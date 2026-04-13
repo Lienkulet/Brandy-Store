@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Collection from "../components/Collection";
 import Hero from "../components/Hero";
 import Season from "../components/Season";
+import BrandStrip from "../components/BrandStrip";
 import Categories from "../components/Categories";
 import Container from "../components/layout/Container";
 
@@ -16,8 +17,11 @@ export default function Home() {
       <Hero />
       <Container>
         <Collection />
-        <Season />
+      </Container>
+      <BrandStrip />
+      <Container>
         <Categories />
+        <Season />
       </Container>
     </main>
   );

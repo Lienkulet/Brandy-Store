@@ -9,7 +9,7 @@ type GreyBtnProps = {
 
 function GreyBtn({ name, type = "button", className = "", href }: GreyBtnProps) {
   const styles =
-    `group relative inline-flex h-11 items-center justify-center overflow-hidden rounded-full border border-white/40 bg-transparent px-7 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition-[border-color] duration-300 hover:border-white/80 ${className}`.trim();
+    `group cursor-pointer relative inline-flex h-11 items-center justify-center overflow-hidden rounded-full border border-white/40 bg-transparent px-7 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition-[border-color] duration-300 hover:border-white/80 ${className}`.trim();
 
   const content = (
     <>
