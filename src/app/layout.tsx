@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Cormorant, Montserrat } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "../../components/layout/Navbar";
-import Container from "../../components/layout/Container";
-import Footer from "../../components/layout/Footer";
+import { Navbar } from "../components/layout/Navbar";
+import Container from "../components/layout/Container";
+import Footer from "../components/layout/Footer";
 
 const cormorant = Cormorant({
   subsets: ["latin"],

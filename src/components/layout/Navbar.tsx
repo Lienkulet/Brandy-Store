@@ -104,6 +104,7 @@ export function Navbar() {
                   <motion.span
                     className="absolute bottom-0 left-0 h-px w-full bg-current"
                     variants={underline}
+                    initial={{ scaleX: 0 }}
                     style={{ transformOrigin: "left" }}
                   />
                 </Link>
