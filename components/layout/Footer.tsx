@@ -29,12 +29,12 @@ function Footer() {
                 height={56}
                 className="h-12 w-12 object-contain"
               />
-              <span className="text-[1.75rem] font-semibold tracking-[-0.04em] text-[#152238]">
+              <span className="text-2xl font-semibold tracking-[-0.04em] text-[#152238]">
                 BrandyStore
               </span>
             </div>
 
-            <p className="mt-6 max-w-[290px] text-lg leading-8 text-muted">
+            <p className="mt-6 max-w-72.5 text-sm leading-6 text-muted">
               Get newsletter updates for upcoming products and best discounts.
             </p>
 
@@ -83,10 +83,10 @@ type FooterColumnProps = {
 function FooterColumn({ title, items }: FooterColumnProps) {
   return (
     <div>
-      <h3 className="font-serif text-[1.55rem] font-semibold text-foreground">
+      <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground">
         {title}
       </h3>
-      <ul className="mt-5 space-y-3 text-lg text-muted">
+      <ul className="mt-4 space-y-2.5 text-sm text-muted">
         {items.map((item) => (
           <li key={item}>
             <Link href="#" className="transition-colors hover:text-foreground">

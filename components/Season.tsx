@@ -16,7 +16,7 @@ function Season() {
         />
 
         <div className="px-6 py-6 text-center sm:px-8 sm:py-8">
-          <h2 className="font-serif text-[1.9rem] font-semibold uppercase tracking-[0.05em] text-foreground sm:text-[2.35rem]">
+          <h2 className="font-serif text-3xl font-semibold uppercase tracking-[0.05em] text-foreground sm:text-4xl">
             The New Season Edit
           </h2>
           <p className="mx-auto mt-3 max-w-170 text-sm text-muted sm:text-base">

@@ -28,7 +28,7 @@ function Collection() {
       className="mx-auto mt-14 flex w-full max-w-280 flex-col"
     >
       <div className="mb-8 text-center sm:mb-10">
-        <p className="font-serif text-2xl font-semibold uppercase tracking-[0.24em] text-foreground sm:text-[2rem]">
+        <p className="font-serif text-2xl font-semibold uppercase tracking-[0.24em] text-foreground sm:text-3xl">
           New Collection
         </p>
         <p className="mx-auto mt-3 max-w-170 text-sm text-muted sm:text-base">

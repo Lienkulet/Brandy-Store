@@ -22,7 +22,7 @@ function CategoryCard({ title, cta, image, href }: CategoryCardProps) {
       <div className="absolute inset-0 bg-linear-to-t from-black/40 via-black/5 to-transparent" />
 
       <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-start gap-3 p-4 sm:p-5">
-        <span className="text-xl font-semibold uppercase tracking-[0.22em] text-white">
+        <span className="text-sm font-semibold uppercase tracking-[0.22em] text-white">
           {title}
         </span>
         <GreyBtn name={cta} />

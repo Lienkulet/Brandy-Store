@@ -3,6 +3,7 @@ import Collection from "../../components/Collection";
 import Hero from "../../components/Hero";
 import Season from "../../components/Season";
 import CategoryCard from "../../components/cards/CategoryCard";
+import Container from "../../components/layout/Container";
 
 const categoryItems = [
   {
@@ -23,21 +24,25 @@ const categoryItems = [
 ];
 
 export const metadata: Metadata = {
-  title: "Noble Shack",
+  title: "Brandy Store",
   description: "Minimal menswear storefront landing page.",
 };
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main className="bg-background text-foreground">
       <Hero />
-      <Collection />
-      <Season />
-      <section className="grid grid-cols-1 gap-5 md:grid-cols-3">
-        {categoryItems.map((item) => (
-          <CategoryCard key={item.title} {...item} />
-        ))}
-      </section>
+      <Container>
+
+        <Collection />
+        <Season />
+        <section className="grid grid-cols-1 gap-5 md:grid-cols-3">
+          {categoryItems.map((item) => (
+            <CategoryCard key={item.title} {...item} />
+          ))}
+        </section>
+      </Container>
+
     </main>
   );
 }

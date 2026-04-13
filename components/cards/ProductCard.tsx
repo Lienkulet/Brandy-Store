@@ -14,19 +14,19 @@ type ProductCardProps = {
 
 function ProductCard({ name, description, image, price }: ProductCardProps) {
   return (
-    <article className="soft-card overflow-hidden rounded-[24px] p-4 sm:p-5">
+    <article className="soft-card overflow-hidden rounded-3xl p-4 sm:p-5">
       <div className="overflow-hidden rounded-[18px] bg-[#f7f4f0]">
         <Image
           src={image}
           alt={name}
           width={214}
           height={260}
-          className="h-[260px] w-full object-cover"
+          className="h-65 w-full object-cover"
         />
       </div>
 
       <div className="px-1 pb-1 pt-5">
-        <h2 className="font-serif text-[1.35rem] font-semibold leading-tight text-foreground">
+        <h2 className="font-serif text-xl font-semibold leading-tight text-foreground">
           {name}
         </h2>
         <p className="mt-1 text-sm text-muted">{description}</p>
