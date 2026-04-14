@@ -1,11 +1,11 @@
-import React from 'react'
+import type { Metadata } from "next";
+import { AboutContent } from "../../../components/AboutContent";
 
-type Props = {}
+export const metadata: Metadata = {
+  title: "The Story — Brandy Store",
+  description: "Brandy Store opened in Chișinău in 2023 with a single idea — world-class menswear, closer to home.",
+};
 
-function page({}: Props) {
-  return (
-    <div>page</div>
-  )
+export default function AboutPage() {
+  return <AboutContent />;
 }
-
-export default page
