@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 
 type ProductPrice = {
@@ -10,22 +11,35 @@ type ProductPrice = {
 
 type ProductCardProps = {
   name: string;
+  brand?: string;
   description: string;
   image: string;
   price: ProductPrice | null;
+  href?: string;
+  isNew?: boolean;
 };
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-function ProductCard({ name, description, image, price }: ProductCardProps) {
+function ProductCard({ name, brand, description, image, price, href, isNew }: ProductCardProps) {
   return (
     <motion.article
-      className="soft-card group overflow-hidden rounded-3xl p-4 sm:p-5"
+      className="soft-card group relative overflow-hidden rounded-3xl p-4 sm:p-5"
       transition={{ duration: 0.35, ease }}
-      style={{
-        boxShadow: "0 18px 40px rgba(95, 77, 57, 0.08)",
-      }}
+      style={{ boxShadow: "0 18px 40px rgba(95, 77, 57, 0.08)" }}
     >
+      {/* Stretched link overlay */}
+      {href && (
+        <Link href={href} className="absolute inset-0 z-10" aria-label={name} />
+      )}
+
+      {/* New badge */}
+      {isNew && (
+        <div className="absolute left-7 top-7 z-5 rounded-full bg-foreground px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white">
+          New In
+        </div>
+      )}
+
       {/* Image — zooms subtly on card hover */}
       <div className="overflow-hidden rounded-[18px] bg-[#f7f4f0]">
         <motion.div
@@ -45,6 +59,11 @@ function ProductCard({ name, description, image, price }: ProductCardProps) {
 
       {/* Details */}
       <div className="px-1 pb-1 pt-4">
+        {brand && (
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/40">
+            {brand}
+          </p>
+        )}
         <h2 className="font-serif text-xl font-semibold leading-tight text-foreground">
           {name}
         </h2>

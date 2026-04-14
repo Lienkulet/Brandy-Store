@@ -38,6 +38,11 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+  cursor: pointer;
+}
+
+button:hover {
+  cursor: pointer;
 }
 
 img {

@@ -1,11 +1,11 @@
-import React from 'react'
+import type { Metadata } from "next";
+import { ShopContent } from "../../../components/ShopContent";
 
-type Props = {}
+export const metadata: Metadata = {
+  title: "Shop — Brandy Store",
+  description: "Browse our full menswear collection — tops, knitwear, jackets, trousers, shoes and essentials from the world's finest houses.",
+};
 
-function page({}: Props) {
-  return (
-    <div>page</div>
-  )
+export default function ShopPage() {
+  return <ShopContent />;
 }
-
-export default page
