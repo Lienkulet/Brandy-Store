@@ -9,8 +9,8 @@ import { TelegramIcon } from "../icons/TelegramIcon";
 import { TikTokIcon } from "../icons/TikTokIcon";
 import { PhoneIcon } from "../icons/PhoneIcon";
 
-const productLinks = ["Tshirt", "Jacket", "Shoes", "Pants", "Sunglasses", "Tuxedo"];
-const categoryLinks = ["Shirts", "Jackets & Coats", "Trousers & Jeans", "T-Shirts & Polos", "Knitwear", "Footwear", "New Arrivals"];
+const productLinks = ["New Arrivals", "Loro Piana", "Brunello Cucinelli", "Polo Ralph Lauren", "Emporio Armani", "Boss"];
+const categoryLinks = ["Tops & Shirts", "Knitwear & Layering","Jackets & Outerwear", "Pants & Jeans", "Underwear & Essentials", "Sportswear & Shoes"];
 const legalLinks = ["Terms & Conditions", "Privacy Policy", "Cookie Policy"];
 
 const socialLinks = [
@@ -34,7 +34,7 @@ function Footer() {
       <div className="border-t border-foreground/8" />
 
       <Container>
-        <div className="grid gap-12 pb-14 pt-12 md:grid-cols-[1.8fr_1fr_1fr_1fr]">
+        <div className="grid gap-12 pb-8 pt-12 md:grid-cols-[1.8fr_1fr_1fr_1fr]">
 
           {/* Brand column */}
           <motion.div

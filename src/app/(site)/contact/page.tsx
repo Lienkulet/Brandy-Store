@@ -106,6 +106,54 @@ export default function ContactPage() {
           </div>
 
         </div>
+
+        {/* Pickup location */}
+        <div className="mt-16">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/50">
+            In-store pickup
+          </p>
+          <p className="mb-6 text-sm text-muted">
+            Prefer to pick up in person? Visit us at our location in Chișinău.
+            Contact us first to confirm availability.
+          </p>
+
+          <div className="overflow-hidden rounded-2xl border border-foreground/8 shadow-[0_8px_32px_rgba(95,77,57,0.07)]">
+            {/* Map label bar */}
+            <div className="flex items-center justify-between border-b border-foreground/8 bg-foreground/2 px-5 py-3.5">
+              <div className="flex items-center gap-2.5">
+                <svg className="h-4 w-4 text-foreground/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                  <circle cx="12" cy="9" r="2.5" />
+                </svg>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/60">
+                  Brandy Store — Chișinău, Moldova
+                </span>
+              </div>
+              <a
+                href="https://maps.google.com/?q=Fourchette+Chisinau"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/40 transition-colors hover:text-foreground"
+              >
+                Open in Maps →
+              </a>
+            </div>
+
+            {/* Map iframe */}
+            <div className="relative h-80 sm:h-96 lg:h-110">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d43504.21309474083!2d28.77044060165749!3d47.03996946352848!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40c97d948db3e011%3A0x572262bdb19c809a!2sFourchette!5e0!3m2!1sen!2s!4v1776157794039!5m2!1sen!2s"
+                className="absolute inset-0 h-full w-full"
+                style={{ border: 0, filter: "grayscale(0.35) sepia(0.22) saturate(0.72) brightness(1.06) contrast(0.88) hue-rotate(-8deg)" }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Brandy Store pickup location"
+              />
+            </div>
+          </div>
+        </div>
+
       </Container>
     </main>
   );
