@@ -2,12 +2,18 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion, useScroll, useTransform, useMotionTemplate, type Variants } from "framer-motion";
 import { AccountIcon } from "../icons/Account";
 import { CartIcon } from "../icons/CartIcon";
 import { SearchIcon } from "../icons/SearchIcon";
 
-const navigationItems = ["New Arrivals", "Shop", "The Story", "Contact"];
+const navigationItems = [
+  { label: "New Arrivals", href: "/new-arrivals" },
+  { label: "Shop",         href: "/shop"         },
+  { label: "The Story",    href: "/about"        },
+  { label: "Contact",      href: "/contact"      },
+];
 
 const actionItems = [
   { label: "Search", icon: SearchIcon },
@@ -34,24 +40,26 @@ const underline: Variants = {
 };
 
 export function Navbar() {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
   const { scrollY } = useScroll();
 
-  // Smooth scroll-driven glass effect
-  const bgOpacity   = useTransform(scrollY, [0, 72], [0, 0.92]);
-  const blurPx      = useTransform(scrollY, [0, 72], [0, 14]);
-  const borderAlpha = useTransform(scrollY, [0, 72], [0, 0.1]);
-  const shadowAlpha = useTransform(scrollY, [0, 72], [0, 0.06]);
+  // On inner pages start fully "scrolled" — on homepage animate from transparent
+  const bgOpacity   = useTransform(scrollY, [0, 72], isHome ? [0, 0.92]   : [0.92, 0.92]);
+  const blurPx      = useTransform(scrollY, [0, 72], isHome ? [0, 14]     : [14, 14]);
+  const borderAlpha = useTransform(scrollY, [0, 72], isHome ? [0, 0.1]    : [0.1, 0.1]);
+  const shadowAlpha = useTransform(scrollY, [0, 72], isHome ? [0, 0.06]   : [0.06, 0.06]);
 
   const backgroundColor  = useMotionTemplate`rgba(252,250,247,${bgOpacity})`;
   const backdropFilter   = useMotionTemplate`blur(${blurPx}px)`;
   const borderColor      = useMotionTemplate`rgba(76,64,53,${borderAlpha})`;
   const boxShadow        = useMotionTemplate`0 1px 32px rgba(95,77,57,${shadowAlpha})`;
 
-  // Text/icon color: white at top, dark foreground when scrolled
-  const navAlpha  = useTransform(scrollY, [0, 72], [0.75, 0.80]);
-  const navR      = useTransform(scrollY, [0, 72], [255, 30]);
-  const navG      = useTransform(scrollY, [0, 72], [255, 26]);
-  const navB      = useTransform(scrollY, [0, 72], [255, 23]);
+  // Text/icon color: white→dark scroll animation on homepage, always dark on inner pages
+  const navAlpha  = useTransform(scrollY, [0, 72], isHome ? [0.75, 0.80] : [0.80, 0.80]);
+  const navR      = useTransform(scrollY, [0, 72], isHome ? [255, 30]    : [30, 30]);
+  const navG      = useTransform(scrollY, [0, 72], isHome ? [255, 26]    : [26, 26]);
+  const navB      = useTransform(scrollY, [0, 72], isHome ? [255, 23]    : [23, 23]);
   const navColor  = useMotionTemplate`rgba(${navR},${navG},${navB},${navAlpha})`;
 
   return (
@@ -76,7 +84,7 @@ export function Navbar() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.0, delay: 0.1, ease }}
         >
-          <Link href="#" aria-label="Home" className="block">
+          <Link href="/" aria-label="Home" className="block">
             <Image
               src="/logo.png"
               alt="Brandy Store"
@@ -98,9 +106,9 @@ export function Navbar() {
             animate="visible"
           >
             {navigationItems.map((item) => (
-              <motion.li key={item} variants={fadeDown} whileHover="hover">
-                <Link href="#" className="relative block py-1 opacity-80 hover:opacity-100 transition-opacity duration-200">
-                  {item}
+              <motion.li key={item.label} variants={fadeDown} whileHover="hover">
+                <Link href={item.href} className="relative block py-1 opacity-80 hover:opacity-100 transition-opacity duration-200">
+                  {item.label}
                   <motion.span
                     className="absolute bottom-0 left-0 h-px w-full bg-current"
                     variants={underline}
