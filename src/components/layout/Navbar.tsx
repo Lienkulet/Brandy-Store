@@ -7,7 +7,7 @@ import { AccountIcon } from "../icons/Account";
 import { CartIcon } from "../icons/CartIcon";
 import { SearchIcon } from "../icons/SearchIcon";
 
-const navigationItems = ["New Arrivals", "Shop", "Brands", "The Story"];
+const navigationItems = ["New Arrivals", "Shop", "The Story", "Contact"];
 
 const actionItems = [
   { label: "Search", icon: SearchIcon },

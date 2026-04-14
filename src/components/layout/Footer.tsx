@@ -4,18 +4,27 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Container from "./Container";
+import { InstagramIcon } from "../icons/InstagramIcon";
+import { TelegramIcon } from "../icons/TelegramIcon";
+import { TikTokIcon } from "../icons/TikTokIcon";
+import { PhoneIcon } from "../icons/PhoneIcon";
 
 const productLinks = ["Tshirt", "Jacket", "Shoes", "Pants", "Sunglasses", "Tuxedo"];
-const categoryLinks = ["Men", "Women", "Kids", "Gift", "New Arrival"];
-const socialLinks = ["Instagram", "Facebook", "YouTube", "Twitter"];
+const categoryLinks = ["Shirts", "Jackets & Coats", "Trousers & Jeans", "T-Shirts & Polos", "Knitwear", "Footwear", "New Arrivals"];
 const legalLinks = ["Terms & Conditions", "Privacy Policy", "Cookie Policy"];
+
+const socialLinks = [
+  { label: "Instagram", href: "https://www.instagram.com/brandystoremd", icon: InstagramIcon },
+  { label: "Telegram",  href: "https://t.me/brandystoremd",              icon: TelegramIcon  },
+  { label: "TikTok",    href: "https://www.tiktok.com/@brandystore11",   icon: TikTokIcon    },
+  { label: "Phone",     href: "tel:+373000000000",                       icon: PhoneIcon     },
+];
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 const columns = [
-  { title: "Product", items: productLinks },
+  { title: "Product",    items: productLinks  },
   { title: "Categories", items: categoryLinks },
-  { title: "Follow Us", items: socialLinks },
 ];
 
 function Footer() {
@@ -87,6 +96,35 @@ function Footer() {
               <FooterColumn title={col.title} items={col.items} />
             </motion.div>
           ))}
+
+          {/* Social column */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.7, ease, delay: 0.3 }}
+          >
+            <h3 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/60">
+              Follow Us
+            </h3>
+            <ul className="mt-5 space-y-3">
+              {socialLinks.map(({ label, href, icon: Icon }) => (
+                <li key={label}>
+                  <Link
+                    href={href}
+                    target={href.startsWith("http") ? "_blank" : undefined}
+                    rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+                    className="group/link flex items-center gap-2.5 text-sm text-muted transition-colors duration-200 hover:text-foreground"
+                  >
+                    <span className="text-foreground/40 transition-colors duration-200 group-hover/link:text-foreground">
+                      <Icon />
+                    </span>
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
         </div>
       </Container>
 
