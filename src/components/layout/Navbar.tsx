@@ -15,6 +15,8 @@ import { SearchIcon } from "../icons/SearchIcon";
 import { InstagramIcon } from "../icons/InstagramIcon";
 import { TelegramIcon } from "../icons/TelegramIcon";
 import { TikTokIcon } from "../icons/TikTokIcon";
+import { CartDrawer } from "../CartDrawer";
+import { useCart } from "../../context/CartContext";
 
 const navigationItems = [
   { label: "New Arrivals", href: "/new-arrivals" },
@@ -57,6 +59,8 @@ export function Navbar() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [isOpen, setIsOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const { itemCount, isHydrated } = useCart();
   const { scrollY } = useScroll();
 
   // Close menu on route change
@@ -156,16 +160,44 @@ export function Navbar() {
             {/* Action icons — desktop only */}
             {actionItems.map(({ label, icon: Icon }) => (
               <motion.div key={label} variants={fadeDown} className="hidden md:block">
-                <Link href="#" aria-label={label} className="block">
-                  <motion.div
-                    whileHover={{ y: -2, scale: 1.1 }}
-                    whileTap={{ scale: 0.92 }}
-                    transition={{ duration: 0.22, ease }}
-                    style={{ color: navColor }}
+                {label === "Cart" ? (
+                  <button
+                    aria-label="Open cart"
+                    onClick={() => setCartOpen(true)}
+                    className="cursor-pointer relative block"
                   >
-                    <Icon />
-                  </motion.div>
-                </Link>
+                    <motion.div
+                      whileHover={{ y: -2, scale: 1.1 }}
+                      whileTap={{ scale: 0.92 }}
+                      transition={{ duration: 0.22, ease }}
+                      style={{ color: navColor }}
+                    >
+                      <Icon />
+                    </motion.div>
+                    {isHydrated && itemCount > 0 && (
+                      <motion.span
+                        key={itemCount}
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.25, ease }}
+                        className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-foreground text-[9px] font-bold text-white"
+                      >
+                        {itemCount > 9 ? "9+" : itemCount}
+                      </motion.span>
+                    )}
+                  </button>
+                ) : (
+                  <Link href="#" aria-label={label} className="block">
+                    <motion.div
+                      whileHover={{ y: -2, scale: 1.1 }}
+                      whileTap={{ scale: 0.92 }}
+                      transition={{ duration: 0.22, ease }}
+                      style={{ color: navColor }}
+                    >
+                      <Icon />
+                    </motion.div>
+                  </Link>
+                )}
               </motion.div>
             ))}
 
@@ -213,6 +245,9 @@ export function Navbar() {
           <MobileMenu onClose={() => setIsOpen(false)} pathname={pathname} />
         )}
       </AnimatePresence>
+
+      {/* Cart drawer */}
+      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
     </>
   );
 }

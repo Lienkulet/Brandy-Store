@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Product } from "../data/products";
 import Container from "./layout/Container";
+import { useCart } from "../context/CartContext";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -15,6 +16,7 @@ export function ProductDetail({ product }: { product: Product }) {
   const [selectedSize, setSize]     = useState<string | null>(null);
   const [sizeError, setSizeError]   = useState(false);
   const [cartState, setCartState]   = useState<"idle" | "added">("idle");
+  const { addItem } = useCart();
 
   const color  = product.colors[colorIdx];
   const images = color.images;
@@ -30,6 +32,16 @@ export function ProductDetail({ product }: { product: Product }) {
       setTimeout(() => setSizeError(false), 2000);
       return;
     }
+    addItem({
+      id:        `${product.id}-${color.name}-${selectedSize}`,
+      productId: product.id,
+      name:      product.name,
+      brand:     product.brand,
+      size:      selectedSize,
+      color:     color.name,
+      price:     product.price?.current ?? "Price on request",
+      image:     color.images[0],
+    });
     setCartState("added");
     setTimeout(() => setCartState("idle"), 2500);
   }

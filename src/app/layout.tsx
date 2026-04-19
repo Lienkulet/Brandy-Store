@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "../components/layout/Navbar";
 import Container from "../components/layout/Container";
 import Footer from "../components/layout/Footer";
+import { CartProvider } from "../context/CartContext";
 
 const cormorant = Cormorant({
   subsets: ["latin"],
@@ -33,9 +34,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${cormorant.variable} ${montserrat.variable} h-full antialiased`}>
       <body className="bg-background text-foreground">
+        <CartProvider>
           <Navbar />
           {children}
-        <Footer />
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );

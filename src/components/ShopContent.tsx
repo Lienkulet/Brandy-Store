@@ -286,6 +286,12 @@ export function ShopContent({ initialCategory }: { initialCategory?: string }) {
                       price={product.price}
                       href={`/product/${product.slug}`}
                       isNew={product.isNew}
+                      quickAdd={{
+                        productId: product.id,
+                        colorName: product.colors[0].name,
+                        sizes:     product.sizes,
+                        price:     product.price?.current ?? "Price on request",
+                      }}
                     />
                   </motion.div>
                 ))}
