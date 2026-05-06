@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader, EmptyState } from "./OverviewContent";
 
@@ -40,18 +40,53 @@ const DELIVERY_LABELS = {
   nationwide: "Nationwide",
 };
 
-// Placeholder — replace with real data source when backend is ready
-const MOCK_ORDERS: Order[] = [];
+type SupabaseOrder = {
+  id: string;
+  created_at: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_address?: string;
+  delivery: "pickup" | "courier" | "nationwide";
+  items: Order["items"];
+  subtotal: string;
+  status: OrderStatus;
+};
+
+function toOrder(o: SupabaseOrder): Order {
+  return {
+    id: o.id,
+    createdAt: o.created_at,
+    customer: { name: o.customer_name, phone: o.customer_phone, address: o.customer_address },
+    delivery: o.delivery,
+    items: o.items,
+    subtotal: o.subtotal,
+    status: o.status,
+  };
+}
 
 export function OrdersContent() {
-  const [orders, setOrders]       = useState<Order[]>(MOCK_ORDERS);
+  const [orders, setOrders]       = useState<Order[]>([]);
+  const [loading, setLoading]     = useState(true);
   const [expanded, setExpanded]   = useState<string | null>(null);
   const [filter, setFilter]       = useState<OrderStatus | "all">("all");
 
+  useEffect(() => {
+    fetch("/api/orders")
+      .then((r) => r.json())
+      .then((data: SupabaseOrder[]) => setOrders(Array.isArray(data) ? data.map(toOrder) : []))
+      .catch(() => setOrders([]))
+      .finally(() => setLoading(false));
+  }, []);
+
   const visible = filter === "all" ? orders : orders.filter((o) => o.status === filter);
 
-  function updateStatus(id: string, status: OrderStatus) {
+  async function updateStatus(id: string, status: OrderStatus) {
     setOrders((prev) => prev.map((o) => o.id === id ? { ...o, status } : o));
+    await fetch(`/api/orders/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
   }
 
   return (
@@ -59,7 +94,7 @@ export function OrdersContent() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <PageHeader title="Orders" subtitle="Manage and track customer orders." />
         <p className="text-[11px] font-semibold text-foreground/40">
-          {orders.length} total
+          {loading ? "Loading…" : `${orders.length} total`}
         </p>
       </div>
 
@@ -91,7 +126,21 @@ export function OrdersContent() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease }}
       >
-        {visible.length === 0 ? (
+        {loading ? (
+          <div className="divide-y divide-foreground/6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-5 py-4">
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-32 animate-pulse rounded bg-foreground/8" />
+                  <div className="h-2.5 w-24 animate-pulse rounded bg-foreground/6" />
+                </div>
+                <div className="hidden h-2.5 w-20 animate-pulse rounded bg-foreground/6 sm:block" />
+                <div className="hidden h-2.5 w-16 animate-pulse rounded bg-foreground/6 sm:block" />
+                <div className="h-5 w-16 animate-pulse rounded-full bg-foreground/8" />
+              </div>
+            ))}
+          </div>
+        ) : visible.length === 0 ? (
           <EmptyState
             icon={
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">

@@ -80,7 +80,7 @@ export function LoginContent() {
               autoComplete="username"
               value={email}
               onChange={(e) => { setEmail(e.target.value); setStatus("idle"); }}
-              className={`input-field ${status === "error" ? "!border-red-400" : ""}`}
+              className={`input-field ${status === "error" ? "border-red-400!" : ""}`}
               placeholder="admin"
               required
             />
@@ -101,7 +101,7 @@ export function LoginContent() {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setStatus("idle"); }}
-                className={`input-field pr-11 ${status === "error" ? "!border-red-400" : ""}`}
+                className={`input-field pr-11 ${status === "error" ? "border-red-400!" : ""}`}
                 placeholder="••••••••"
                 required
               />

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useCart, type CartItem } from "../context/CartContext";
 import Container from "./layout/Container";
 
@@ -24,25 +24,93 @@ function parseMDL(str: string): number {
 }
 
 export function CheckoutContent() {
-  const { items, itemCount, isHydrated } = useCart();
+  const { items, itemCount, isHydrated, clearCart } = useCart();
   const router = useRouter();
 
   const [name,     setName]     = useState("");
   const [phone,    setPhone]    = useState("");
   const [address,  setAddress]  = useState("");
   const [delivery, setDelivery] = useState<DeliveryMethod>("pickup");
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState("");
+  const [success,  setSuccess]  = useState(false);
 
   // Redirect to shop if cart is empty (after hydration)
   useEffect(() => {
-    if (isHydrated && itemCount === 0) {
+    if (isHydrated && itemCount === 0 && !success) {
       router.replace("/shop");
     }
-  }, [isHydrated, itemCount, router]);
+  }, [isHydrated, itemCount, router, success]);
 
   const subtotal  = items.reduce((sum, i) => sum + parseMDL(i.price) * i.quantity, 0);
   const formatted = subtotal.toLocaleString("ro-MD") + " MDL";
 
-  if (!isHydrated || itemCount === 0) return null;
+  async function handlePlaceOrder() {
+    if (!name.trim()) { setError("Please enter your full name."); return; }
+    if (!phone.trim()) { setError("Please enter your phone number."); return; }
+    if (delivery !== "pickup" && !address.trim()) { setError("Please enter your delivery address."); return; }
+
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customer_name: name.trim(),
+          customer_phone: phone.trim(),
+          customer_address: delivery !== "pickup" ? address.trim() : undefined,
+          delivery,
+          items: items.map((i) => ({
+            name: i.name, brand: i.brand, size: i.size,
+            color: i.color, price: i.price, quantity: i.quantity, image: i.image,
+          })),
+          subtotal: formatted,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json();
+        throw new Error(body.error || "Something went wrong.");
+      }
+      clearCart();
+      setSuccess(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to place order.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (!isHydrated || (itemCount === 0 && !success)) return null;
+
+  if (success) {
+    return (
+      <main className="flex min-h-dvh items-center justify-center bg-background px-6 text-foreground">
+        <motion.div
+          className="max-w-md text-center"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease }}
+        >
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-foreground/6">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-foreground">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <h1 className="mb-3 font-serif text-3xl font-semibold">Order received</h1>
+          <p className="mb-8 text-sm leading-relaxed text-muted">
+            Thank you! Our team will call you shortly to confirm the details and arrange payment.
+          </p>
+          <Link
+            href="/shop"
+            className="inline-block rounded-full bg-foreground px-8 py-3.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition-colors duration-300 hover:bg-foreground/85"
+          >
+            Continue Shopping
+          </Link>
+        </motion.div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-dvh bg-background pb-24 pt-28 text-foreground sm:pt-32">
@@ -203,12 +271,35 @@ export function CheckoutContent() {
               </p>
             </div>
 
+            {/* Error */}
+            <AnimatePresence>
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-[11px] text-red-600"
+                >
+                  {error}
+                </motion.p>
+              )}
+            </AnimatePresence>
+
             {/* Place order button */}
             <button
               type="button"
-              className="cursor-pointer mt-5 w-full rounded-full bg-foreground py-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition-colors duration-300 hover:bg-foreground/85"
+              onClick={handlePlaceOrder}
+              disabled={loading}
+              className="cursor-pointer mt-4 flex w-full items-center justify-center gap-2.5 rounded-full bg-foreground py-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition-colors duration-300 hover:bg-foreground/85 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Place Order
+              {loading && (
+                <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+              )}
+              {loading ? "Placing order…" : "Place Order"}
             </button>
 
             <p className="mt-4 text-center text-[10px] text-muted">

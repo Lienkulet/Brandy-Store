@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { PageHeader } from "./OverviewContent";
@@ -144,7 +143,8 @@ export function ProductsContent() {
               >
                 {/* Image */}
                 <div className="relative aspect-4/5 bg-[#f7f4f0]">
-                  <Image src={product.image} alt={product.name} fill className="object-cover" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
 
                   {/* Stock badge */}
                   <div className={`absolute right-3 top-3 rounded-full border px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] ${

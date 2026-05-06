@@ -29,7 +29,7 @@ function toSlug(name: string) {
 
 function blankProduct(): Partial<Product> {
   return {
-    id:          String(Date.now()),
+    id:          `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     slug:        "",
     name:        "",
     brand:       "",
@@ -178,7 +178,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 z-[59] bg-foreground/25 backdrop-blur-sm"
+            className="fixed inset-0 z-59 bg-foreground/25 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

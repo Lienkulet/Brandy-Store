@@ -1,63 +1,93 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { products } from "../../data/products";
+import type { Product } from "../../data/products";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-const totalProducts  = products.length;
-const inStockItems   = products.filter((p) => p.sizes.some((s) => s.inStock)).length;
-const outOfStockItems = products.filter((p) => p.sizes.every((s) => !s.inStock)).length;
-const newArrivals    = products.filter((p) => p.isNew).length;
+type SupabaseOrder = { id: string; subtotal: string; status: string; created_at: string; customer_name: string; customer_phone: string };
 
-const STATS = [
-  {
-    label:    "Total Orders",
-    value:    "0",
-    sublabel: "No orders yet",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-        <line x1="3" y1="6" x2="21" y2="6" />
-        <path d="M16 10a4 4 0 0 1-8 0" />
-      </svg>
-    ),
-  },
-  {
-    label:    "Revenue",
-    value:    "0 MDL",
-    sublabel: "Awaiting first order",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" y1="1" x2="12" y2="23" />
-        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-      </svg>
-    ),
-  },
-  {
-    label:    "Products",
-    value:    String(totalProducts),
-    sublabel: `${inStockItems} in stock · ${outOfStockItems} out`,
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-        <line x1="7" y1="7" x2="7.01" y2="7" />
-      </svg>
-    ),
-  },
-  {
-    label:    "New Arrivals",
-    value:    String(newArrivals),
-    sublabel: "Marked as new in store",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-      </svg>
-    ),
-  },
-];
+function parseMDL(str: string): number {
+  const n = parseInt(str.replace(/\s/g, "").replace("MDL", ""), 10);
+  return isNaN(n) ? 0 : n;
+}
 
 export function OverviewContent() {
+  const [orders, setOrders]           = useState<SupabaseOrder[]>([]);
+  const [ordersLoaded, setLoaded]     = useState(false);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    fetch("/api/orders")
+      .then((r) => r.json())
+      .then((data) => setOrders(Array.isArray(data) ? data : []))
+      .catch(() => setOrders([]))
+      .finally(() => setLoaded(true));
+    fetch("/api/products")
+      .then((r) => r.json())
+      .then((data) => setAllProducts(Array.isArray(data) ? data : []))
+      .catch(() => setAllProducts([]));
+  }, []);
+
+  const totalProducts   = allProducts.length;
+  const inStockItems    = allProducts.filter((p) => p.sizes.some((s) => s.inStock)).length;
+  const outOfStockItems = allProducts.filter((p) => p.sizes.every((s) => !s.inStock)).length;
+  const newArrivals     = allProducts.filter((p) => p.isNew).length;
+
+  const revenue = orders
+    .filter((o) => o.status !== "cancelled")
+    .reduce((sum, o) => sum + parseMDL(o.subtotal), 0);
+
+  const STATS = [
+    {
+      label:    "Total Orders",
+      value:    ordersLoaded ? String(orders.length) : "—",
+      sublabel: orders.length === 0 ? "No orders yet" : `${orders.filter((o) => o.status === "pending").length} pending`,
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <path d="M16 10a4 4 0 0 1-8 0" />
+        </svg>
+      ),
+    },
+    {
+      label:    "Revenue",
+      value:    ordersLoaded ? (revenue > 0 ? revenue.toLocaleString("ro-MD") + " MDL" : "0 MDL") : "—",
+      sublabel: revenue === 0 ? "Awaiting first order" : "Confirmed + shipped",
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
+      ),
+    },
+    {
+      label:    "Products",
+      value:    String(totalProducts),
+      sublabel: `${inStockItems} in stock · ${outOfStockItems} out`,
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+          <line x1="7" y1="7" x2="7.01" y2="7" />
+        </svg>
+      ),
+    },
+    {
+      label:    "New Arrivals",
+      value:    String(newArrivals),
+      sublabel: "Marked as new in store",
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+      ),
+    },
+  ];
+
+  const recentOrders = orders.slice(0, 5);
+
   return (
     <div>
       <PageHeader title="Overview" subtitle="Welcome back. Here's what's happening." />
@@ -96,17 +126,34 @@ export function OverviewContent() {
             Recent Orders
           </p>
         </div>
-        <EmptyState
-          icon={
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <path d="M16 10a4 4 0 0 1-8 0" />
-            </svg>
-          }
-          message="No orders yet"
-          sub="Orders will appear here once customers start checking out."
-        />
+        {recentOrders.length === 0 ? (
+          <EmptyState
+            icon={
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 0 1-8 0" />
+              </svg>
+            }
+            message="No orders yet"
+            sub="Orders will appear here once customers start checking out."
+          />
+        ) : (
+          <ul className="divide-y divide-foreground/6">
+            {recentOrders.map((o) => (
+              <li key={o.id} className="flex items-center justify-between gap-4 px-6 py-3.5">
+                <div>
+                  <p className="text-[12px] font-semibold text-foreground">{o.customer_name}</p>
+                  <p className="text-[11px] text-muted">{o.customer_phone}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[12px] font-semibold text-foreground">{o.subtotal}</p>
+                  <p className="text-[10px] text-muted">{new Date(o.created_at).toLocaleDateString("ro-MD")}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </motion.div>
 
       {/* Low stock */}

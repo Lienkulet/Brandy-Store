@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Container from "./layout/Container";
 import ProductCard from "./cards/ProductCard";
-import { products, categories, type Product } from "../data/products";
+import { categories, type Product } from "../data/products";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -53,12 +53,22 @@ function applyFilters(list: Product[], filters: Filters): Product[] {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function ShopContent({ initialCategory }: { initialCategory?: string }) {
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [loading, setLoading]         = useState(true);
   const [category, setCategory]       = useState<string | null>(initialCategory ?? null);
   const [filters, setFilters]         = useState<Filters>({ brands: [], sizes: [], colors: [] });
   const [sort, setSort]               = useState<SortKey>("new-in");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen]   = useState(false);
   const pillsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then((r) => r.json())
+      .then((data) => setAllProducts(Array.isArray(data) ? data : []))
+      .catch(() => setAllProducts([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   // Scroll active category pill into view on mobile
   useEffect(() => {
@@ -79,8 +89,8 @@ export function ShopContent({ initialCategory }: { initialCategory?: string }) {
 
   // Derive available options from category-filtered products (before sub-filters)
   const categoryProducts = category
-    ? products.filter((p) => p.category === category)
-    : products;
+    ? allProducts.filter((p) => p.category === category)
+    : allProducts;
 
   const availableBrands = [...new Set(categoryProducts.map((p) => p.brand))].sort();
   const availableSizes  = [...new Set(categoryProducts.flatMap((p) => p.sizes.map((s) => s.label)))];
@@ -263,13 +273,23 @@ export function ShopContent({ initialCategory }: { initialCategory?: string }) {
         {/* Product grid */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={`${category}-${JSON.stringify(filters)}-${sort}`}
+            key={loading ? "loading" : `${category}-${JSON.stringify(filters)}-${sort}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease }}
           >
-            {visible.length > 0 ? (
+            {loading ? (
+              <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="flex flex-col gap-3">
+                    <div className="aspect-4/5 animate-pulse rounded-2xl bg-foreground/6" />
+                    <div className="h-3 w-3/4 animate-pulse rounded bg-foreground/6" />
+                    <div className="h-2.5 w-1/2 animate-pulse rounded bg-foreground/5" />
+                  </div>
+                ))}
+              </div>
+            ) : visible.length > 0 ? (
               <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
                 {visible.map((product, i) => (
                   <motion.div
@@ -310,6 +330,7 @@ export function ShopContent({ initialCategory }: { initialCategory?: string }) {
             )}
           </motion.div>
         </AnimatePresence>
+
 
       </Container>
 
