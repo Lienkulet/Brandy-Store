@@ -58,9 +58,17 @@ const underline: Variants = {
 export function Navbar() {
   const pathname = usePathname();
   const isHome = pathname === "/";
-  const [isOpen, setIsOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
-  const { itemCount, isHydrated } = useCart();
+  const [isOpen, setIsOpen]         = useState(false);
+  const [cartOpen, setCartOpen]     = useState(false);
+  const [authed, setAuthed]         = useState(false);
+  const { itemCount, isHydrated }   = useCart();
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => setAuthed(d.authenticated ?? false))
+      .catch(() => {});
+  }, [pathname]);
   const { scrollY } = useScroll();
 
   // Close menu on route change
@@ -187,7 +195,11 @@ export function Navbar() {
                     )}
                   </button>
                 ) : (
-                  <Link href="#" aria-label={label} className="block">
+                  <Link
+                    href={label === "Account" ? (authed ? "/admin" : "/login") : "#"}
+                    aria-label={label}
+                    className="block"
+                  >
                     <motion.div
                       whileHover={{ y: -2, scale: 1.1 }}
                       whileTap={{ scale: 0.92 }}

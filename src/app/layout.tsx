@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant, Montserrat } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "../components/layout/Navbar";
-import Container from "../components/layout/Container";
-import Footer from "../components/layout/Footer";
-import { CartProvider } from "../context/CartContext";
 
 const cormorant = Cormorant({
   subsets: ["latin"],
@@ -26,19 +22,11 @@ export const metadata: Metadata = {
   description: "Minimal menswear storefront landing page.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${cormorant.variable} ${montserrat.variable} h-full antialiased`}>
       <body className="bg-background text-foreground">
-        <CartProvider>
-          <Navbar />
-          {children}
-          <Footer />
-        </CartProvider>
+        {children}
       </body>
     </html>
   );

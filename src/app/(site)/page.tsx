@@ -1,10 +1,11 @@
+import BrandStrip from "@/components/BrandStrip";
+import Categories from "@/components/Categories";
+import Collection from "@/components/Collection";
+import Hero from "@/components/Hero";
+import Container from "@/components/layout/Container";
+import Season from "@/components/Season";
 import type { Metadata } from "next";
-import Collection from "../components/Collection";
-import Hero from "../components/Hero";
-import Season from "../components/Season";
-import BrandStrip from "../components/BrandStrip";
-import Categories from "../components/Categories";
-import Container from "../components/layout/Container";
+
 
 export const metadata: Metadata = {
   title: "Brandy Store",
