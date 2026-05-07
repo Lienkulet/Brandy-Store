@@ -92,7 +92,14 @@ export function ShopContent({ initialCategory }: { initialCategory?: string }) {
     ? allProducts.filter((p) => p.category === category)
     : allProducts;
 
-  const availableBrands = [...new Set(categoryProducts.map((p) => p.brand))].sort();
+  const ALL_BRANDS = [
+    "Loro Piana", "Boss", "Hugo", "Polo", "Zegna",
+    "Armani Exchange", "Tommy Hilfiger", "Calvin Klein",
+    "Brunello Cucinelli", "Emporio Armani", "Lacoste",
+    "Brango", "Tony Montana", "Etro", "Tom Ford",
+    "DOLCE & GABBANA", "Zara", "Massimo Dutti", "Vaganza", "Moncler",
+  ];
+  const availableBrands = ALL_BRANDS;
   const availableSizes  = [...new Set(categoryProducts.flatMap((p) => p.sizes.map((s) => s.label)))];
   const COLOR_PRIORITY: Record<string, number> = { White: 0, Black: 1 };
   const availableColors = [
@@ -267,7 +274,7 @@ export function ShopContent({ initialCategory }: { initialCategory?: string }) {
 
         {/* Backdrop for desktop dropdowns */}
         {openDropdown && (
-          <div className="fixed inset-0 z-40" onClick={closeDropdown} />
+          <div className="fixed inset-0 z-10" onClick={closeDropdown} />
         )}
 
         {/* Product grid */}
@@ -394,13 +401,13 @@ function FilterDropdown({
       <AnimatePresence>
         {open && (
           <motion.div
-            className="absolute left-0 top-full z-20 mt-2 min-w-40 overflow-hidden rounded-2xl border border-foreground/8 bg-card shadow-[0_12px_40px_rgba(95,77,57,0.12)]"
+            className="absolute left-0 top-full z-20 mt-2 min-w-48 rounded-2xl border border-foreground/8 bg-card shadow-[0_12px_40px_rgba(95,77,57,0.12)]"
             initial={{ opacity: 0, y: -6, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ duration: 0.18, ease }}
           >
-            <div className="max-h-64 overflow-y-auto p-2">
+            <div className="max-h-80 overflow-y-auto rounded-2xl p-2">
               {options.map(({ value, label: optLabel }) => {
                 const checked = selected.includes(value);
                 return (

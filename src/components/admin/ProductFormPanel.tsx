@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Product, ColorVariant, SizeOption } from "@/data/products";
 
@@ -15,12 +15,21 @@ const DEFAULT_SIZES: SizeOption[] = [
   { label: "XXL", inStock: false },
 ];
 
+const BRANDS = [
+  "Loro Piana", "Boss", "Hugo", "Polo", "Zegna",
+  "Armani Exchange", "Tommy Hilfiger", "Calvin Klein",
+  "Brunello Cucinelli", "Emporio Armani", "Lacoste",
+  "Brango", "Tony Montana", "Etro", "Tom Ford",
+  "DOLCE & GABBANA", "Zara", "Massimo Dutti", "Vaganza", "Moncler",
+];
+
 const CATEGORIES = [
-  { label: "Tops & Shirts", slug: "tops-shirts" },
-  { label: "Bottoms",       slug: "bottoms"     },
-  { label: "Outerwear",     slug: "outerwear"   },
-  { label: "Footwear",      slug: "footwear"    },
-  { label: "Accessories",   slug: "accessories" },
+  { label: "Tops & Shirts",          slug: "tops-shirts"          },
+  { label: "Knitwear & Layering",    slug: "knitwear-layering"    },
+  { label: "Jackets & Outerwear",    slug: "jackets-outerwear"    },
+  { label: "Pants & Jeans",          slug: "pants-jeans"          },
+  { label: "Underwear & Essentials", slug: "underwear-essentials" },
+  { label: "Sportswear & Shoes",     slug: "sportswear-shoes"     },
 ];
 
 function toSlug(name: string) {
@@ -53,11 +62,24 @@ type Props = {
 
 export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
   const isEdit = Boolean(product);
-  const [form, setForm]       = useState<Partial<Product>>(blankProduct());
-  const [hasPrice, setHasPrice] = useState(false);
-  const [saving, setSaving]   = useState(false);
-  const [error, setError]     = useState("");
+  const [form, setForm]           = useState<Partial<Product>>(blankProduct());
+  const [hasPrice, setHasPrice]   = useState(false);
+  const [saving, setSaving]       = useState(false);
+  const [error, setError]         = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
+  const [brandOpen, setBrandOpen]       = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const brandRef    = useRef<HTMLDivElement>(null);
+  const categoryRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (brandRef.current && !brandRef.current.contains(e.target as Node)) setBrandOpen(false);
+      if (categoryRef.current && !categoryRef.current.contains(e.target as Node)) setCategoryOpen(false);
+    }
+    if (brandOpen || categoryOpen) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [brandOpen, categoryOpen]);
 
   // Seed form when panel opens
   useEffect(() => {
@@ -154,7 +176,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
       description: form.description ?? "",
       image:       form.image!,
       isNew:       form.isNew ?? false,
-      price:       hasPrice ? (form.price ?? null) : null,
+      price:       form.price?.current?.trim() ? { original: hasPrice ? (form.price.original ?? "") : "", current: form.price.current } : null,
       colors:      (form.colors ?? []).map((c) => ({
         ...c,
         images: c.images[0] ? [c.images[0], c.images[0], c.images[0]] : [form.image!],
@@ -188,7 +210,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
 
           {/* Panel */}
           <motion.div
-            className="fixed right-0 top-0 z-60 flex h-dvh w-full flex-col bg-white shadow-[-4px_0_40px_rgba(95,77,57,0.1)] md:w-[560px]"
+            className="fixed right-0 top-0 z-60 flex h-dvh w-full flex-col bg-white shadow-[-4px_0_40px_rgba(95,77,57,0.1)] md:w-140"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
@@ -219,32 +241,130 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                     <FormField label="Product name" required>
                       <input className="input-field" value={form.name ?? ""} onChange={(e) => set("name", e.target.value)} placeholder="Oxford Button-Down Shirt" />
                     </FormField>
+                    <FormField label="Slug" required>
+                      <input
+                        className="input-field font-mono text-xs"
+                        value={form.slug ?? ""}
+                        onChange={(e) => { setSlugEdited(true); set("slug", e.target.value); }}
+                        placeholder="oxford-button-down-shirt"
+                      />
+                    </FormField>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="flex-1 min-w-0">
                     <FormField label="Brand" required>
-                      <input className="input-field" value={form.brand ?? ""} onChange={(e) => set("brand", e.target.value)} placeholder="Polo Ralph Lauren" />
+                      <div className="relative" ref={brandRef}>
+                        <button
+                          type="button"
+                          onClick={() => setBrandOpen((v) => !v)}
+                          className={`input-field flex items-center justify-between text-left ${!form.brand ? "text-foreground/30" : "text-foreground"}`}
+                        >
+                          <span>{form.brand || "Select brand…"}</span>
+                          <motion.svg
+                            animate={{ rotate: brandOpen ? 180 : 0 }}
+                            transition={{ duration: 0.2, ease }}
+                            width="12" height="12" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+                            className="shrink-0 text-foreground/40"
+                          >
+                            <polyline points="6 9 12 15 18 9" />
+                          </motion.svg>
+                        </button>
+
+                        <AnimatePresence>
+                          {brandOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                              transition={{ duration: 0.18, ease }}
+                              className="absolute left-0 top-full z-50 mt-1.5 w-full rounded-2xl border border-foreground/8 bg-white shadow-[0_12px_40px_rgba(95,77,57,0.12)]"
+                            >
+                              <div className="max-h-56 overflow-y-auto rounded-2xl p-1.5">
+                                {BRANDS.map((b) => (
+                                  <button
+                                    key={b}
+                                    type="button"
+                                    onClick={() => { set("brand", b); setBrandOpen(false); }}
+                                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-[12px] transition-colors duration-150 hover:bg-foreground/4 ${
+                                      form.brand === b ? "font-semibold text-foreground" : "text-foreground/70"
+                                    }`}
+                                  >
+                                    {b}
+                                    {form.brand === b && (
+                                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </FormField>
-                  </div>
-
-                  <FormField label="Slug" required>
-                    <input
-                      className="input-field font-mono text-xs"
-                      value={form.slug ?? ""}
-                      onChange={(e) => { setSlugEdited(true); set("slug", e.target.value); }}
-                      placeholder="oxford-button-down-shirt"
-                    />
-                  </FormField>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
+                    </div>
+                    <div className="flex-1 min-w-0">
                     <FormField label="Category">
-                      <select className="input-field" value={form.category ?? "tops-shirts"} onChange={(e) => set("category", e.target.value)}>
-                        {CATEGORIES.map((c) => (
-                          <option key={c.slug} value={c.slug}>{c.label}</option>
-                        ))}
-                      </select>
+                      <div className="relative" ref={categoryRef}>
+                        <button
+                          type="button"
+                          onClick={() => setCategoryOpen((v) => !v)}
+                          className="input-field flex items-center justify-between text-left text-foreground"
+                        >
+                          <span>{CATEGORIES.find((c) => c.slug === (form.category ?? "tops-shirts"))?.label ?? "Select…"}</span>
+                          <motion.svg
+                            animate={{ rotate: categoryOpen ? 180 : 0 }}
+                            transition={{ duration: 0.2, ease }}
+                            width="12" height="12" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+                            className="shrink-0 text-foreground/40"
+                          >
+                            <polyline points="6 9 12 15 18 9" />
+                          </motion.svg>
+                        </button>
+
+                        <AnimatePresence>
+                          {categoryOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                              transition={{ duration: 0.18, ease }}
+                              className="absolute left-0 top-full z-50 mt-1.5 w-full rounded-2xl border border-foreground/8 bg-white shadow-[0_12px_40px_rgba(95,77,57,0.12)]"
+                            >
+                              <div className="rounded-2xl p-1.5">
+                                {CATEGORIES.map((c) => (
+                                  <button
+                                    key={c.slug}
+                                    type="button"
+                                    onClick={() => { set("category", c.slug); setCategoryOpen(false); }}
+                                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-[12px] transition-colors duration-150 hover:bg-foreground/4 ${
+                                      (form.category ?? "tops-shirts") === c.slug ? "font-semibold text-foreground" : "text-foreground/70"
+                                    }`}
+                                  >
+                                    {c.label}
+                                    {(form.category ?? "tops-shirts") === c.slug && (
+                                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </FormField>
-                    <FormField label="Description">
-                      <input className="input-field" value={form.description ?? ""} onChange={(e) => set("description", e.target.value)} placeholder="Classic Oxford weave, slim fit" />
-                    </FormField>
+                    </div>
                   </div>
+
+                  <FormField label="Description">
+                    <input className="input-field" value={form.description ?? ""} onChange={(e) => set("description", e.target.value)} placeholder="Classic Oxford weave, slim fit" />
+                  </FormField>
 
                   {/* isNew toggle */}
                   <label className="flex cursor-pointer items-center gap-3">
@@ -253,9 +373,9 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                       role="switch"
                       aria-checked={form.isNew}
                       onClick={() => set("isNew", !form.isNew)}
-                      className={`relative h-5 w-9 rounded-full transition-colors duration-200 ${form.isNew ? "bg-foreground" : "bg-foreground/20"}`}
+                      className={`relative h-5 w-9 shrink-0 overflow-hidden rounded-full p-0 transition-colors duration-200 ${form.isNew ? "bg-foreground" : "bg-foreground/20"}`}
                     >
-                      <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${form.isNew ? "translate-x-4" : "translate-x-0.5"}`} />
+                      <span className={`absolute left-0 top-0.5 h-4 w-4 rounded-full bg-white transition-transform duration-200 ${form.isNew ? "translate-x-4.5" : "translate-x-0.5"}`} />
                     </button>
                     <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/55">
                       Mark as New In
@@ -267,41 +387,55 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
 
                 {/* ── Pricing ────────────────────────────────────── */}
                 <FormSection title="Pricing">
-                  <label className="flex cursor-pointer items-center gap-3">
+                  <FormField label="Price (MDL)">
+                    <input
+                      className="input-field"
+                      value={form.price?.current ?? ""}
+                      onChange={(e) => set("price", { original: form.price?.original ?? "", current: e.target.value })}
+                      placeholder="2 800 MDL"
+                    />
+                  </FormField>
+
+                  <label className="mt-4 flex cursor-pointer items-center gap-3">
                     <button
                       type="button"
                       role="switch"
                       aria-checked={hasPrice}
-                      onClick={() => setHasPrice((v) => !v)}
-                      className={`relative h-5 w-9 rounded-full transition-colors duration-200 ${hasPrice ? "bg-foreground" : "bg-foreground/20"}`}
+                      onClick={() => {
+                        setHasPrice((v) => !v);
+                        if (hasPrice) set("price", { original: "", current: form.price?.current ?? "" });
+                      }}
+                      className={`relative h-5 w-9 shrink-0 overflow-hidden rounded-full p-0 transition-colors duration-200 ${hasPrice ? "bg-foreground" : "bg-foreground/20"}`}
                     >
-                      <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${hasPrice ? "translate-x-4" : "translate-x-0.5"}`} />
+                      <span className={`absolute left-0 top-0.5 h-4 w-4 rounded-full bg-white transition-transform duration-200 ${hasPrice ? "translate-x-4.5" : "translate-x-0.5"}`} />
                     </button>
                     <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/55">
-                      Has a price
+                      On Sale
                     </span>
                   </label>
 
-                  {hasPrice && (
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <FormField label="Original price (MDL)">
-                        <input
-                          className="input-field"
-                          value={form.price?.original ?? ""}
-                          onChange={(e) => set("price", { original: e.target.value, current: form.price?.current ?? "" })}
-                          placeholder="3 500 MDL"
-                        />
-                      </FormField>
-                      <FormField label="Current price (MDL)">
-                        <input
-                          className="input-field"
-                          value={form.price?.current ?? ""}
-                          onChange={(e) => set("price", { original: form.price?.original ?? "", current: e.target.value })}
-                          placeholder="2 800 MDL"
-                        />
-                      </FormField>
-                    </div>
-                  )}
+                  <AnimatePresence>
+                    {hasPrice && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25, ease }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pt-4">
+                          <FormField label="Original price (MDL)">
+                            <input
+                              className="input-field"
+                              value={form.price?.original ?? ""}
+                              onChange={(e) => set("price", { original: e.target.value, current: form.price?.current ?? "" })}
+                              placeholder="3 500 MDL"
+                            />
+                          </FormField>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </FormSection>
 
                 <Divider />
