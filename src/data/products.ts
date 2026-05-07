@@ -31,5 +31,6 @@ export const categories = [
   { label: "Jackets & Outerwear",    slug: "jackets-outerwear"    },
   { label: "Pants & Jeans",          slug: "pants-jeans"          },
   { label: "Underwear & Essentials", slug: "underwear-essentials" },
-  { label: "Sportswear & Shoes",     slug: "sportswear-shoes"     },
+  { label: "Sportswear",             slug: "sportswear"           },
+  { label: "Shoes",                  slug: "shoes"                },
 ];

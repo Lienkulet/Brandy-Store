@@ -101,7 +101,9 @@ export function ShopContent({ initialCategory }: { initialCategory?: string }) {
     "DOLCE & GABBANA", "Zara", "Massimo Dutti", "Vaganza", "Moncler",
   ];
   const availableBrands = ALL_BRANDS;
-  const availableSizes  = [...new Set(categoryProducts.flatMap((p) => p.sizes.map((s) => s.label)))];
+  const availableSizes  = category === "shoes"
+    ? ["39", "40", "41", "42", "43", "44", "45", "46"]
+    : ["XS", "S", "M", "L", "XL", "XXL"];
   const availableColors = PALETTE;
 
   // Final filtered + sorted list

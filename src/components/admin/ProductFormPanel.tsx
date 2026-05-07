@@ -16,6 +16,17 @@ const DEFAULT_SIZES: SizeOption[] = [
   { label: "XXL", inStock: false },
 ];
 
+const SHOE_SIZES: SizeOption[] = [
+  { label: "39", inStock: false },
+  { label: "40", inStock: false },
+  { label: "41", inStock: false },
+  { label: "42", inStock: false },
+  { label: "43", inStock: false },
+  { label: "44", inStock: false },
+  { label: "45", inStock: false },
+  { label: "46", inStock: false },
+];
+
 const BRANDS = [
   "Loro Piana", "Boss", "Hugo", "Polo", "Zegna",
   "Armani Exchange", "Tommy Hilfiger", "Calvin Klein",
@@ -31,7 +42,8 @@ const CATEGORIES = [
   { label: "Jackets & Outerwear",    slug: "jackets-outerwear"    },
   { label: "Pants & Jeans",          slug: "pants-jeans"          },
   { label: "Underwear & Essentials", slug: "underwear-essentials" },
-  { label: "Sportswear & Shoes",     slug: "sportswear-shoes"     },
+  { label: "Sportswear",             slug: "sportswear"           },
+  { label: "Shoes",                  slug: "shoes"                },
 ];
 
 function toSlug(name: string) {
@@ -44,7 +56,7 @@ function blankProduct(): Partial<Product> {
     slug:        "",
     name:        "",
     brand:       "",
-    category:    "tops-shirts",
+    category: "tops-shirts",
     description: "",
     price:       null,
     image:       "",
@@ -109,6 +121,16 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
       setForm((f) => ({ ...f, slug: toSlug(f.name ?? "") }));
     }
   }, [form.name, slugEdited]);
+
+  // Swap size presets when category changes (only for new products)
+  useEffect(() => {
+    if (!isEdit) {
+      setForm((f) => ({
+        ...f,
+        sizes: (f.category === "shoes" ? SHOE_SIZES : DEFAULT_SIZES).map((s) => ({ ...s })),
+      }));
+    }
+  }, [form.category, isEdit]);
 
   function set<K extends keyof Product>(key: K, val: Product[K]) {
     setForm((f) => ({ ...f, [key]: val }));
