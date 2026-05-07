@@ -90,7 +90,7 @@ function ProductCard({ name, brand, description, image, price, href, isNew, quic
 
       {/* New badge */}
       {isNew && (
-        <div className="absolute left-7 top-7 z-20 rounded-full bg-foreground px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white">
+        <div className="absolute left-7 top-7 z-10 rounded-full bg-foreground px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white">
           New In
         </div>
       )}

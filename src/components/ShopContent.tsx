@@ -53,7 +53,7 @@ function applyFilters(list: Product[], filters: Filters): Product[] {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function ShopContent({ initialCategory }: { initialCategory?: string }) {
+export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: string; onlyNew?: boolean }) {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading]         = useState(true);
   const [category, setCategory]       = useState<string | null>(initialCategory ?? null);
@@ -66,7 +66,10 @@ export function ShopContent({ initialCategory }: { initialCategory?: string }) {
   useEffect(() => {
     fetch("/api/products")
       .then((r) => r.json())
-      .then((data) => setAllProducts(Array.isArray(data) ? data : []))
+      .then((data) => {
+        const list = Array.isArray(data) ? data : [];
+        setAllProducts(onlyNew ? list.filter((p) => p.isNew) : list);
+      })
       .catch(() => setAllProducts([]))
       .finally(() => setLoading(false));
   }, []);
@@ -141,7 +144,7 @@ export function ShopContent({ initialCategory }: { initialCategory?: string }) {
           transition={{ duration: 0.8, ease }}
         >
           <p className="font-serif text-4xl font-semibold uppercase tracking-[0.06em] sm:text-5xl">
-            Shop
+            {onlyNew ? "New Arrivals" : "Shop"}
           </p>
           <motion.div
             className="mx-auto mt-5 h-px bg-foreground/20"
@@ -155,7 +158,9 @@ export function ShopContent({ initialCategory }: { initialCategory?: string }) {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, ease, delay: 0.4 }}
           >
-            Carefully selected menswear from the world&apos;s finest houses.
+            {onlyNew
+              ? "The latest additions to our collection."
+              : "Carefully selected menswear from the world’s finest houses."}
           </motion.p>
         </motion.div>
 
