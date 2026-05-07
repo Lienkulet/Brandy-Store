@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Container from "./layout/Container";
 import ProductCard from "./cards/ProductCard";
 import { categories, type Product } from "../data/products";
+import { PALETTE } from "../data/colors";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -101,18 +102,7 @@ export function ShopContent({ initialCategory }: { initialCategory?: string }) {
   ];
   const availableBrands = ALL_BRANDS;
   const availableSizes  = [...new Set(categoryProducts.flatMap((p) => p.sizes.map((s) => s.label)))];
-  const COLOR_PRIORITY: Record<string, number> = { White: 0, Black: 1 };
-  const availableColors = [
-    ...new Map(
-      categoryProducts.flatMap((p) => p.colors.map((c) => [c.name, c.hex] as [string, string]))
-    ).entries(),
-  ]
-    .map(([name, hex]) => ({ name, hex }))
-    .sort((a, b) => {
-      const ap = COLOR_PRIORITY[a.name] ?? 2;
-      const bp = COLOR_PRIORITY[b.name] ?? 2;
-      return ap !== bp ? ap - bp : a.name.localeCompare(b.name);
-    });
+  const availableColors = PALETTE;
 
   // Final filtered + sorted list
   const visible = applySort(applyFilters(categoryProducts, filters), sort);

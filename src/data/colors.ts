@@ -1,0 +1,18 @@
+export const PALETTE = [
+  { name: "White",        hex: "#FFFFFF" },
+  { name: "Off-White",    hex: "#F5F0E8" },
+  { name: "Light Grey",   hex: "#D1CEC9" },
+  { name: "Grey",         hex: "#9B9894" },
+  { name: "Charcoal",     hex: "#4A4845" },
+  { name: "Black",        hex: "#1A1A1A" },
+  { name: "Navy",         hex: "#1B2A4A" },
+  { name: "Royal Blue",   hex: "#2B5FA6" },
+  { name: "Sky Blue",     hex: "#7BAFD4" },
+  { name: "Beige",        hex: "#E8D9C0" },
+  { name: "Camel",        hex: "#C8A97E" },
+  { name: "Brown",        hex: "#6B4A2E" },
+  { name: "Burgundy",     hex: "#7A1F2E" },
+  { name: "Red",          hex: "#C0392B" },
+  { name: "Forest Green", hex: "#2D4A35" },
+  { name: "Olive",        hex: "#6B6B35" },
+];

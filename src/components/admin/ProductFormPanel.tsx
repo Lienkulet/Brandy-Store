@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Product, ColorVariant, SizeOption } from "@/data/products";
+import { PALETTE } from "@/data/colors";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -22,6 +23,7 @@ const BRANDS = [
   "Brango", "Tony Montana", "Etro", "Tom Ford",
   "DOLCE & GABBANA", "Zara", "Massimo Dutti", "Vaganza", "Moncler",
 ];
+
 
 const CATEGORIES = [
   { label: "Tops & Shirts",          slug: "tops-shirts"          },
@@ -47,7 +49,7 @@ function blankProduct(): Partial<Product> {
     price:       null,
     image:       "",
     isNew:       false,
-    colors:      [{ name: "", hex: "#c8b89a", images: [""] }],
+    colors:      [{ name: "White", hex: "#FFFFFF", images: [""] }],
     sizes:       DEFAULT_SIZES.map((s) => ({ ...s })),
     details:     [""],
   };
@@ -67,19 +69,22 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
   const [saving, setSaving]       = useState(false);
   const [error, setError]         = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
-  const [brandOpen, setBrandOpen]       = useState(false);
-  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [brandOpen, setBrandOpen]             = useState(false);
+  const [categoryOpen, setCategoryOpen]       = useState(false);
+  const [colorPaletteOpen, setColorPaletteOpen] = useState<number | null>(null);
   const brandRef    = useRef<HTMLDivElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
+  const paletteRef  = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (brandRef.current && !brandRef.current.contains(e.target as Node)) setBrandOpen(false);
       if (categoryRef.current && !categoryRef.current.contains(e.target as Node)) setCategoryOpen(false);
+      if (paletteRef.current && !paletteRef.current.contains(e.target as Node)) setColorPaletteOpen(null);
     }
-    if (brandOpen || categoryOpen) document.addEventListener("mousedown", handleClick);
+    if (brandOpen || categoryOpen || colorPaletteOpen !== null) document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [brandOpen, categoryOpen]);
+  }, [brandOpen, categoryOpen, colorPaletteOpen]);
 
   // Seed form when panel opens
   useEffect(() => {
@@ -94,6 +99,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
         setSlugEdited(false);
       }
       setError("");
+      setSaving(false);
     }
   }, [open, product]);
 
@@ -133,7 +139,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
   function addColor() {
     setForm((f) => ({
       ...f,
-      colors: [...(f.colors ?? []), { name: "", hex: "#c8b89a", images: [""] }],
+      colors: [...(f.colors ?? []), { name: "White", hex: "#FFFFFF", images: [""] }],
     }));
   }
   function removeColor(i: number) {
@@ -188,6 +194,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
     setSaving(true);
     try {
       await onSave(payload);
+      setSaving(false);
     } catch {
       setError("Failed to save. Please try again.");
       setSaving(false);
@@ -480,36 +487,63 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
 
                 {/* ── Colours ─────────────────────────────────────── */}
                 <FormSection title="Colours">
-                  <div className="space-y-3">
+                  <div className="space-y-3" ref={paletteRef}>
                     {(form.colors ?? []).map((c, i) => (
                       <div key={i} className="flex items-start gap-3 rounded-xl border border-foreground/8 p-3">
-                        {/* Hex picker */}
-                        <div className="relative mt-1 h-8 w-8 shrink-0 overflow-hidden rounded-full border border-foreground/15">
-                          <span className="absolute inset-0 rounded-full" style={{ backgroundColor: c.hex }} />
-                          <input
-                            type="color"
-                            value={c.hex}
-                            onChange={(e) => setColor(i, "hex", e.target.value)}
-                            className="absolute inset-0 cursor-pointer opacity-0"
+                        {/* Swatch picker */}
+                        <div className="relative mt-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setColorPaletteOpen(colorPaletteOpen === i ? null : i)}
+                            className="h-8 w-8 rounded-full border border-foreground/20 shadow-sm transition-transform duration-150 hover:scale-110"
+                            style={{ backgroundColor: c.hex }}
                             title="Pick colour"
                           />
+                          <AnimatePresence>
+                            {colorPaletteOpen === i && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                                transition={{ duration: 0.18, ease }}
+                                className="absolute left-0 top-full z-50 mt-2 rounded-2xl border border-foreground/8 bg-white p-3 shadow-[0_12px_40px_rgba(95,77,57,0.14)]"
+                                style={{ minWidth: "11rem" }}
+                              >
+                                <p className="mb-2.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-foreground/35">
+                                  Colour palette
+                                </p>
+                                <div className="grid grid-cols-4 gap-2">
+                                  {PALETTE.map((p) => (
+                                    <button
+                                      key={p.name}
+                                      type="button"
+                                      title={p.name}
+                                      onClick={() => {
+                                        setColor(i, "hex", p.hex);
+                                        setColor(i, "name", p.name);
+                                        setColorPaletteOpen(null);
+                                      }}
+                                      className={`h-7 w-7 rounded-full border transition-transform duration-100 hover:scale-110 ${
+                                        c.hex === p.hex
+                                          ? "border-foreground ring-2 ring-foreground ring-offset-1"
+                                          : "border-black/10"
+                                      }`}
+                                      style={{ backgroundColor: p.hex }}
+                                    />
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
 
-                        <div className="flex-1 space-y-2">
-                          <div className="grid gap-2 sm:grid-cols-2">
-                            <input
-                              className="input-field"
-                              value={c.name}
-                              onChange={(e) => setColor(i, "name", e.target.value)}
-                              placeholder="Colour name (e.g. Navy)"
-                            />
-                            <input
-                              className="input-field"
-                              value={c.images[0] ?? ""}
-                              onChange={(e) => setColor(i, "images", e.target.value)}
-                              placeholder="Image URL for this colour"
-                            />
-                          </div>
+                        <div className="flex-1">
+                          <input
+                            className="input-field bg-foreground/3 text-foreground/60"
+                            value={c.name}
+                            readOnly
+                            placeholder="Select a colour"
+                          />
                         </div>
 
                         {(form.colors ?? []).length > 1 && (

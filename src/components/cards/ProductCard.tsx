@@ -204,6 +204,19 @@ function ProductCard({ name, brand, description, image, price, href, isNew, quic
         </h2>
         <p className="mt-1 text-sm text-muted">{description}</p>
 
+        {inStockSizes.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1">
+            {inStockSizes.map((s) => (
+              <span
+                key={s.label}
+                className="rounded-md border border-foreground/12 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-foreground/45"
+              >
+                {s.label}
+              </span>
+            ))}
+          </div>
+        )}
+
         {price ? (
           <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-foreground sm:text-base">
             <span className="text-foreground/45 line-through">{price.original}</span>
