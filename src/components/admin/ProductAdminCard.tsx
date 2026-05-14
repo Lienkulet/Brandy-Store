@@ -86,7 +86,7 @@ export function ProductAdminCard({ product, index, onEdit, onDelete }: Props) {
 
         <div className="mt-3 flex items-center justify-between">
           <p className="text-sm font-semibold text-foreground">
-            {product.price ? product.price.current : "On request"}
+            {product.price ? `${product.price.current} MDL` : "On request"}
           </p>
           <Link
             href={`/product/${product.slug}`}
