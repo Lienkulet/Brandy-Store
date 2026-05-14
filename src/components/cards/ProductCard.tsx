@@ -79,7 +79,7 @@ function ProductCard({ name, brand, description, image, price, href, isNew, quic
 
   return (
     <motion.article
-      className="soft-card group relative overflow-hidden rounded-2xl p-3 sm:p-3"
+      className="soft-card group relative flex h-full flex-col overflow-hidden rounded-2xl"
       transition={{ duration: 0.35, ease }}
       style={{ boxShadow: "0 18px 40px rgba(95, 77, 57, 0.08)" }}
     >
@@ -90,15 +90,15 @@ function ProductCard({ name, brand, description, image, price, href, isNew, quic
 
       {/* New badge */}
       {isNew && (
-        <div className="absolute left-7 top-7 z-10 rounded-full bg-foreground px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white">
+        <div className="absolute left-3 top-3 z-10 rounded-full bg-foreground px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white">
           New In
         </div>
       )}
 
       {/* Image */}
-      <div className="relative overflow-hidden rounded-2xl bg-[#f7f4f0]">
+      <div className="relative aspect-4/5 shrink-0 overflow-hidden bg-[#f7f4f0]">
         <motion.div
-          className="will-change-transform"
+          className="h-full w-full will-change-transform"
           whileHover={{ scale: 1.05 }}
           transition={{ duration: 0.55, ease }}
         >
@@ -107,7 +107,7 @@ function ProductCard({ name, brand, description, image, price, href, isNew, quic
             alt={name}
             width={214}
             height={260}
-            className="h-65 w-full object-cover"
+            className="h-full w-full object-cover"
           />
         </motion.div>
 
@@ -193,19 +193,19 @@ function ProductCard({ name, brand, description, image, price, href, isNew, quic
       </div>
 
       {/* Details */}
-      <div className="px-1 pb-1 pt-4">
+      <div className="flex flex-1 flex-col p-4">
         {brand && (
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/40">
+          <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/40">
             {brand}
           </p>
         )}
-        <h2 className="font-serif text-xl font-semibold leading-tight text-foreground">
+        <h2 className="truncate font-serif text-xl font-semibold leading-tight text-foreground">
           {name}
         </h2>
-        <p className="mt-1 text-sm text-muted">{description}</p>
+        <p className="mt-0.5 line-clamp-2 min-h-9 text-sm leading-snug text-muted">{description}</p>
 
         {inStockSizes.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1">
+          <div className="mt-2 flex max-h-6 min-h-6 flex-wrap gap-1 overflow-hidden">
             {inStockSizes.map((s) => (
               <span
                 key={s.label}
@@ -218,12 +218,12 @@ function ProductCard({ name, brand, description, image, price, href, isNew, quic
         )}
 
         {price ? (
-          <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-foreground sm:text-base">
+          <p className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 pt-3 text-sm font-semibold text-foreground sm:text-base">
             <span className="text-foreground/45 line-through">{price.original}MDL</span>
             <span>{price.current}MDL</span>
           </p>
         ) : (
-          <div className="mt-4 h-6" aria-hidden="true" />
+          <div className="mt-auto h-10" aria-hidden="true" />
         )}
       </div>
     </motion.article>
