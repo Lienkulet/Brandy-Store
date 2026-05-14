@@ -11,11 +11,22 @@ type Props = {
   index:   number;
   onEdit:   (p: Product) => void;
   onDelete: (p: Product) => void;
+  onMarkOutOfStock: (p: Product) => void;
+  markingOutOfStock?: boolean;
 };
 
-export function ProductAdminCard({ product, index, onEdit, onDelete }: Props) {
+export function ProductAdminCard({
+  product,
+  index,
+  onEdit,
+  onDelete,
+  onMarkOutOfStock,
+  markingOutOfStock = false,
+}: Props) {
   const allOut     = product.sizes.every((s) => !s.inStock);
   const stockCount = product.sizes.filter((s) => s.inStock).length;
+  const isOnSale   = Boolean(product.price?.original.trim());
+  const isSizeFree = product.category === "accessories";
 
   return (
     <motion.div
@@ -33,17 +44,35 @@ export function ProductAdminCard({ product, index, onEdit, onDelete }: Props) {
         <div className={`absolute right-3 top-3 rounded-full border px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] ${
           allOut ? "border-red-200 bg-red-50 text-red-500" : "border-green-200 bg-green-50 text-green-700"
         }`}>
-          {allOut ? "Out of stock" : `${stockCount} size${stockCount > 1 ? "s" : ""}`}
+          {allOut ? "Out of stock" : isSizeFree ? "In stock" : `${stockCount} size${stockCount > 1 ? "s" : ""}`}
         </div>
 
-        {product.isNew && (
-          <div className="absolute left-3 top-3 rounded-full bg-foreground px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-white">
-            New
+        {(product.isNew || isOnSale) && (
+          <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+            {product.isNew && (
+              <div className="rounded-full bg-foreground px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-white">
+                New
+              </div>
+            )}
+            {isOnSale && (
+              <div className="rounded-full bg-red-500 px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-white">
+                Sale
+              </div>
+            )}
           </div>
         )}
 
         {/* Edit / delete overlay */}
-        <div className="absolute inset-0 flex items-center justify-center gap-2 bg-foreground/40 opacity-0 backdrop-blur-[2px] transition-opacity duration-200 group-hover:opacity-100">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-foreground/40 opacity-0 backdrop-blur-[2px] transition-opacity duration-200 group-hover:opacity-100">
+          <button
+            onClick={() => onMarkOutOfStock(product)}
+            disabled={allOut || markingOutOfStock}
+            className="cursor-pointer rounded-full bg-white px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-55 hover:bg-foreground hover:text-white!"
+            title="Mark out of stock"
+          >
+            {markingOutOfStock ? "Saving..." : allOut ? "Out of stock" : "Mark out of stock"}
+          </button>
+          <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => onEdit(product)}
             className="cursor-pointer flex h-9 w-9 items-center justify-center rounded-full bg-white text-foreground transition-colors hover:bg-foreground hover:text-white!"
@@ -66,6 +95,7 @@ export function ProductAdminCard({ product, index, onEdit, onDelete }: Props) {
               <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
             </svg>
           </button>
+          </div>
         </div>
       </div>
 
@@ -74,15 +104,17 @@ export function ProductAdminCard({ product, index, onEdit, onDelete }: Props) {
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/40">{product.brand}</p>
         <p className="mt-0.5 truncate text-sm font-semibold text-foreground">{product.name}</p>
 
-        <div className="mt-3 flex flex-wrap gap-1">
-          {product.sizes.map((s) => (
-            <span key={s.label} className={`rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest ${
-              s.inStock ? "border-foreground/15 text-foreground/60" : "border-foreground/8 text-foreground/25 line-through"
-            }`}>
-              {s.label}
-            </span>
-          ))}
-        </div>
+        {!isSizeFree && (
+          <div className="mt-3 flex flex-wrap gap-1">
+            {product.sizes.map((s) => (
+              <span key={s.label} className={`rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest ${
+                s.inStock ? "border-foreground/15 text-foreground/60" : "border-foreground/8 text-foreground/25 line-through"
+              }`}>
+                {s.label}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="mt-3 flex items-center justify-between">
           <p className="text-sm font-semibold text-foreground">

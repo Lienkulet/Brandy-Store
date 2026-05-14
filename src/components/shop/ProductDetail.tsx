@@ -22,6 +22,8 @@ export function ProductDetail({ product }: { product: Product }) {
   const color  = product.colors[colorIdx];
   const images = color.images;
   const sizes  = color.sizes?.length ? color.sizes : product.sizes;
+  const isOnSale = Boolean(product.price?.original.trim());
+  const isSizeFree = product.category === "accessories";
 
   // Flat slider: all colours in fixed order, never reordered
   const sliderImages = product.colors.flatMap((c, ci) =>
@@ -35,6 +37,12 @@ export function ProductDetail({ product }: { product: Product }) {
   const stripRef = useRef<HTMLDivElement>(null);
   const [lightbox, setLightbox] = useState(false);
 
+  function navigateLightbox(dir: 1 | -1) {
+    const next = sliderImages[(activeFlatIdx + dir + sliderImages.length) % sliderImages.length];
+    setColorIdx(next.colorIdx);
+    setImageIdx(next.imgIdx);
+  }
+
   // Close lightbox on Escape, navigate with arrow keys
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -46,18 +54,12 @@ export function ProductDetail({ product }: { product: Product }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [lightbox, activeFlatIdx]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function navigateLightbox(dir: 1 | -1) {
-    const next = sliderImages[(activeFlatIdx + dir + sliderImages.length) % sliderImages.length];
-    setColorIdx(next.colorIdx);
-    setImageIdx(next.imgIdx);
-  }
-
   // Scroll active thumbnail into view when it changes
   useEffect(() => {
     const strip = stripRef.current;
     if (!strip) return;
     const thumb = strip.children[activeFlatIdx] as HTMLElement | undefined;
-    thumb?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    thumb?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
   }, [activeFlatIdx]);
 
   function handleColorChange(idx: number) {
@@ -67,17 +69,18 @@ export function ProductDetail({ product }: { product: Product }) {
   }
 
   function handleAddToBag() {
-    if (!selectedSize) {
+    if (!isSizeFree && !selectedSize) {
       setSizeError(true);
       setTimeout(() => setSizeError(false), 2000);
       return;
     }
+    const itemSize = isSizeFree ? "One Size" : selectedSize!;
     addItem({
-      id:        `${product.id}-${color.name}-${selectedSize}`,
+      id:        `${product.id}-${color.name}-${itemSize}`,
       productId: product.id,
       name:      product.name,
       brand:     product.brand,
-      size:      selectedSize,
+      size:      itemSize,
       color:     color.name,
       price:     product.price?.current ?? "Price on request",
       image:     color.images[0],
@@ -86,7 +89,7 @@ export function ProductDetail({ product }: { product: Product }) {
     setTimeout(() => setCartState("idle"), 2500);
   }
 
-  const allSizesOut = sizes.every((s) => !s.inStock);
+  const allSizesOut = sizes.length > 0 && sizes.every((s) => !s.inStock);
 
   return (
     <>
@@ -97,72 +100,76 @@ export function ProductDetail({ product }: { product: Product }) {
           {/* ── Left: Image Gallery ─────────────────────────────── */}
           <div className="lg:sticky lg:top-28 lg:self-start">
 
-            {/* Main image */}
-            <div
-              className="relative w-full h-[75vh] rounded-2xl overflow-hidden cursor-zoom-in"
-              onClick={() => setLightbox(true)}
-            >
-              {product.isNew && (
-                <div className="absolute left-5 top-5 z-10 rounded-full bg-foreground px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white">
-                  New In
+            <div className="flex items-start gap-3">
+              {/* Main image */}
+              <div
+                className="relative min-w-0 flex-1 cursor-zoom-in overflow-hidden rounded-2xl bg-[#f7f4f0]"
+                onClick={() => setLightbox(true)}
+              >
+                {product.isNew && (
+                  <div className="absolute left-5 top-5 z-10 rounded-full bg-foreground px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white">
+                    New In
+                  </div>
+                )}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`${colorIdx}-${imageIdx}`}
+                    className="relative w-full rounded-2xl bg-[#f7f4f0]"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3, ease }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={images[imageIdx]}
+                      alt={`${product.name} - ${color.name}`}
+                      className="h-auto w-full object-contain"
+                    />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Thumbnail strip */}
+              {sliderImages.length > 1 && (
+                <div
+                  ref={stripRef}
+                  className="flex max-h-[88vh] w-18 shrink-0 flex-col gap-2 overflow-y-auto px-1 py-1 scrollbar-none"
+                >
+                  {sliderImages.map((item, fi) => {
+                    const isActive = fi === activeFlatIdx;
+                    const isSameColor = item.colorIdx === colorIdx;
+                    return (
+                      <button
+                        key={fi}
+                        onClick={() => { setColorIdx(item.colorIdx); setImageIdx(item.imgIdx); setSize(null); }}
+                        className={`relative cursor-pointer shrink-0 overflow-hidden rounded-xl bg-[#f7f4f0] transition-all duration-200 ${
+                          isActive
+                            ? "ring-2 ring-foreground ring-offset-2"
+                            : isSameColor
+                            ? "opacity-70 hover:opacity-100"
+                            : "opacity-35 hover:opacity-60"
+                        }`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={item.src}
+                          alt=""
+                          className="h-20 w-16 object-cover"
+                        />
+                        {/* Color dot for other-colour thumbnails */}
+                        {!isSameColor && (
+                          <span
+                            className="absolute bottom-1.5 right-1.5 h-2.5 w-2.5 rounded-full border border-white/60 shadow-sm"
+                            style={{ backgroundColor: product.colors[item.colorIdx].hex }}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={`${colorIdx}-${imageIdx}`}
-                  className="absolute inset-0 rounded-2xl bg-[#f7f4f0] bg-no-repeat"
-                  style={{
-                    backgroundImage: `url(${images[imageIdx]})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "top center",
-                  }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3, ease }}
-                />
-              </AnimatePresence>
             </div>
-
-            {/* Thumbnail strip */}
-            {sliderImages.length > 1 && (
-              <div
-                ref={stripRef}
-                className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-none"
-              >
-                {sliderImages.map((item, fi) => {
-                  const isActive = fi === activeFlatIdx;
-                  const isSameColor = item.colorIdx === colorIdx;
-                  return (
-                    <button
-                      key={fi}
-                      onClick={() => { setColorIdx(item.colorIdx); setImageIdx(item.imgIdx); setSize(null); }}
-                      className={`relative cursor-pointer shrink-0 overflow-hidden rounded-xl bg-[#f7f4f0] transition-all duration-200 ${
-                        isActive
-                          ? "ring-2 ring-foreground ring-offset-2"
-                          : isSameColor
-                          ? "opacity-70 hover:opacity-100"
-                          : "opacity-35 hover:opacity-60"
-                      }`}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={item.src}
-                        alt=""
-                        className="h-20 w-16 object-cover"
-                      />
-                      {/* Color dot for other-colour thumbnails */}
-                      {!isSameColor && (
-                        <span
-                          className="absolute bottom-1.5 right-1.5 h-2.5 w-2.5 rounded-full border border-white/60 shadow-sm"
-                          style={{ backgroundColor: product.colors[item.colorIdx].hex }}
-                        />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </div>
 
           {/* ── Right: Product Info ─────────────────────────────── */}
@@ -197,9 +204,11 @@ export function ProductDetail({ product }: { product: Product }) {
                   <span className="font-serif text-2xl font-semibold text-foreground">
                     {product.price.current} MDL
                   </span>
-                  <span className="text-base text-foreground/40 line-through">
-                    {product.price.original} MDL
-                  </span>
+                  {isOnSale && (
+                    <span className="text-base text-foreground/40 line-through">
+                      {product.price.original} MDL
+                    </span>
+                  )}
                 </div>
               ) : (
                 <p className="font-serif text-2xl font-semibold text-foreground">
@@ -242,6 +251,7 @@ export function ProductDetail({ product }: { product: Product }) {
             </div>
 
             {/* Size selector */}
+            {!isSizeFree && (
             <div className="mb-7">
               <div className="mb-3 flex items-baseline justify-between">
                 <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors duration-300 ${
@@ -302,6 +312,17 @@ export function ProductDetail({ product }: { product: Product }) {
                 </p>
               )}
             </div>
+            )}
+
+            {isSizeFree && allSizesOut && (
+              <p className="mb-7 text-xs text-muted">
+                This item is currently out of stock.{" "}
+                <Link href="/contact" className="underline underline-offset-2 hover:text-foreground transition-colors duration-200">
+                  Contact us
+                </Link>{" "}
+                to be notified when it returns.
+              </p>
+            )}
 
             {/* Add to bag */}
             <motion.button

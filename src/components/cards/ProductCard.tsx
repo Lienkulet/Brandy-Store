@@ -27,22 +27,27 @@ type ProductCardProps = {
   href?:       string;
   isNew?:      boolean;
   quickAdd?:   QuickAddData;
+  sizeFree?:   boolean;
 };
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 type Step = "idle" | "sizes" | "added";
 
-function ProductCard({ name, brand, description, image, price, href, isNew, quickAdd }: ProductCardProps) {
+function ProductCard({ name, brand, image, price, href, isNew, quickAdd, sizeFree = false }: ProductCardProps) {
   const [step, setStep] = useState<Step>("idle");
   const { addItem } = useCart();
 
   const inStockSizes = quickAdd?.sizes.filter((s) => s.inStock) ?? [];
+  const isOnSale = Boolean(price?.original.trim());
+  const isOutOfStock = Boolean(quickAdd && inStockSizes.length === 0);
 
   function handleQuickAdd(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (inStockSizes.length === 1) {
+    if (sizeFree) {
+      addAndConfirm("One Size");
+    } else if (inStockSizes.length === 1) {
       addAndConfirm(inStockSizes[0].label);
     } else {
       setStep("sizes");
@@ -88,10 +93,24 @@ function ProductCard({ name, brand, description, image, price, href, isNew, quic
         <Link href={href} className="absolute inset-0 z-10" aria-label={name} />
       )}
 
-      {/* New badge */}
-      {isNew && (
-        <div className="absolute left-3 top-3 z-10 rounded-full bg-foreground px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white">
-          New In
+      {/* Badges */}
+      {(isNew || isOnSale || isOutOfStock) && (
+        <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-1.5">
+          {isNew && (
+            <div className="rounded-full bg-foreground px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white">
+              New In
+            </div>
+          )}
+          {isOnSale && (
+            <div className="rounded-full bg-red-500 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white">
+              Sale
+            </div>
+          )}
+          {isOutOfStock && (
+            <div className="rounded-full bg-white/90 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-foreground/60 backdrop-blur-sm">
+              Out of stock
+            </div>
+          )}
         </div>
       )}
 
@@ -202,24 +221,28 @@ function ProductCard({ name, brand, description, image, price, href, isNew, quic
         <h2 className="truncate font-serif text-xl font-semibold leading-tight text-foreground">
           {name}
         </h2>
-        <p className="mt-0.5 line-clamp-2 min-h-9 text-sm leading-snug text-muted">{description}</p>
-
-        {inStockSizes.length > 0 && (
-          <div className="mt-2 flex max-h-6 min-h-6 flex-wrap gap-1 overflow-hidden">
-            {inStockSizes.map((s) => (
+        <div className="mt-1.5 flex max-h-6 min-h-6 flex-wrap items-center gap-1 overflow-hidden justify-start">
+          {sizeFree && inStockSizes.length > 0 ? null : inStockSizes.length > 0 ? (
+            inStockSizes.map((s) => (
               <span
                 key={s.label}
                 className="rounded-md border border-foreground/12 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-foreground/45"
               >
                 {s.label}
               </span>
-            ))}
-          </div>
-        )}
+            ))
+          ) : (
+            <span className="text-start rounded-md border border-foreground/8 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-foreground/30">
+              Out of stock
+            </span>
+          )}
+        </div>
 
         {price ? (
           <p className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 pt-3 text-sm font-semibold text-foreground sm:text-base">
-            <span className="text-foreground/45 line-through">{price.original}MDL</span>
+            {isOnSale && (
+              <span className="text-foreground/45 line-through">{price.original}MDL</span>
+            )}
             <span>{price.current}MDL</span>
           </p>
         ) : (

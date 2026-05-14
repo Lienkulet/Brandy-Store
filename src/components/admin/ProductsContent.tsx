@@ -17,6 +17,7 @@ export function ProductsContent() {
 
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting]         = useState(false);
+  const [markingOutStockId, setMarkingOutStockId] = useState<string | null>(null);
 
   async function fetchProducts() {
     setLoading(true);
@@ -56,6 +57,30 @@ export function ProductsContent() {
     await fetchProducts();
     setDeleteTarget(null);
     setDeleting(false);
+  }
+
+  async function handleMarkOutOfStock(product: Product) {
+    setMarkingOutStockId(product.id);
+    const outOfStockSizes = product.sizes.map((size) => ({ ...size, inStock: false }));
+    const updated: Product = {
+      ...product,
+      sizes: outOfStockSizes,
+      colors: product.colors.map((color) => ({
+        ...color,
+        sizes: (color.sizes ?? product.sizes).map((size) => ({ ...size, inStock: false })),
+      })),
+    };
+
+    try {
+      const res = await fetch(`/api/products/${product.id}`, {
+        method:  "PUT",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(updated),
+      });
+      if (res.ok) await fetchProducts();
+    } finally {
+      setMarkingOutStockId(null);
+    }
   }
 
   function openCreate() { setEditing(null); setPanelOpen(true); }
@@ -98,6 +123,8 @@ export function ProductsContent() {
               index={i}
               onEdit={openEdit}
               onDelete={setDeleteTarget}
+              onMarkOutOfStock={handleMarkOutOfStock}
+              markingOutOfStock={markingOutStockId === product.id}
             />
           ))}
         </div>

@@ -164,7 +164,7 @@ function CartItemList({ items }: { items: CartItem[] }) {
                   {item.name}
                 </p>
                 <p className="mt-1 text-[11px] text-muted">
-                  {item.color} · {item.size}
+                  {item.size === "One Size" ? item.color : `${item.color} · ${item.size}`}
                 </p>
               </div>
 

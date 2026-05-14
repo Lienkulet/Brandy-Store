@@ -235,7 +235,9 @@ function OrderRow({
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[11px] font-semibold text-foreground">{item.name}</p>
-                      <p className="text-[10px] text-muted">{item.color} · {item.size} · Qty {item.quantity}</p>
+                      <p className="text-[10px] text-muted">
+                        {item.size === "One Size" ? item.color : `${item.color} · ${item.size}`} · Qty {item.quantity}
+                      </p>
                     </div>
                     <p className="text-[11px] font-semibold text-foreground">{item.price}</p>
                   </li>

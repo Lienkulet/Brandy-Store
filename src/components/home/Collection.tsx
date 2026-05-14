@@ -69,6 +69,7 @@ function Collection() {
               price={product.price}
               href={`/product/${product.slug}`}
               isNew={product.isNew}
+              sizeFree={product.category === "accessories"}
               quickAdd={{
                 productId: product.id,
                 colorName: product.colors[0]?.name ?? "",

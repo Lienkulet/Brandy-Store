@@ -335,7 +335,9 @@ function OrderItem({ item }: { item: CartItem }) {
             {item.brand}
           </p>
           <p className="truncate text-sm font-semibold text-foreground">{item.name}</p>
-          <p className="text-[11px] text-muted">{item.color} · {item.size}</p>
+          <p className="text-[11px] text-muted">
+            {item.size === "One Size" ? item.color : `${item.color} · ${item.size}`}
+          </p>
         </div>
         <div className="flex items-end justify-between">
           <p className="text-[11px] text-muted">Qty {item.quantity}</p>

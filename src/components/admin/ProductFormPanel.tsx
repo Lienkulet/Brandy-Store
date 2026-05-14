@@ -27,6 +27,20 @@ const SHOE_SIZES: SizeOption[] = [
   { label: "46", inStock: true },
 ];
 
+const WAIST_SIZES: SizeOption[] = [
+  { label: "30", inStock: true },
+  { label: "31", inStock: true },
+  { label: "32", inStock: true },
+  { label: "33", inStock: true },
+  { label: "34", inStock: true },
+  { label: "36", inStock: true },
+  { label: "38", inStock: true },
+];
+
+const ACCESSORY_SIZES: SizeOption[] = [
+  { label: "One Size", inStock: true },
+];
+
 const BRANDS = [
   "Loro Piana", "Boss", "Hugo", "Polo", "Zegna",
   "Armani Exchange", "Tommy Hilfiger", "Calvin Klein",
@@ -49,7 +63,16 @@ const CATEGORIES = [
 ];
 
 function sizesForCategory(category?: string): SizeOption[] {
-  return (category === "shoes" ? SHOE_SIZES : DEFAULT_SIZES).map((s) => ({ ...s }));
+  if (category === "shoes") return SHOE_SIZES.map((s) => ({ ...s }));
+  if (category === "accessories") return ACCESSORY_SIZES.map((s) => ({ ...s }));
+  if (category === "pants-jeans" || category === "shorts") {
+    return WAIST_SIZES.map((s) => ({ ...s }));
+  }
+  return DEFAULT_SIZES.map((s) => ({ ...s }));
+}
+
+function categoryLabelForSlug(slug?: string) {
+  return CATEGORIES.find((c) => c.slug === (slug ?? "tops-shirts"))?.label ?? "";
 }
 
 function toSlug(name: string) {
@@ -93,6 +116,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
   const [saving, setSaving]         = useState(false);
   const [error, setError]           = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
+  const [categoryQuery, setCategoryQuery] = useState(categoryLabelForSlug("tops-shirts"));
 
   // Active colour tab
   const [activeColor, setActiveColor] = useState(0);
@@ -116,6 +140,15 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
   const brandRef    = useRef<HTMLDivElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
   const paletteRef  = useRef<HTMLDivElement>(null);
+  const brandSearch = (form.brand ?? "").trim().toLowerCase();
+  const filteredBrands = BRANDS.filter((brand) =>
+    brand.toLowerCase().includes(brandSearch)
+  );
+  const categorySearch = categoryQuery.trim().toLowerCase();
+  const filteredCategories = CATEGORIES.filter((category) =>
+    category.label.toLowerCase().includes(categorySearch) ||
+    category.slug.toLowerCase().includes(categorySearch)
+  );
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -138,11 +171,13 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
           sizes:  c.sizes?.length  ? [...c.sizes] : (product.sizes ?? DEFAULT_SIZES).map((s) => ({ ...s })),
         }));
         setForm({ ...structuredClone(product), colors });
-        setHasPrice(product.price !== null);
+        setCategoryQuery(categoryLabelForSlug(product.category));
+        setHasPrice(Boolean(product.price?.original?.trim()));
         setSlugEdited(true);
       } else {
         const blank = blankProduct();
         setForm(blank);
+        setCategoryQuery(categoryLabelForSlug(blank.category));
         setHasPrice(false);
         setSlugEdited(false);
       }
@@ -205,6 +240,28 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
       };
       return { ...f, colors };
     });
+  }
+
+  function applyCategorySizes() {
+    setForm((f) => {
+      const preset = sizesForCategory(f.category);
+      return {
+        ...f,
+        sizes:  preset,
+        colors: f.colors.map((c) => ({ ...c, sizes: preset.map((s) => ({ ...s })) })),
+      };
+    });
+  }
+
+  function setAccessoryStock(inStock: boolean) {
+    setForm((f) => ({
+      ...f,
+      sizes:  ACCESSORY_SIZES.map((s) => ({ ...s, inStock })),
+      colors: f.colors.map((c) => ({
+        ...c,
+        sizes: ACCESSORY_SIZES.map((s) => ({ ...s, inStock })),
+      })),
+    }));
   }
 
   function addColor() {
@@ -281,6 +338,20 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
     const mainImage = firstColorImages[0] ?? "";
     if (!mainImage) return setError("Add at least one image to the first colour.");
 
+    const isAccessory = form.category === "accessories";
+    const normalizedColors = form.colors.map((c) => {
+      const imgs = c.images.map((u) => u.trim()).filter(Boolean);
+      const accessoryInStock = c.sizes?.some((s) => s.inStock) ?? true;
+      return {
+        name:   c.name,
+        hex:    c.hex,
+        images: imgs.length ? imgs : [mainImage],
+        sizes:  isAccessory
+          ? ACCESSORY_SIZES.map((s) => ({ ...s, inStock: accessoryInStock }))
+          : c.sizes,
+      };
+    });
+
     const payload: Product = {
       id:          form.id!,
       slug:        form.slug!,
@@ -293,16 +364,8 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
       price:       form.price?.current?.trim()
         ? { original: hasPrice ? (form.price.original ?? "") : "", current: form.price.current }
         : null,
-      colors: form.colors.map((c, ci) => {
-        const imgs = c.images.map((u) => u.trim()).filter(Boolean);
-        return {
-          name:   c.name,
-          hex:    c.hex,
-          images: imgs.length ? imgs : [mainImage],
-          sizes:  c.sizes,
-        };
-      }),
-      sizes:   form.colors[0]?.sizes ?? DEFAULT_SIZES,
+      colors: normalizedColors,
+      sizes:  normalizedColors[0]?.sizes ?? DEFAULT_SIZES,
       details: (form.details ?? []).filter((d) => d.trim()),
     };
 
@@ -398,18 +461,28 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                     <div className="flex-1 min-w-0">
                       <FormField label="Brand" required>
                         <div className="relative" ref={brandRef}>
+                          <input
+                            className="input-field pr-9"
+                            value={form.brand ?? ""}
+                            onFocus={() => setBrandOpen(true)}
+                            onChange={(e) => {
+                              set("brand", e.target.value);
+                              setBrandOpen(true);
+                            }}
+                            placeholder="Start typing brand..."
+                          />
                           <button
                             type="button"
                             onClick={() => setBrandOpen((v) => !v)}
-                            className={`input-field flex items-center justify-between text-left ${!form.brand ? "text-foreground/30" : "text-foreground"}`}
+                            className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center justify-center text-foreground/40"
+                            aria-label="Toggle brand options"
                           >
-                            <span>{form.brand || "Select brand…"}</span>
                             <motion.svg
                               animate={{ rotate: brandOpen ? 180 : 0 }}
                               transition={{ duration: 0.2, ease }}
                               width="12" height="12" viewBox="0 0 24 24" fill="none"
                               stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-                              className="shrink-0 text-foreground/40"
+                              className="shrink-0"
                             >
                               <polyline points="6 9 12 15 18 9" />
                             </motion.svg>
@@ -424,23 +497,29 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                                 className="absolute left-0 top-full z-50 mt-1.5 w-full rounded-2xl border border-foreground/8 bg-white shadow-[0_12px_40px_rgba(95,77,57,0.12)]"
                               >
                                 <div className="max-h-56 overflow-y-auto rounded-2xl p-1.5">
-                                  {BRANDS.map((b) => (
-                                    <button
-                                      key={b}
-                                      type="button"
-                                      onClick={() => { set("brand", b); setBrandOpen(false); }}
-                                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-[12px] transition-colors duration-150 hover:bg-foreground/4 ${
-                                        form.brand === b ? "font-semibold text-foreground" : "text-foreground/70"
-                                      }`}
-                                    >
-                                      {b}
-                                      {form.brand === b && (
-                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                          <polyline points="20 6 9 17 4 12" />
-                                        </svg>
-                                      )}
-                                    </button>
-                                  ))}
+                                  {filteredBrands.length > 0 ? (
+                                    filteredBrands.map((b) => (
+                                      <button
+                                        key={b}
+                                        type="button"
+                                        onClick={() => { set("brand", b); setBrandOpen(false); }}
+                                        className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-[12px] transition-colors duration-150 hover:bg-foreground/4 ${
+                                          form.brand === b ? "font-semibold text-foreground" : "text-foreground/70"
+                                        }`}
+                                      >
+                                        {b}
+                                        {form.brand === b && (
+                                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="20 6 9 17 4 12" />
+                                          </svg>
+                                        )}
+                                      </button>
+                                    ))
+                                  ) : (
+                                    <p className="px-3 py-2.5 text-[12px] text-foreground/45">
+                                      No matching brands. Keep typing to use a custom brand.
+                                    </p>
+                                  )}
                                 </div>
                               </motion.div>
                             )}
@@ -451,18 +530,34 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                     <div className="flex-1 min-w-0">
                       <FormField label="Category">
                         <div className="relative" ref={categoryRef}>
+                          <input
+                            className="input-field pr-9"
+                            value={categoryQuery}
+                            onFocus={() => setCategoryOpen(true)}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              const exact = CATEGORIES.find((c) =>
+                                c.label.toLowerCase() === value.trim().toLowerCase() ||
+                                c.slug.toLowerCase() === value.trim().toLowerCase()
+                              );
+                              setCategoryQuery(value);
+                              if (exact) set("category", exact.slug);
+                              setCategoryOpen(true);
+                            }}
+                            placeholder="Start typing category..."
+                          />
                           <button
                             type="button"
                             onClick={() => setCategoryOpen((v) => !v)}
-                            className="input-field flex items-center justify-between text-left text-foreground"
+                            className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center justify-center text-foreground/40"
+                            aria-label="Toggle category options"
                           >
-                            <span>{CATEGORIES.find((c) => c.slug === (form.category ?? "tops-shirts"))?.label ?? "Select…"}</span>
                             <motion.svg
                               animate={{ rotate: categoryOpen ? 180 : 0 }}
                               transition={{ duration: 0.2, ease }}
                               width="12" height="12" viewBox="0 0 24 24" fill="none"
                               stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-                              className="shrink-0 text-foreground/40"
+                              className="shrink-0"
                             >
                               <polyline points="6 9 12 15 18 9" />
                             </motion.svg>
@@ -477,23 +572,33 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                                 className="absolute left-0 top-full z-50 mt-1.5 w-full rounded-2xl border border-foreground/8 bg-white shadow-[0_12px_40px_rgba(95,77,57,0.12)]"
                               >
                                 <div className="rounded-2xl p-1.5">
-                                  {CATEGORIES.map((c) => (
-                                    <button
-                                      key={c.slug}
-                                      type="button"
-                                      onClick={() => { set("category", c.slug); setCategoryOpen(false); }}
-                                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-[12px] transition-colors duration-150 hover:bg-foreground/4 ${
-                                        (form.category ?? "tops-shirts") === c.slug ? "font-semibold text-foreground" : "text-foreground/70"
-                                      }`}
-                                    >
-                                      {c.label}
-                                      {(form.category ?? "tops-shirts") === c.slug && (
-                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                          <polyline points="20 6 9 17 4 12" />
-                                        </svg>
-                                      )}
-                                    </button>
-                                  ))}
+                                  {filteredCategories.length > 0 ? (
+                                    filteredCategories.map((c) => (
+                                      <button
+                                        key={c.slug}
+                                        type="button"
+                                        onClick={() => {
+                                          set("category", c.slug);
+                                          setCategoryQuery(c.label);
+                                          setCategoryOpen(false);
+                                        }}
+                                        className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-[12px] transition-colors duration-150 hover:bg-foreground/4 ${
+                                          (form.category ?? "tops-shirts") === c.slug ? "font-semibold text-foreground" : "text-foreground/70"
+                                        }`}
+                                      >
+                                        {c.label}
+                                        {(form.category ?? "tops-shirts") === c.slug && (
+                                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="20 6 9 17 4 12" />
+                                          </svg>
+                                        )}
+                                      </button>
+                                    ))
+                                  ) : (
+                                    <p className="px-3 py-2.5 text-[12px] text-foreground/45">
+                                      No matching categories. Select one of the available categories.
+                                    </p>
+                                  )}
                                 </div>
                               </motion.div>
                             )}
@@ -758,26 +863,54 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                         </div>
 
                         {/* Sizes */}
-                        <div className="space-y-3">
-                          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-foreground/35">Sizes in stock</p>
-                          <div className="flex flex-wrap gap-2">
-                            {(c.sizes ?? []).map((s) => (
-                              <button
-                                key={s.label}
-                                type="button"
-                                onClick={() => toggleColorSize(ci, s.label)}
-                                className={`cursor-pointer h-9 min-w-11 rounded-xl border px-3 text-[10px] font-semibold uppercase tracking-[0.12em] transition-all duration-200 ${
-                                  s.inStock
-                                    ? "border-foreground bg-foreground text-white!"
-                                    : "border-foreground/15 text-foreground/40 hover:border-foreground/30"
-                                }`}
-                              >
-                                {s.label}
-                              </button>
-                            ))}
+                        {form.category === "accessories" ? (
+                          <div className="space-y-3">
+                            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-foreground/35">Stock</p>
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={Boolean(c.sizes?.[0]?.inStock)}
+                              onClick={() => setAccessoryStock(!c.sizes?.[0]?.inStock)}
+                              className={`relative h-9 rounded-full px-4 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors duration-200 ${
+                                c.sizes?.[0]?.inStock
+                                  ? "bg-foreground text-white"
+                                  : "border border-foreground/15 text-foreground/45"
+                              }`}
+                            >
+                              {c.sizes?.[0]?.inStock ? "In stock" : "Out of stock"}
+                            </button>
                           </div>
-                          <p className="text-[9px] text-muted">Tap a size to toggle stock for this colour.</p>
-                        </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-foreground/35">Sizes in stock</p>
+                              <button
+                                type="button"
+                                onClick={applyCategorySizes}
+                                className="cursor-pointer text-[9px] font-semibold uppercase tracking-[0.14em] text-foreground/45 underline underline-offset-4 transition-colors hover:text-foreground"
+                              >
+                                Use category sizes
+                              </button>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {(c.sizes ?? []).map((s) => (
+                                <button
+                                  key={s.label}
+                                  type="button"
+                                  onClick={() => toggleColorSize(ci, s.label)}
+                                  className={`cursor-pointer h-9 min-w-11 rounded-xl border px-3 text-[10px] font-semibold uppercase tracking-[0.12em] transition-all duration-200 ${
+                                    s.inStock
+                                      ? "border-foreground bg-foreground text-white!"
+                                      : "border-foreground/15 text-foreground/40 hover:border-foreground/30"
+                                  }`}
+                                >
+                                  {s.label}
+                                </button>
+                              ))}
+                            </div>
+                            <p className="text-[9px] text-muted">Tap a size to toggle stock for this colour.</p>
+                          </div>
+                        )}
 
                       </div>
                     );

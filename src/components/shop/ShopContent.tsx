@@ -123,8 +123,12 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
     "DOLCE & GABBANA", "Zara", "Massimo Dutti", "Vaganza", "Moncler",
   ];
   const availableBrands = ALL_BRANDS;
-  const availableSizes  = category === "shoes"
+  const availableSizes = category === "accessories"
+    ? []
+    : category === "shoes"
     ? ["39", "40", "41", "42", "43", "44", "45", "46"]
+    : category === "pants-jeans" || category === "shorts"
+    ? ["30", "31", "32", "33", "34", "36", "38"]
     : ["XS", "S", "M", "L", "XL", "XXL"];
   const availableColors = PALETTE;
 
@@ -227,14 +231,16 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
                   open={openDropdown === "brand"}
                   onOpen={() => setOpenDropdown(openDropdown === "brand" ? null : "brand")}
                 />
-                <FilterDropdown
-                  label="Size"
-                  options={availableSizes.map((s) => ({ value: s, label: s }))}
-                  selected={filters.sizes}
-                  onToggle={(v) => toggleFilter("sizes", v)}
-                  open={openDropdown === "size"}
-                  onOpen={() => setOpenDropdown(openDropdown === "size" ? null : "size")}
-                />
+                {availableSizes.length > 0 && (
+                  <FilterDropdown
+                    label="Size"
+                    options={availableSizes.map((s) => ({ value: s, label: s }))}
+                    selected={filters.sizes}
+                    onToggle={(v) => toggleFilter("sizes", v)}
+                    open={openDropdown === "size"}
+                    onOpen={() => setOpenDropdown(openDropdown === "size" ? null : "size")}
+                  />
+                )}
                 <ColorFilterDropdown
                   options={availableColors}
                   selected={filters.colors}
@@ -329,6 +335,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
                       price={product.price}
                       href={`/product/${product.slug}`}
                       isNew={product.isNew}
+                      sizeFree={product.category === "accessories"}
                       quickAdd={{
                         productId: product.id,
                         colorName: product.colors[0].name,
