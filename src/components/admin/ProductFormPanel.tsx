@@ -163,7 +163,9 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
 
   // Seed form when panel opens
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+
+    const timer = window.setTimeout(() => {
       if (product) {
         const colors: FormColor[] = product.colors.map((c) => ({
           ...c,
@@ -185,42 +187,38 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
       setError("");
       setSaving(false);
       revokePending();
-    }
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [open, product]);
-
-  // Auto-generate slug from name
-  useEffect(() => {
-    if (!slugEdited && form.name) {
-      setForm((f) => ({ ...f, slug: toSlug(f.name ?? "") }));
-    }
-  }, [form.name, slugEdited]);
-
-  // Swap size presets in all colors when category changes (new products only)
-  useEffect(() => {
-    if (!isEdit) {
-      const preset = sizesForCategory(form.category);
-      setForm((f) => ({
-        ...f,
-        sizes:  preset,
-        colors: f.colors.map((c) => ({ ...c, sizes: preset.map((s) => ({ ...s })) })),
-      }));
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.category, isEdit]);
 
   function set<K extends keyof Product>(key: K, val: Product[K]) {
     setForm((f) => ({ ...f, [key]: val }));
   }
 
-  // ── Per-color helpers ──────────────────────────────────────────────
-  function setColorField(ci: number, key: keyof ColorVariant, val: string) {
+  function setName(name: string) {
+    setForm((f) => ({
+      ...f,
+      name,
+      slug: slugEdited ? f.slug : toSlug(name),
+    }));
+  }
+
+  function setCategory(category: string) {
     setForm((f) => {
-      const colors = [...f.colors];
-      colors[ci] = { ...colors[ci], [key]: val };
-      return { ...f, colors };
+      const next = { ...f, category };
+      if (isEdit) return next;
+
+      const preset = sizesForCategory(category);
+      return {
+        ...next,
+        sizes:  preset,
+        colors: f.colors.map((c) => ({ ...c, sizes: preset.map((s) => ({ ...s })) })),
+      };
     });
   }
 
+  // ── Per-color helpers ──────────────────────────────────────────────
   function setColorImages(ci: number, images: string[]) {
     setForm((f) => {
       const colors = [...f.colors];
@@ -445,7 +443,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                 <FormSection title="Basic info">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <FormField label="Product name" required>
-                      <input className="input-field" value={form.name ?? ""} onChange={(e) => set("name", e.target.value)} placeholder="Oxford Button-Down Shirt" />
+                      <input className="input-field" value={form.name ?? ""} onChange={(e) => setName(e.target.value)} placeholder="Oxford Button-Down Shirt" />
                     </FormField>
                     <FormField label="Slug" required>
                       <input
@@ -541,7 +539,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                                 c.slug.toLowerCase() === value.trim().toLowerCase()
                               );
                               setCategoryQuery(value);
-                              if (exact) set("category", exact.slug);
+                              if (exact) setCategory(exact.slug);
                               setCategoryOpen(true);
                             }}
                             placeholder="Start typing category..."
@@ -578,7 +576,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                                         key={c.slug}
                                         type="button"
                                         onClick={() => {
-                                          set("category", c.slug);
+                                          setCategory(c.slug);
                                           setCategoryQuery(c.label);
                                           setCategoryOpen(false);
                                         }}

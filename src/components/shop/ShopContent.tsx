@@ -91,7 +91,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
       })
       .catch(() => setAllProducts([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [onlyNew]);
 
   // Scroll active category pill into view on mobile
   useEffect(() => {
@@ -104,11 +104,6 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
     document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [mobileOpen]);
-
-  // Reset sub-filters when category changes
-  useEffect(() => {
-    setFilters({ brands: [], sizes: [], colors: [] });
-  }, [category]);
 
   // Derive available options from category-filtered products (before sub-filters)
   const categoryProducts = category
@@ -151,6 +146,11 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
   function clearFilters() {
     setFilters({ brands: [], sizes: [], colors: [] });
     setSort("new-in");
+  }
+
+  function changeCategory(nextCategory: string | null) {
+    setCategory(nextCategory);
+    setFilters({ brands: [], sizes: [], colors: [] });
   }
 
   const closeDropdown = () => setOpenDropdown(null);
@@ -204,7 +204,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
                 <button
                   key={cat.label}
                   data-active={isActive}
-                  onClick={() => setCategory(cat.slug)}
+                  onClick={() => changeCategory(cat.slug)}
                   className={`cursor-pointer shrink-0 h-9 rounded-full px-5 text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors duration-200 ${
                     isActive
                       ? "bg-foreground text-white"

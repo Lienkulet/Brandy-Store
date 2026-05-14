@@ -22,7 +22,7 @@ export function ContactForm() {
           Message received.
         </p>
         <p className="mt-3 text-sm text-muted">
-          We'll get back to you within a few hours.
+          We&apos;ll get back to you within a few hours.
         </p>
       </div>
     );

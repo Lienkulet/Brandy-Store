@@ -98,7 +98,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // corrupted storage — start fresh
     }
-    setIsHydrated(true);
+    const timer = window.setTimeout(() => setIsHydrated(true), 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   // Persist to localStorage on every change (after hydration)

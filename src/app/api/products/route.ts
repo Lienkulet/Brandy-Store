@@ -56,7 +56,6 @@ export async function POST(req: NextRequest) {
 
   let slug = product.slug;
   let attempt = 0;
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const row = { ...toRow(product), slug };
     const { data, error } = await supabaseAdmin

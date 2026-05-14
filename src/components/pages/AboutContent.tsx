@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { motion } from "framer-motion";
 import Container from "@/components/layout/Container";
 import BlackBtn from "@/components/ui/BlackBtn";
@@ -22,8 +21,6 @@ const values = [
     body: "We believe in buying less and wearing more. The brands we carry are chosen because their clothes age well and hold their value.",
   },
 ];
-
-const brands = ["Loro Piana", "Brunello Cucinelli", "Polo Ralph Lauren", "Emporio Armani", "Boss"];
 
 export function AboutContent() {
   return (
