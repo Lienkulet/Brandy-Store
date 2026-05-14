@@ -1,32 +1,25 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import ProductCard from "@/components/cards/ProductCard";
-
-const collectionItems = [
-  {
-    name: "Leather Penny Loafers",
-    description: "Built for every setting",
-    image: "/assets/product-loafers.png",
-    price: null,
-  },
-  {
-    name: "V-Neck Sleeveless Sweater Polo",
-    description: "Built for every setting",
-    image: "/assets/product-vest.png",
-    price: null,
-  },
-  {
-    name: "Crochet Polo Shirt",
-    description: "Built for every setting",
-    image: "/assets/product-shirt.png",
-    price: null,
-  },
-] as const;
+import type { Product } from "@/data/products";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 function Collection() {
+  const [items, setItems] = useState<Product[]>([]);
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then((r) => r.json())
+      .then((data: unknown) => {
+        const list = Array.isArray(data) ? (data as Product[]) : [];
+        setItems(list.filter((p) => p.isNew).slice(0, 3));
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <section
       id="collection"
@@ -44,7 +37,6 @@ function Collection() {
           New Collection
         </p>
 
-        {/* Animated divider */}
         <motion.div
           className="mx-auto mt-4 h-px bg-foreground/20"
           initial={{ width: 0 }}
@@ -59,17 +51,31 @@ function Collection() {
         </p>
       </motion.div>
 
-      {/* Cards grid — each card staggers in */}
+      {/* Cards grid */}
       <div className="grid gap-5 md:grid-cols-3">
-        {collectionItems.map((item, i) => (
+        {items.map((product, i) => (
           <motion.div
-            key={item.name}
+            key={product.id}
             initial={{ opacity: 0, y: 36 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.7, ease, delay: i * 0.14 }}
           >
-            <ProductCard {...item} />
+            <ProductCard
+              name={product.name}
+              brand={product.brand}
+              description={product.description}
+              image={product.image}
+              price={product.price}
+              href={`/product/${product.slug}`}
+              isNew={product.isNew}
+              quickAdd={{
+                productId: product.id,
+                colorName: product.colors[0]?.name ?? "",
+                sizes: product.sizes,
+                price: product.price?.current ?? "Price on request",
+              }}
+            />
           </motion.div>
         ))}
       </div>

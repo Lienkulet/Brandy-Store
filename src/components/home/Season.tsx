@@ -2,16 +2,14 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import Container from "@/components/layout/Container";
 import BlackBtn from "@/components/ui/BlackBtn";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 function Season() {
   return (
-    <Container className="mt-16">
-      <motion.section
-        className="soft-card overflow-hidden rounded-[28px]"
+    <motion.section
+        className="mt-16 soft-card overflow-hidden rounded-4xl"
         initial={{ opacity: 0, y: 32 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
@@ -65,11 +63,10 @@ function Season() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.55, ease }}
           >
-            <BlackBtn href="#" name="Shop New Arrivals" className="mt-6" />
+            <BlackBtn href="/new-arrivals" name="Shop New Arrivals" className="mt-6" />
           </motion.div>
         </div>
       </motion.section>
-    </Container>
   );
 }
 

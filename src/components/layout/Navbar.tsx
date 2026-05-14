@@ -11,7 +11,6 @@ import {
 } from "framer-motion";
 import { AccountIcon } from "../icons/Account";
 import { CartIcon } from "../icons/CartIcon";
-import { SearchIcon } from "../icons/SearchIcon";
 import { InstagramIcon } from "../icons/InstagramIcon";
 import { TelegramIcon } from "../icons/TelegramIcon";
 import { TikTokIcon } from "../icons/TikTokIcon";
@@ -26,7 +25,7 @@ const navigationItems = [
 ];
 
 const actionItems = [
-  { label: "Search",  icon: SearchIcon  },
+  // { label: "Search",  icon: SearchIcon  },
   { label: "Cart",    icon: CartIcon    },
   { label: "Account", icon: AccountIcon },
 ];
@@ -165,9 +164,9 @@ export function Navbar() {
             initial="hidden"
             animate="visible"
           >
-            {/* Action icons — desktop only */}
+            {/* Action icons */}
             {actionItems.map(({ label, icon: Icon }) => (
-              <motion.div key={label} variants={fadeDown} className="hidden md:block">
+              <motion.div key={label} variants={fadeDown} className="block">
                 {label === "Cart" ? (
                   <button
                     aria-label="Open cart"

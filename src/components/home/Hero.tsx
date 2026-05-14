@@ -96,7 +96,7 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease, delay: 1.2 }}
         >
-          <GreyBtn name="Buy Now" href="#collection" />
+          <GreyBtn name="Buy Now" href="/shop" />
         </motion.div>
       </motion.div>
 

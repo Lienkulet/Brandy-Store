@@ -19,8 +19,8 @@ const MotionLink = motion(Link);
 function CategoryCard({ title, cta, image, href }: CategoryCardProps) {
   return (
     <MotionLink
-      href={href || "/#"}
-      className="relative block overflow-hidden rounded-3xl cursor-pointer"
+      href={href || "/shop"}
+      className="relative block overflow-hidden rounded-4xl cursor-pointer"
       whileHover="hover"
       initial="rest"
       animate="rest"
