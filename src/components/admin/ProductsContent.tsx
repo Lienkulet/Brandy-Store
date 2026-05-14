@@ -1,16 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ProductFormPanel } from "./ProductFormPanel";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
 import { ProductAdminCard } from "./ProductAdminCard";
-import { ProductsToolbar } from "./ProductsToolbar";
+import { ProductsToolbar, type ProductFilter } from "./ProductsToolbar";
+import { EmptyState } from "./OverviewContent";
 import type { Product } from "@/data/products";
+
+function isProductInStock(product: Product) {
+  return (product.sizes ?? []).some((size) => size.inStock);
+}
+
+function isProductOutOfStock(product: Product) {
+  const sizes = product.sizes ?? [];
+  return sizes.length > 0 && sizes.every((size) => !size.inStock);
+}
+
+function isProductOnSale(product: Product) {
+  return Boolean(product.price?.original.trim());
+}
+
+function matchesFilter(product: Product, filter: ProductFilter) {
+  if (filter === "in-stock") return isProductInStock(product);
+  if (filter === "out-of-stock") return isProductOutOfStock(product);
+  if (filter === "on-sale") return isProductOnSale(product);
+  if (filter === "new") return Boolean(product.isNew);
+  return true;
+}
 
 export function ProductsContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading]   = useState(true);
   const [search, setSearch]     = useState("");
+  const [activeFilter, setActiveFilter] = useState<ProductFilter>("all");
 
   const [panelOpen, setPanelOpen] = useState(false);
   const [editing, setEditing]     = useState<Product | null>(null);
@@ -29,14 +52,40 @@ export function ProductsContent() {
 
   useEffect(() => { fetchProducts(); }, []);
 
-  const visible = products.filter((p) =>
-    search.trim() === "" ||
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.brand.toLowerCase().includes(search.toLowerCase())
-  );
+  const normalizedSearch = search.trim().toLowerCase();
+  const visible = useMemo(() => {
+    return products.filter((product) => {
+      if (!matchesFilter(product, activeFilter)) return false;
+      if (!normalizedSearch) return true;
 
-  const totalInStock  = products.filter((p) => p.sizes.some((s) => s.inStock)).length;
-  const totalOutStock = products.filter((p) => p.sizes.every((s) => !s.inStock)).length;
+      const searchableText = [
+        product.name,
+        product.brand,
+        product.category,
+        product.slug,
+        product.description,
+        product.price?.current,
+        product.price?.original,
+        ...(product.details ?? []),
+        ...(product.colors ?? []).flatMap((color) => [
+          color.name,
+          color.hex,
+          ...(color.sizes ?? []).map((size) => size.label),
+        ]),
+        ...(product.sizes ?? []).map((size) => size.label),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(normalizedSearch);
+    });
+  }, [activeFilter, normalizedSearch, products]);
+
+  const totalInStock  = products.filter(isProductInStock).length;
+  const totalOutStock = products.filter(isProductOutOfStock).length;
+  const totalOnSale   = products.filter(isProductOnSale).length;
+  const totalNew      = products.filter((p) => p.isNew).length;
 
   async function handleSave(product: Product) {
     const isEdit = products.some((p) => p.id === product.id);
@@ -93,8 +142,13 @@ export function ProductsContent() {
         total={products.length}
         totalInStock={totalInStock}
         totalOutStock={totalOutStock}
+        totalOnSale={totalOnSale}
+        totalNew={totalNew}
         search={search}
+        activeFilter={activeFilter}
         onSearch={setSearch}
+        onClearSearch={() => setSearch("")}
+        onFilterChange={setActiveFilter}
         onCreate={openCreate}
       />
 
@@ -114,7 +168,7 @@ export function ProductsContent() {
       )}
 
       {/* Product grid */}
-      {!loading && (
+      {!loading && visible.length > 0 && (
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {visible.map((product, i) => (
             <ProductAdminCard
@@ -127,6 +181,16 @@ export function ProductsContent() {
               markingOutOfStock={markingOutStockId === product.id}
             />
           ))}
+        </div>
+      )}
+
+      {!loading && products.length > 0 && visible.length === 0 && (
+        <div className="mt-5 rounded-2xl border border-foreground/8 bg-white">
+          <EmptyState
+            icon={<SearchEmptyIcon />}
+            message="No products found"
+            sub={emptyStateMessage(search, activeFilter)}
+          />
         </div>
       )}
 
@@ -145,5 +209,28 @@ export function ProductsContent() {
         loading={deleting}
       />
     </div>
+  );
+}
+
+function emptyStateMessage(search: string, activeFilter: ProductFilter) {
+  const trimmedSearch = search.trim();
+  const filterLabel: Record<ProductFilter, string> = {
+    all: "all products",
+    "in-stock": "in-stock products",
+    "out-of-stock": "out-of-stock products",
+    "on-sale": "sale products",
+    new: "new products",
+  };
+
+  if (!trimmedSearch) return `No ${filterLabel[activeFilter]} match this filter.`;
+  return `Nothing matches "${trimmedSearch}" within ${filterLabel[activeFilter]}. Try another product name, brand, category, color, size, or price.`;
+}
+
+function SearchEmptyIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="7" />
+      <line x1="16.65" y1="16.65" x2="21" y2="21" />
+    </svg>
   );
 }

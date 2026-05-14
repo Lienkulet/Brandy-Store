@@ -24,6 +24,7 @@ export function ProductDetail({ product }: { product: Product }) {
   const sizes  = color.sizes?.length ? color.sizes : product.sizes;
   const isOnSale = Boolean(product.price?.original.trim());
   const isSizeFree = product.category === "accessories";
+  const details = product.details.filter((detail) => detail.trim());
 
   // Flat slider: all colours in fixed order, never reordered
   const sliderImages = product.colors.flatMap((c, ci) =>
@@ -196,6 +197,12 @@ export function ProductDetail({ product }: { product: Product }) {
             <h1 className="font-serif text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
               {product.name}
             </h1>
+
+            {product.description.trim() && (
+              <p className="mt-3 max-w-130 text-sm leading-relaxed text-muted sm:text-base">
+                {product.description}
+              </p>
+            )}
 
             {/* Price */}
             <div className="mt-4">
@@ -400,22 +407,26 @@ export function ProductDetail({ product }: { product: Product }) {
               </Link>
             </p>
 
-            <div className="my-7 h-px bg-foreground/8" />
+            {details.length > 0 && (
+              <>
+                <div className="my-7 h-px bg-foreground/8" />
 
-            {/* Product details */}
-            <div>
-              <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/60">
-                Details
-              </p>
-              <ul className="space-y-2">
-                {product.details.map((detail) => (
-                  <li key={detail} className="flex items-start gap-2.5 text-sm text-muted">
-                    <span className="mt-2 h-px w-3 shrink-0 bg-foreground/25" />
-                    {detail}
-                  </li>
-                ))}
-              </ul>
-            </div>
+                {/* Product details */}
+                <div>
+                  <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/60">
+                    Details
+                  </p>
+                  <ul className="space-y-2">
+                    {details.map((detail) => (
+                      <li key={detail} className="flex items-start gap-2.5 text-sm text-muted">
+                        <span className="mt-2 h-px w-3 shrink-0 bg-foreground/25" />
+                        {detail}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </>
+            )}
 
           </motion.div>
         </div>

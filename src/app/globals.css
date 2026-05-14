@@ -88,6 +88,11 @@ img {
   transition: border-color 0.2s;
 }
 
+.input-field.search-input-field {
+  padding-left: 3.75rem;
+  padding-right: 2.75rem;
+}
+
 .input-field::placeholder {
   color: rgba(76, 64, 53, 0.3);
 }
