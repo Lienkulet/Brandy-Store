@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "../../context/CartContext";
 import BlackBtn from "../ui/BlackBtn";
 
@@ -37,7 +37,10 @@ type Step = "idle" | "sizes" | "added";
 
 function ProductCard({ name, brand, image, price, href, isNew, quickAdd, sizeFree = false }: ProductCardProps) {
   const [step, setStep] = useState<Step>("idle");
+  const [recentlyAddedSize, setRecentlyAddedSize] = useState<string | null>(null);
   const { addItem } = useCart();
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sizeConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const inStockSizes = quickAdd?.sizes.filter((s) => s.inStock) ?? [];
   const isOnSale = Boolean(price?.original.trim());
@@ -58,10 +61,10 @@ function ProductCard({ name, brand, image, price, href, isNew, quickAdd, sizeFre
   function handleSizeClick(e: React.MouseEvent, sizeLabel: string) {
     e.preventDefault();
     e.stopPropagation();
-    addAndConfirm(sizeLabel);
+    addAndConfirm(sizeLabel, { keepSizesOpen: true });
   }
 
-  function addAndConfirm(sizeLabel: string) {
+  function addAndConfirm(sizeLabel: string, options?: { keepSizesOpen?: boolean }) {
     if (!quickAdd) return;
     addItem({
       id:        `${quickAdd.productId}-${quickAdd.colorName}-${sizeLabel}`,
@@ -73,8 +76,17 @@ function ProductCard({ name, brand, image, price, href, isNew, quickAdd, sizeFre
       price:     quickAdd.price,
       image,
     });
+    if (options?.keepSizesOpen) {
+      setStep("sizes");
+      setRecentlyAddedSize(sizeLabel);
+      if (sizeConfirmTimer.current) clearTimeout(sizeConfirmTimer.current);
+      sizeConfirmTimer.current = setTimeout(() => setRecentlyAddedSize(null), 950);
+      return;
+    }
+
     setStep("added");
-    setTimeout(() => setStep("idle"), 1800);
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    resetTimer.current = setTimeout(() => setStep("idle"), 1800);
   }
 
   function handleDismiss(e: React.MouseEvent) {
@@ -82,6 +94,13 @@ function ProductCard({ name, brand, image, price, href, isNew, quickAdd, sizeFre
     e.stopPropagation();
     setStep("idle");
   }
+
+  useEffect(() => {
+    return () => {
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+      if (sizeConfirmTimer.current) clearTimeout(sizeConfirmTimer.current);
+    };
+  }, []);
 
   return (
     <motion.article
@@ -180,9 +199,31 @@ function ProductCard({ name, brand, image, price, href, isNew, quickAdd, sizeFre
                       <button
                         key={s.label}
                         onClick={(e) => handleSizeClick(e, s.label)}
-                        className="cursor-pointer h-8 min-w-10 rounded-lg border border-foreground/15 px-2 text-[10px] font-semibold uppercase tracking-widest text-foreground transition-all duration-150 hover:border-foreground hover:bg-foreground hover:text-white"
+                        className={`cursor-pointer h-8 min-w-10 rounded-lg border px-2 text-[10px] font-semibold uppercase tracking-widest transition-all duration-200 ${
+                          recentlyAddedSize === s.label
+                            ? "border-foreground bg-foreground text-white"
+                            : "border-foreground/15 text-foreground hover:border-foreground hover:bg-foreground hover:text-white"
+                        }`}
                       >
-                        {s.label}
+                        <span className="inline-flex min-w-4 items-center justify-center">
+                          {recentlyAddedSize === s.label ? (
+                            <motion.svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              initial={{ scale: 0.5, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              transition={{ duration: 0.18, ease }}
+                            >
+                              <polyline points="20 6 9 17 4 12" />
+                            </motion.svg>
+                          ) : s.label}
+                        </span>
                       </button>
                     ))}
                   </div>

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   motion, AnimatePresence,
   useScroll, useTransform, useMotionTemplate,
@@ -60,7 +60,10 @@ export function Navbar() {
   const [isOpen, setIsOpen]         = useState(false);
   const [cartOpen, setCartOpen]     = useState(false);
   const [authed, setAuthed]         = useState(false);
+  const [cartPulse, setCartPulse]   = useState(false);
   const { itemCount, isHydrated }   = useCart();
+  const previousItemCount = useRef(itemCount);
+  const hasHydratedCart = useRef(false);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -72,6 +75,25 @@ export function Navbar() {
 
   // Close menu on route change
   useEffect(() => { setIsOpen(false); }, [pathname]);
+
+  // Pulse the cart icon only when the shopper adds something after hydration.
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (!hasHydratedCart.current) {
+      previousItemCount.current = itemCount;
+      hasHydratedCart.current = true;
+      return;
+    }
+
+    if (itemCount > previousItemCount.current) {
+      setCartPulse(true);
+      const timer = window.setTimeout(() => setCartPulse(false), 650);
+      previousItemCount.current = itemCount;
+      return () => window.clearTimeout(timer);
+    }
+
+    previousItemCount.current = itemCount;
+  }, [isHydrated, itemCount]);
 
   // Lock body scroll when menu is open
   useEffect(() => {
@@ -174,9 +196,10 @@ export function Navbar() {
                     className="cursor-pointer relative block"
                   >
                     <motion.div
+                      animate={cartPulse ? { y: [0, -3, 0], scale: [1, 1.16, 1], rotate: [0, -8, 8, 0] } : { y: 0, scale: 1, rotate: 0 }}
                       whileHover={{ y: -2, scale: 1.1 }}
                       whileTap={{ scale: 0.92 }}
-                      transition={{ duration: 0.22, ease }}
+                      transition={{ duration: 0.48, ease }}
                       style={{ color: navColor }}
                     >
                       <Icon />
@@ -185,12 +208,21 @@ export function Navbar() {
                       <motion.span
                         key={itemCount}
                         initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.25, ease }}
+                        animate={cartPulse ? { scale: [1, 1.28, 1], opacity: 1 } : { scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.42, ease }}
                         className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-foreground text-[9px] font-bold text-white"
                       >
                         {itemCount > 9 ? "9+" : itemCount}
                       </motion.span>
+                    )}
+                    {cartPulse && (
+                      <motion.span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute -right-2 -top-2 h-5 w-5 rounded-full border border-foreground/45"
+                        initial={{ scale: 0.55, opacity: 0.7 }}
+                        animate={{ scale: 1.8, opacity: 0 }}
+                        transition={{ duration: 0.55, ease }}
+                      />
                     )}
                   </button>
                 ) : (
