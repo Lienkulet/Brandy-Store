@@ -20,10 +20,12 @@ export function ProductDetail({ product }: { product: Product }) {
 
   const color  = product.colors[colorIdx];
   const images = color.images;
+  const sizes  = color.sizes?.length ? color.sizes : product.sizes;
 
   function handleColorChange(idx: number) {
     setColorIdx(idx);
     setImageIdx(0);
+    setSize(null);
   }
 
   function handleAddToBag() {
@@ -46,7 +48,7 @@ export function ProductDetail({ product }: { product: Product }) {
     setTimeout(() => setCartState("idle"), 2500);
   }
 
-  const allSizesOut = product.sizes.every((s) => !s.inStock);
+  const allSizesOut = sizes.every((s) => !s.inStock);
 
   return (
     <main className="min-h-dvh bg-background pt-28 pb-24 text-foreground sm:pt-32">
@@ -202,7 +204,7 @@ export function ProductDetail({ product }: { product: Product }) {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {product.sizes.map((s) => {
+                {sizes.map((s) => {
                   const isSelected = selectedSize === s.label;
                   return (
                     <button

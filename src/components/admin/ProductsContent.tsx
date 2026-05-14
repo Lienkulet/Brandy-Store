@@ -26,7 +26,7 @@ export function ProductsContent() {
     setLoading(true);
     const res = await fetch("/api/products");
     const data = await res.json();
-    setProducts(data);
+    setProducts(Array.isArray(data) ? data : []);
     setLoading(false);
   }
 

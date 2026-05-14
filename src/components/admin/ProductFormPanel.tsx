@@ -8,23 +8,23 @@ import { PALETTE } from "@/data/colors";
 const ease = [0.22, 1, 0.36, 1] as const;
 
 const DEFAULT_SIZES: SizeOption[] = [
-  { label: "XS",  inStock: false },
-  { label: "S",   inStock: false },
-  { label: "M",   inStock: false },
-  { label: "L",   inStock: false },
-  { label: "XL",  inStock: false },
-  { label: "XXL", inStock: false },
+  { label: "XS",  inStock: true },
+  { label: "S",   inStock: true },
+  { label: "M",   inStock: true },
+  { label: "L",   inStock: true },
+  { label: "XL",  inStock: true },
+  { label: "XXL", inStock: true },
 ];
 
 const SHOE_SIZES: SizeOption[] = [
-  { label: "39", inStock: false },
-  { label: "40", inStock: false },
-  { label: "41", inStock: false },
-  { label: "42", inStock: false },
-  { label: "43", inStock: false },
-  { label: "44", inStock: false },
-  { label: "45", inStock: false },
-  { label: "46", inStock: false },
+  { label: "39", inStock: true },
+  { label: "40", inStock: true },
+  { label: "41", inStock: true },
+  { label: "42", inStock: true },
+  { label: "43", inStock: true },
+  { label: "44", inStock: true },
+  { label: "45", inStock: true },
+  { label: "46", inStock: true },
 ];
 
 const BRANDS = [
@@ -34,7 +34,6 @@ const BRANDS = [
   "Brango", "Tony Montana", "Etro", "Tom Ford",
   "DOLCE & GABBANA", "Zara", "Massimo Dutti", "Vaganza", "Moncler",
 ];
-
 
 const CATEGORIES = [
   { label: "Tops & Shirts",          slug: "tops-shirts"          },
@@ -46,22 +45,32 @@ const CATEGORIES = [
   { label: "Shoes",                  slug: "shoes"                },
 ];
 
+function sizesForCategory(category?: string): SizeOption[] {
+  return (category === "shoes" ? SHOE_SIZES : DEFAULT_SIZES).map((s) => ({ ...s }));
+}
+
 function toSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
-function blankProduct(): Partial<Product> {
+type FormColor = ColorVariant & { sizes: SizeOption[] };
+
+function blankColor(category?: string): FormColor {
+  return { name: "White", hex: "#FFFFFF", images: [""], sizes: sizesForCategory(category) };
+}
+
+function blankProduct(): Partial<Product> & { colors: FormColor[] } {
   return {
     id:          `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     slug:        "",
     name:        "",
     brand:       "",
-    category: "tops-shirts",
+    category:    "tops-shirts",
     description: "",
     price:       null,
     image:       "",
     isNew:       false,
-    colors:      [{ name: "White", hex: "#FFFFFF", images: [""] }],
+    colors:      [blankColor("tops-shirts")],
     sizes:       DEFAULT_SIZES.map((s) => ({ ...s })),
     details:     [""],
   };
@@ -69,20 +78,37 @@ function blankProduct(): Partial<Product> {
 
 type Props = {
   open:     boolean;
-  product?: Product | null;  // null = create, Product = edit
+  product?: Product | null;
   onClose:  () => void;
   onSave:   (p: Product) => Promise<void>;
 };
 
 export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
   const isEdit = Boolean(product);
-  const [form, setForm]           = useState<Partial<Product>>(blankProduct());
-  const [hasPrice, setHasPrice]   = useState(false);
-  const [saving, setSaving]       = useState(false);
-  const [error, setError]         = useState("");
+  const [form, setForm]             = useState<ReturnType<typeof blankProduct>>(blankProduct());
+  const [hasPrice, setHasPrice]     = useState(false);
+  const [saving, setSaving]         = useState(false);
+  const [error, setError]           = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
-  const [brandOpen, setBrandOpen]             = useState(false);
-  const [categoryOpen, setCategoryOpen]       = useState(false);
+
+  // Active colour tab
+  const [activeColor, setActiveColor] = useState(0);
+
+  // Drag / drop state
+  const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // objectURL → File, uploaded only on save
+  const pendingFiles = useRef<Record<string, File>>({});
+
+  function revokePending() {
+    Object.keys(pendingFiles.current).forEach((u) => URL.revokeObjectURL(u));
+    pendingFiles.current = {};
+  }
+
+  // Dropdowns
+  const [brandOpen, setBrandOpen]               = useState(false);
+  const [categoryOpen, setCategoryOpen]         = useState(false);
   const [colorPaletteOpen, setColorPaletteOpen] = useState<number | null>(null);
   const brandRef    = useRef<HTMLDivElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
@@ -90,11 +116,12 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (brandRef.current && !brandRef.current.contains(e.target as Node)) setBrandOpen(false);
+      if (brandRef.current    && !brandRef.current.contains(e.target as Node))    setBrandOpen(false);
       if (categoryRef.current && !categoryRef.current.contains(e.target as Node)) setCategoryOpen(false);
-      if (paletteRef.current && !paletteRef.current.contains(e.target as Node)) setColorPaletteOpen(null);
+      if (paletteRef.current  && !paletteRef.current.contains(e.target as Node))  setColorPaletteOpen(null);
     }
-    if (brandOpen || categoryOpen || colorPaletteOpen !== null) document.addEventListener("mousedown", handleClick);
+    if (brandOpen || categoryOpen || colorPaletteOpen !== null)
+      document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [brandOpen, categoryOpen, colorPaletteOpen]);
 
@@ -102,70 +129,123 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
   useEffect(() => {
     if (open) {
       if (product) {
-        setForm(structuredClone(product));
+        const colors: FormColor[] = product.colors.map((c) => ({
+          ...c,
+          images: c.images?.length ? c.images : [""],
+          sizes:  c.sizes?.length  ? [...c.sizes] : (product.sizes ?? DEFAULT_SIZES).map((s) => ({ ...s })),
+        }));
+        setForm({ ...structuredClone(product), colors });
         setHasPrice(product.price !== null);
         setSlugEdited(true);
       } else {
-        setForm(blankProduct());
+        const blank = blankProduct();
+        setForm(blank);
         setHasPrice(false);
         setSlugEdited(false);
       }
+      setActiveColor(0);
       setError("");
       setSaving(false);
+      revokePending();
     }
   }, [open, product]);
 
-  // Auto-generate slug from name (unless user edited it)
+  // Auto-generate slug from name
   useEffect(() => {
     if (!slugEdited && form.name) {
       setForm((f) => ({ ...f, slug: toSlug(f.name ?? "") }));
     }
   }, [form.name, slugEdited]);
 
-  // Swap size presets when category changes (only for new products)
+  // Swap size presets in all colors when category changes (new products only)
   useEffect(() => {
     if (!isEdit) {
+      const preset = sizesForCategory(form.category);
       setForm((f) => ({
         ...f,
-        sizes: (f.category === "shoes" ? SHOE_SIZES : DEFAULT_SIZES).map((s) => ({ ...s })),
+        sizes:  preset,
+        colors: f.colors.map((c) => ({ ...c, sizes: preset.map((s) => ({ ...s })) })),
       }));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.category, isEdit]);
 
   function set<K extends keyof Product>(key: K, val: Product[K]) {
     setForm((f) => ({ ...f, [key]: val }));
   }
 
-  // ── Sizes ──────────────────────────────────────────────────────────
-  function toggleSize(label: string) {
-    setForm((f) => ({
-      ...f,
-      sizes: (f.sizes ?? []).map((s) =>
-        s.label === label ? { ...s, inStock: !s.inStock } : s
-      ),
-    }));
-  }
-
-  // ── Colors ─────────────────────────────────────────────────────────
-  function setColor(i: number, key: keyof ColorVariant, val: string) {
+  // ── Per-color helpers ──────────────────────────────────────────────
+  function setColorField(ci: number, key: keyof ColorVariant, val: string) {
     setForm((f) => {
-      const colors = [...(f.colors ?? [])];
-      if (key === "images") {
-        colors[i] = { ...colors[i], images: [val] };
-      } else {
-        colors[i] = { ...colors[i], [key]: val };
-      }
+      const colors = [...f.colors];
+      colors[ci] = { ...colors[ci], [key]: val };
       return { ...f, colors };
     });
   }
+
+  function setColorImages(ci: number, images: string[]) {
+    setForm((f) => {
+      const colors = [...f.colors];
+      colors[ci] = { ...colors[ci], images };
+      return { ...f, colors };
+    });
+  }
+
+  function toggleColorSize(ci: number, label: string) {
+    setForm((f) => {
+      const colors = [...f.colors];
+      colors[ci] = {
+        ...colors[ci],
+        sizes: colors[ci].sizes.map((s) =>
+          s.label === label ? { ...s, inStock: !s.inStock } : s
+        ),
+      };
+      return { ...f, colors };
+    });
+  }
+
   function addColor() {
     setForm((f) => ({
       ...f,
-      colors: [...(f.colors ?? []), { name: "White", hex: "#FFFFFF", images: [""] }],
+      colors: [...f.colors, blankColor(f.category)],
     }));
+    setActiveColor((prev) => prev + 1);
   }
+
   function removeColor(i: number) {
-    setForm((f) => ({ ...f, colors: (f.colors ?? []).filter((_, idx) => idx !== i) }));
+    setForm((f) => ({ ...f, colors: f.colors.filter((_, idx) => idx !== i) as FormColor[] }));
+    setActiveColor((prev) => Math.max(0, prev >= i ? prev - 1 : prev));
+  }
+
+  function pickColorSwatch(ci: number, hex: string, name: string) {
+    setForm((f) => {
+      const colors = [...f.colors];
+      colors[ci] = { ...colors[ci], hex, name };
+      return { ...f, colors };
+    });
+    setColorPaletteOpen(null);
+  }
+
+  // ── Image drop — store locally, upload on save ────────────────────
+  function uploadFiles(ci: number, files: FileList | File[]) {
+    const arr = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (!arr.length) return;
+    const objectUrls = arr.map((file) => {
+      const url = URL.createObjectURL(file);
+      pendingFiles.current[url] = file;
+      return url;
+    });
+    setColorImages(ci, [
+      ...form.colors[ci].images.filter((u) => u.trim()),
+      ...objectUrls,
+      "",
+    ]);
+  }
+
+  function handleDrop(ci: number, e: React.DragEvent) {
+    e.preventDefault();
+    setDraggingIdx(null);
+    uploadFiles(ci, e.dataTransfer.files);
   }
 
   // ── Details ────────────────────────────────────────────────────────
@@ -191,9 +271,12 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
     if (!form.name?.trim())  return setError("Name is required.");
     if (!form.brand?.trim()) return setError("Brand is required.");
     if (!form.slug?.trim())  return setError("Slug is required.");
-    if (!form.image?.trim()) return setError("Primary image URL is required.");
     if (!form.colors?.length || !form.colors[0].name.trim())
       return setError("At least one colour is required.");
+
+    const firstColorImages = form.colors[0].images.map((u) => u.trim()).filter(Boolean);
+    const mainImage = firstColorImages[0] ?? "";
+    if (!mainImage) return setError("Add at least one image to the first colour.");
 
     const payload: Product = {
       id:          form.id!,
@@ -202,19 +285,47 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
       brand:       form.brand!,
       category:    form.category!,
       description: form.description ?? "",
-      image:       form.image!,
+      image:       mainImage,
       isNew:       form.isNew ?? false,
-      price:       form.price?.current?.trim() ? { original: hasPrice ? (form.price.original ?? "") : "", current: form.price.current } : null,
-      colors:      (form.colors ?? []).map((c) => ({
-        ...c,
-        images: c.images[0] ? [c.images[0], c.images[0], c.images[0]] : [form.image!],
-      })),
-      sizes:    form.sizes ?? DEFAULT_SIZES,
-      details:  (form.details ?? []).filter((d) => d.trim()),
+      price:       form.price?.current?.trim()
+        ? { original: hasPrice ? (form.price.original ?? "") : "", current: form.price.current }
+        : null,
+      colors: form.colors.map((c, ci) => {
+        const imgs = c.images.map((u) => u.trim()).filter(Boolean);
+        return {
+          name:   c.name,
+          hex:    c.hex,
+          images: imgs.length ? imgs : [mainImage],
+          sizes:  c.sizes,
+        };
+      }),
+      sizes:   form.colors[0]?.sizes ?? DEFAULT_SIZES,
+      details: (form.details ?? []).filter((d) => d.trim()),
     };
 
     setSaving(true);
     try {
+      // Upload any locally-buffered files now
+      const resolved: Record<string, string> = {};
+      await Promise.all(
+        Object.entries(pendingFiles.current).map(async ([objectUrl, file]) => {
+          const fd = new FormData();
+          fd.append("file", file);
+          const res  = await fetch("/api/upload", { method: "POST", body: fd });
+          const data = await res.json();
+          if (data.url) resolved[objectUrl] = data.url;
+        })
+      );
+
+      // Swap object URLs → real URLs in payload
+      const resolveUrl = (u: string) => resolved[u] ?? u;
+      payload.image  = resolveUrl(payload.image);
+      payload.colors = payload.colors.map((c) => ({
+        ...c,
+        images: c.images.map(resolveUrl),
+      }));
+
+      revokePending();
       await onSave(payload);
       setSaving(false);
     } catch {
@@ -282,112 +393,110 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
 
                   <div className="flex gap-4">
                     <div className="flex-1 min-w-0">
-                    <FormField label="Brand" required>
-                      <div className="relative" ref={brandRef}>
-                        <button
-                          type="button"
-                          onClick={() => setBrandOpen((v) => !v)}
-                          className={`input-field flex items-center justify-between text-left ${!form.brand ? "text-foreground/30" : "text-foreground"}`}
-                        >
-                          <span>{form.brand || "Select brand…"}</span>
-                          <motion.svg
-                            animate={{ rotate: brandOpen ? 180 : 0 }}
-                            transition={{ duration: 0.2, ease }}
-                            width="12" height="12" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-                            className="shrink-0 text-foreground/40"
+                      <FormField label="Brand" required>
+                        <div className="relative" ref={brandRef}>
+                          <button
+                            type="button"
+                            onClick={() => setBrandOpen((v) => !v)}
+                            className={`input-field flex items-center justify-between text-left ${!form.brand ? "text-foreground/30" : "text-foreground"}`}
                           >
-                            <polyline points="6 9 12 15 18 9" />
-                          </motion.svg>
-                        </button>
-
-                        <AnimatePresence>
-                          {brandOpen && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                              transition={{ duration: 0.18, ease }}
-                              className="absolute left-0 top-full z-50 mt-1.5 w-full rounded-2xl border border-foreground/8 bg-white shadow-[0_12px_40px_rgba(95,77,57,0.12)]"
+                            <span>{form.brand || "Select brand…"}</span>
+                            <motion.svg
+                              animate={{ rotate: brandOpen ? 180 : 0 }}
+                              transition={{ duration: 0.2, ease }}
+                              width="12" height="12" viewBox="0 0 24 24" fill="none"
+                              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+                              className="shrink-0 text-foreground/40"
                             >
-                              <div className="max-h-56 overflow-y-auto rounded-2xl p-1.5">
-                                {BRANDS.map((b) => (
-                                  <button
-                                    key={b}
-                                    type="button"
-                                    onClick={() => { set("brand", b); setBrandOpen(false); }}
-                                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-[12px] transition-colors duration-150 hover:bg-foreground/4 ${
-                                      form.brand === b ? "font-semibold text-foreground" : "text-foreground/70"
-                                    }`}
-                                  >
-                                    {b}
-                                    {form.brand === b && (
-                                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="20 6 9 17 4 12" />
-                                      </svg>
-                                    )}
-                                  </button>
-                                ))}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </FormField>
+                              <polyline points="6 9 12 15 18 9" />
+                            </motion.svg>
+                          </button>
+                          <AnimatePresence>
+                            {brandOpen && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                                transition={{ duration: 0.18, ease }}
+                                className="absolute left-0 top-full z-50 mt-1.5 w-full rounded-2xl border border-foreground/8 bg-white shadow-[0_12px_40px_rgba(95,77,57,0.12)]"
+                              >
+                                <div className="max-h-56 overflow-y-auto rounded-2xl p-1.5">
+                                  {BRANDS.map((b) => (
+                                    <button
+                                      key={b}
+                                      type="button"
+                                      onClick={() => { set("brand", b); setBrandOpen(false); }}
+                                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-[12px] transition-colors duration-150 hover:bg-foreground/4 ${
+                                        form.brand === b ? "font-semibold text-foreground" : "text-foreground/70"
+                                      }`}
+                                    >
+                                      {b}
+                                      {form.brand === b && (
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                          <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                      )}
+                                    </button>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      </FormField>
                     </div>
                     <div className="flex-1 min-w-0">
-                    <FormField label="Category">
-                      <div className="relative" ref={categoryRef}>
-                        <button
-                          type="button"
-                          onClick={() => setCategoryOpen((v) => !v)}
-                          className="input-field flex items-center justify-between text-left text-foreground"
-                        >
-                          <span>{CATEGORIES.find((c) => c.slug === (form.category ?? "tops-shirts"))?.label ?? "Select…"}</span>
-                          <motion.svg
-                            animate={{ rotate: categoryOpen ? 180 : 0 }}
-                            transition={{ duration: 0.2, ease }}
-                            width="12" height="12" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-                            className="shrink-0 text-foreground/40"
+                      <FormField label="Category">
+                        <div className="relative" ref={categoryRef}>
+                          <button
+                            type="button"
+                            onClick={() => setCategoryOpen((v) => !v)}
+                            className="input-field flex items-center justify-between text-left text-foreground"
                           >
-                            <polyline points="6 9 12 15 18 9" />
-                          </motion.svg>
-                        </button>
-
-                        <AnimatePresence>
-                          {categoryOpen && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                              transition={{ duration: 0.18, ease }}
-                              className="absolute left-0 top-full z-50 mt-1.5 w-full rounded-2xl border border-foreground/8 bg-white shadow-[0_12px_40px_rgba(95,77,57,0.12)]"
+                            <span>{CATEGORIES.find((c) => c.slug === (form.category ?? "tops-shirts"))?.label ?? "Select…"}</span>
+                            <motion.svg
+                              animate={{ rotate: categoryOpen ? 180 : 0 }}
+                              transition={{ duration: 0.2, ease }}
+                              width="12" height="12" viewBox="0 0 24 24" fill="none"
+                              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+                              className="shrink-0 text-foreground/40"
                             >
-                              <div className="rounded-2xl p-1.5">
-                                {CATEGORIES.map((c) => (
-                                  <button
-                                    key={c.slug}
-                                    type="button"
-                                    onClick={() => { set("category", c.slug); setCategoryOpen(false); }}
-                                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-[12px] transition-colors duration-150 hover:bg-foreground/4 ${
-                                      (form.category ?? "tops-shirts") === c.slug ? "font-semibold text-foreground" : "text-foreground/70"
-                                    }`}
-                                  >
-                                    {c.label}
-                                    {(form.category ?? "tops-shirts") === c.slug && (
-                                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="20 6 9 17 4 12" />
-                                      </svg>
-                                    )}
-                                  </button>
-                                ))}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </FormField>
+                              <polyline points="6 9 12 15 18 9" />
+                            </motion.svg>
+                          </button>
+                          <AnimatePresence>
+                            {categoryOpen && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                                transition={{ duration: 0.18, ease }}
+                                className="absolute left-0 top-full z-50 mt-1.5 w-full rounded-2xl border border-foreground/8 bg-white shadow-[0_12px_40px_rgba(95,77,57,0.12)]"
+                              >
+                                <div className="rounded-2xl p-1.5">
+                                  {CATEGORIES.map((c) => (
+                                    <button
+                                      key={c.slug}
+                                      type="button"
+                                      onClick={() => { set("category", c.slug); setCategoryOpen(false); }}
+                                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-[12px] transition-colors duration-150 hover:bg-foreground/4 ${
+                                        (form.category ?? "tops-shirts") === c.slug ? "font-semibold text-foreground" : "text-foreground/70"
+                                      }`}
+                                    >
+                                      {c.label}
+                                      {(form.category ?? "tops-shirts") === c.slug && (
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                          <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                      )}
+                                    </button>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      </FormField>
                     </div>
                   </div>
 
@@ -395,7 +504,6 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                     <input className="input-field" value={form.description ?? ""} onChange={(e) => set("description", e.target.value)} placeholder="Classic Oxford weave, slim fit" />
                   </FormField>
 
-                  {/* isNew toggle */}
                   <label className="flex cursor-pointer items-center gap-3">
                     <button
                       type="button"
@@ -469,129 +577,208 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
 
                 <Divider />
 
-                {/* ── Primary image ───────────────────────────────── */}
-                <FormSection title="Primary image">
-                  <FormField label="Image URL" required>
-                    <input className="input-field" value={form.image ?? ""} onChange={(e) => set("image", e.target.value)} placeholder="/assets/product-shirt.png" />
-                  </FormField>
-                  {form.image && (
-                    <div className="h-24 w-18 overflow-hidden rounded-xl bg-[#f7f4f0]">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={form.image} alt="Preview" className="h-full w-full object-cover" />
-                    </div>
-                  )}
-                </FormSection>
-
-                <Divider />
-
-                {/* ── Sizes ───────────────────────────────────────── */}
-                <FormSection title="Sizes & stock">
-                  <div className="flex flex-wrap gap-2">
-                    {(form.sizes ?? DEFAULT_SIZES).map((s) => (
-                      <button
-                        key={s.label}
-                        type="button"
-                        onClick={() => toggleSize(s.label)}
-                        className={`cursor-pointer h-10 min-w-12 rounded-xl border px-3 text-[11px] font-semibold uppercase tracking-[0.12em] transition-all duration-200 ${
-                          s.inStock
-                            ? "border-foreground bg-foreground text-white!"
-                            : "border-foreground/15 text-foreground/40 hover:border-foreground/30"
-                        }`}
-                      >
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-[10px] text-muted">Highlighted sizes are in stock.</p>
-                </FormSection>
-
-                <Divider />
-
                 {/* ── Colours ─────────────────────────────────────── */}
                 <FormSection title="Colours">
-                  <div className="space-y-3" ref={paletteRef}>
-                    {(form.colors ?? []).map((c, i) => (
-                      <div key={i} className="flex items-start gap-3 rounded-xl border border-foreground/8 p-3">
-                        {/* Swatch picker */}
-                        <div className="relative mt-1 shrink-0">
+
+                  {/* Swatch tab row */}
+                  <div className="flex flex-wrap items-center gap-2" ref={paletteRef}>
+                    {form.colors.map((c, ci) => (
+                      <div key={ci} className="relative">
+                        {/* Active ring + remove badge */}
+                        <button
+                          type="button"
+                          onClick={() => setActiveColor(ci)}
+                          title={c.name}
+                          className={`relative h-8 w-8 cursor-pointer rounded-full border transition-all duration-200 ${
+                            activeColor === ci
+                              ? "border-foreground ring-2 ring-foreground ring-offset-2 scale-110"
+                              : "border-black/10 opacity-60 hover:opacity-100 hover:scale-105"
+                          }`}
+                          style={{ backgroundColor: c.hex }}
+                        />
+                        {/* Remove on non-active, only if >1 colour */}
+                        {form.colors.length > 1 && activeColor === ci && (
                           <button
                             type="button"
-                            onClick={() => setColorPaletteOpen(colorPaletteOpen === i ? null : i)}
-                            className="h-8 w-8 rounded-full border border-foreground/20 shadow-sm transition-transform duration-150 hover:scale-110"
-                            style={{ backgroundColor: c.hex }}
-                            title="Pick colour"
-                          />
-                          <AnimatePresence>
-                            {colorPaletteOpen === i && (
-                              <motion.div
-                                initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                                transition={{ duration: 0.18, ease }}
-                                className="absolute left-0 top-full z-50 mt-2 rounded-2xl border border-foreground/8 bg-white p-3 shadow-[0_12px_40px_rgba(95,77,57,0.14)]"
-                                style={{ minWidth: "11rem" }}
-                              >
-                                <p className="mb-2.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-foreground/35">
-                                  Colour palette
-                                </p>
-                                <div className="grid grid-cols-4 gap-2">
-                                  {PALETTE.map((p) => (
-                                    <button
-                                      key={p.name}
-                                      type="button"
-                                      title={p.name}
-                                      onClick={() => {
-                                        setColor(i, "hex", p.hex);
-                                        setColor(i, "name", p.name);
-                                        setColorPaletteOpen(null);
-                                      }}
-                                      className={`h-7 w-7 rounded-full border transition-transform duration-100 hover:scale-110 ${
-                                        c.hex === p.hex
-                                          ? "border-foreground ring-2 ring-foreground ring-offset-1"
-                                          : "border-black/10"
-                                      }`}
-                                      style={{ backgroundColor: p.hex }}
-                                    />
-                                  ))}
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-
-                        <div className="flex-1">
-                          <input
-                            className="input-field bg-foreground/3 text-foreground/60"
-                            value={c.name}
-                            readOnly
-                            placeholder="Select a colour"
-                          />
-                        </div>
-
-                        {(form.colors ?? []).length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeColor(i)}
-                            className="cursor-pointer mt-1 text-foreground/25 transition-colors hover:text-red-400"
+                            onClick={() => removeColor(ci)}
+                            className="cursor-pointer absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-white shadow-sm transition-opacity hover:bg-red-600"
+                            title="Remove colour"
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                            <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
                               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                             </svg>
                           </button>
                         )}
                       </div>
                     ))}
+
+                    {/* Add colour button */}
+                    <button
+                      type="button"
+                      onClick={addColor}
+                      className="cursor-pointer flex h-8 w-8 items-center justify-center rounded-full border-2 border-dashed border-foreground/20 text-foreground/35 transition-colors hover:border-foreground/40 hover:text-foreground/60"
+                      title="Add colour"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={addColor}
-                    className="cursor-pointer flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/40 transition-colors hover:text-foreground"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                    Add colour
-                  </button>
+
+                  {/* Active colour panel */}
+                  {form.colors[activeColor] && (() => {
+                    const c  = form.colors[activeColor];
+                    const ci = activeColor;
+                    return (
+                      <div className="rounded-2xl border border-foreground/8 bg-foreground/1.5 p-4 space-y-5">
+
+                        {/* Colour name + swatch picker */}
+                        <div className="flex items-center gap-3">
+                          <div className="relative shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => setColorPaletteOpen(colorPaletteOpen === ci ? null : ci)}
+                              className="h-8 w-8 cursor-pointer rounded-full border border-foreground/20 shadow-sm transition-transform duration-150 hover:scale-110"
+                              style={{ backgroundColor: c.hex }}
+                              title="Pick colour"
+                            />
+                            <AnimatePresence>
+                              {colorPaletteOpen === ci && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                                  transition={{ duration: 0.18, ease }}
+                                  className="absolute left-0 top-full z-50 mt-2 rounded-2xl border border-foreground/8 bg-white p-3 shadow-[0_12px_40px_rgba(95,77,57,0.14)]"
+                                  style={{ minWidth: "11rem" }}
+                                >
+                                  <p className="mb-2.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-foreground/35">
+                                    Colour palette
+                                  </p>
+                                  <div className="grid grid-cols-4 gap-2">
+                                    {PALETTE.map((p) => (
+                                      <button
+                                        key={p.name}
+                                        type="button"
+                                        title={p.name}
+                                        onClick={() => pickColorSwatch(ci, p.hex, p.name)}
+                                        className={`h-7 w-7 rounded-full border transition-transform duration-100 hover:scale-110 ${
+                                          c.hex === p.hex
+                                            ? "border-foreground ring-2 ring-foreground ring-offset-1"
+                                            : "border-black/10"
+                                        }`}
+                                        style={{ backgroundColor: p.hex }}
+                                      />
+                                    ))}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                          <p className="text-sm font-semibold text-foreground">{c.name}</p>
+                        </div>
+
+                        {/* Images */}
+                        <div className="space-y-3">
+                          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-foreground/35">Images</p>
+
+                          <div
+                            onDragOver={(e) => { e.preventDefault(); setDraggingIdx(ci); }}
+                            onDragLeave={() => setDraggingIdx(null)}
+                            onDrop={(e) => handleDrop(ci, e)}
+                            onClick={() => fileInputRefs.current[ci]?.click()}
+                            className={`cursor-pointer flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed py-5 transition-colors duration-200 ${
+                              draggingIdx === ci
+                                ? "border-foreground/40 bg-foreground/5"
+                                : "border-foreground/12 hover:border-foreground/25 hover:bg-foreground/3"
+                            }`}
+                          >
+                              <svg className="text-foreground/30" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                              </svg>
+                            <p className="text-[10px] font-semibold text-foreground/35">Drop or click to upload</p>
+                          </div>
+                          <input
+                            ref={(el) => { fileInputRefs.current[ci] = el; }}
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            onChange={(e) => e.target.files && uploadFiles(ci, e.target.files)}
+                          />
+
+                          {c.images.some((u) => u.trim()) && (
+                            <div className="space-y-1.5">
+                              {c.images.map((url, ii) => (
+                                <div key={ii} className="flex items-center gap-2">
+                                  {/* First image indicator */}
+                                  <div className={`shrink-0 w-3 ${ii === 0 && ci === 0 ? "text-amber-400" : "text-transparent"}`}>
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                    </svg>
+                                  </div>
+                                  <div className="h-9 w-7 shrink-0 overflow-hidden rounded-lg bg-[#f7f4f0]">
+                                    {url.trim() && (
+                                      // eslint-disable-next-line @next/next/no-img-element
+                                      <img src={url} alt="" className="h-full w-full object-cover" />
+                                    )}
+                                  </div>
+                                  <input
+                                    className="input-field flex-1 font-mono text-[10px]"
+                                    value={url}
+                                    onChange={(e) => {
+                                      const imgs = [...c.images];
+                                      imgs[ii] = e.target.value;
+                                      setColorImages(ci, imgs);
+                                    }}
+                                    placeholder="or paste a URL…"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const imgs = c.images.filter((_, idx) => idx !== ii);
+                                      setColorImages(ci, imgs.length ? imgs : [""]);
+                                    }}
+                                    className="cursor-pointer shrink-0 text-foreground/25 transition-colors hover:text-red-400"
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {ci === 0 && <p className="text-[9px] text-muted">First image of the first colour is used as the product card thumbnail.</p>}
+                        </div>
+
+                        {/* Sizes */}
+                        <div className="space-y-3">
+                          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-foreground/35">Sizes in stock</p>
+                          <div className="flex flex-wrap gap-2">
+                            {(c.sizes ?? []).map((s) => (
+                              <button
+                                key={s.label}
+                                type="button"
+                                onClick={() => toggleColorSize(ci, s.label)}
+                                className={`cursor-pointer h-9 min-w-11 rounded-xl border px-3 text-[10px] font-semibold uppercase tracking-[0.12em] transition-all duration-200 ${
+                                  s.inStock
+                                    ? "border-foreground bg-foreground text-white!"
+                                    : "border-foreground/15 text-foreground/40 hover:border-foreground/30"
+                                }`}
+                              >
+                                {s.label}
+                              </button>
+                            ))}
+                          </div>
+                          <p className="text-[9px] text-muted">Tap a size to toggle stock for this colour.</p>
+                        </div>
+
+                      </div>
+                    );
+                  })()}
                 </FormSection>
 
                 <Divider />

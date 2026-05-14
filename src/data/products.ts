@@ -2,6 +2,7 @@ export type ColorVariant = {
   name: string;
   hex: string;
   images: string[];
+  sizes?: SizeOption[];
 };
 
 export type SizeOption = {
