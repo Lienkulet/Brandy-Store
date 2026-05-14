@@ -1,11 +1,12 @@
 import Link from "next/link";
+import type { MouseEventHandler } from "react";
 
 type BlackBtnProps = {
   name: string;
   type?: "button" | "submit" | "reset";
   className?: string;
   href?: string;
-  onClick?: () => void;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
   disabled?: boolean;
 };
 

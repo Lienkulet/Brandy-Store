@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useCart } from "../../context/CartContext";
+import BlackBtn from "../ui/BlackBtn";
 
 type ProductPrice = {
   original: string;
@@ -84,7 +85,7 @@ function ProductCard({ name, brand, image, price, href, isNew, quickAdd, sizeFre
 
   return (
     <motion.article
-      className="soft-card group relative flex h-full flex-col overflow-hidden rounded-2xl"
+      className="soft-card group/card relative flex h-full flex-col overflow-hidden rounded-2xl"
       transition={{ duration: 0.35, ease }}
       style={{ boxShadow: "0 18px 40px rgba(95, 77, 57, 0.08)" }}
     >
@@ -137,17 +138,18 @@ function ProductCard({ name, brand, image, price, href, isNew, quickAdd, sizeFre
 
               {/* Idle: "Add to Bag" button, only visible on group hover */}
               {step === "idle" && (
-                <motion.button
+                <motion.div
                   key="add"
-                  onClick={handleQuickAdd}
-                  className="cursor-pointer w-full rounded-full bg-background/90 py-2.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground backdrop-blur-sm transition-colors duration-200 hover:bg-foreground hover:text-white translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100"
-                  style={{ transition: "transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s cubic-bezier(0.22,1,0.36,1), background-color 0.2s, color 0.2s" }}
                   initial={false}
                   exit={{ opacity: 0, y: 6 }}
                   transition={{ duration: 0.2, ease }}
                 >
-                  Add to Bag
-                </motion.button>
+                  <BlackBtn
+                    name="Add to Bag"
+                    onClick={handleQuickAdd}
+                    className="h-10 w-full translate-y-3 opacity-0 shadow-[0_12px_30px_rgba(30,26,23,0.18)] transition-all delay-75 duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/card:translate-y-0 group-hover/card:opacity-100 group-hover/card:delay-150"
+                  />
+                </motion.div>
               )}
 
               {/* Sizes: pill row */}
