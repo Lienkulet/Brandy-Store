@@ -2,21 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import type { Product } from "../../data/products";
+import { useProducts } from "@/hooks/useProducts";
+import { parseMDL, formatMDL } from "@/lib/money";
+import { getProductStats } from "@/lib/product-utils";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 type SupabaseOrder = { id: string; subtotal: string; status: string; created_at: string; customer_name: string; customer_phone: string };
 
-function parseMDL(str: string): number {
-  const n = parseInt(str.replace(/\s/g, "").replace("MDL", ""), 10);
-  return isNaN(n) ? 0 : n;
-}
-
 export function OverviewContent() {
   const [orders, setOrders]           = useState<SupabaseOrder[]>([]);
   const [ordersLoaded, setLoaded]     = useState(false);
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const { products: allProducts } = useProducts();
 
   useEffect(() => {
     fetch("/api/orders")
@@ -24,16 +21,9 @@ export function OverviewContent() {
       .then((data) => setOrders(Array.isArray(data) ? data : []))
       .catch(() => setOrders([]))
       .finally(() => setLoaded(true));
-    fetch("/api/products")
-      .then((r) => r.json())
-      .then((data) => setAllProducts(Array.isArray(data) ? data : []))
-      .catch(() => setAllProducts([]));
   }, []);
 
-  const totalProducts   = allProducts.length;
-  const inStockItems    = allProducts.filter((p) => p.sizes.some((s) => s.inStock)).length;
-  const outOfStockItems = allProducts.filter((p) => p.sizes.every((s) => !s.inStock)).length;
-  const newArrivals     = allProducts.filter((p) => p.isNew).length;
+  const productStats = getProductStats(allProducts);
 
   const revenue = orders
     .filter((o) => o.status !== "cancelled")
@@ -54,7 +44,7 @@ export function OverviewContent() {
     },
     {
       label:    "Revenue",
-      value:    ordersLoaded ? (revenue > 0 ? revenue.toLocaleString("ro-MD") + " MDL" : "0 MDL") : "—",
+      value:    ordersLoaded ? (revenue > 0 ? formatMDL(revenue) : "0 MDL") : "—",
       sublabel: revenue === 0 ? "Awaiting first order" : "Confirmed + shipped",
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -65,8 +55,8 @@ export function OverviewContent() {
     },
     {
       label:    "Products",
-      value:    String(totalProducts),
-      sublabel: `${inStockItems} in stock · ${outOfStockItems} out`,
+      value:    String(productStats.total),
+      sublabel: `${productStats.inStock} in stock · ${productStats.outOfStock} out`,
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
@@ -76,7 +66,7 @@ export function OverviewContent() {
     },
     {
       label:    "New Arrivals",
-      value:    String(newArrivals),
+      value:    String(productStats.newArrivals),
       sublabel: "Marked as new in store",
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -157,7 +147,7 @@ export function OverviewContent() {
       </motion.div>
 
       {/* Low stock */}
-      {outOfStockItems > 0 && (
+      {productStats.outOfStock > 0 && (
         <motion.div
           className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-6 py-4"
           initial={{ opacity: 0, y: 12 }}
@@ -171,7 +161,7 @@ export function OverviewContent() {
             </svg>
             <div>
               <p className="text-[11px] font-semibold text-amber-800">
-                {outOfStockItems} product{outOfStockItems > 1 ? "s" : ""} fully out of stock
+                {productStats.outOfStock} product{productStats.outOfStock > 1 ? "s" : ""} fully out of stock
               </p>
               <p className="mt-0.5 text-[11px] text-amber-700/70">
                 Review your products to update stock availability.

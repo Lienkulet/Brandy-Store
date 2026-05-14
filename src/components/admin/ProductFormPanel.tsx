@@ -2,105 +2,22 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Product, ColorVariant, SizeOption } from "@/data/products";
+import type { Product } from "@/data/products";
 import { PALETTE } from "@/data/colors";
+import {
+  ACCESSORY_SIZES,
+  BRANDS,
+  DEFAULT_SIZES,
+  PRODUCT_CATEGORIES,
+  blankColor,
+  blankProduct,
+  categoryLabelForSlug,
+  sizesForCategory,
+  toSlug,
+  type ProductFormColor,
+} from "./productFormModel";
 
 const ease = [0.22, 1, 0.36, 1] as const;
-
-const DEFAULT_SIZES: SizeOption[] = [
-  { label: "XS",  inStock: true },
-  { label: "S",   inStock: true },
-  { label: "M",   inStock: true },
-  { label: "L",   inStock: true },
-  { label: "XL",  inStock: true },
-  { label: "XXL", inStock: true },
-];
-
-const SHOE_SIZES: SizeOption[] = [
-  { label: "39", inStock: true },
-  { label: "40", inStock: true },
-  { label: "41", inStock: true },
-  { label: "42", inStock: true },
-  { label: "43", inStock: true },
-  { label: "44", inStock: true },
-  { label: "45", inStock: true },
-  { label: "46", inStock: true },
-];
-
-const WAIST_SIZES: SizeOption[] = [
-  { label: "30", inStock: true },
-  { label: "31", inStock: true },
-  { label: "32", inStock: true },
-  { label: "33", inStock: true },
-  { label: "34", inStock: true },
-  { label: "36", inStock: true },
-  { label: "38", inStock: true },
-];
-
-const ACCESSORY_SIZES: SizeOption[] = [
-  { label: "One Size", inStock: true },
-];
-
-const BRANDS = [
-  "Loro Piana", "Boss", "Hugo", "Polo", "Zegna",
-  "Armani Exchange", "Tommy Hilfiger", "Calvin Klein",
-  "Brunello Cucinelli", "Emporio Armani", "Lacoste",
-  "Brango", "Tony Montana", "Etro", "Tom Ford",
-  "DOLCE & GABBANA", "Zara", "Massimo Dutti", "Vaganza", "Moncler",
-];
-
-const CATEGORIES = [
-  { label: "Tops & Shirts",          slug: "tops-shirts" },
-  { label: "Knitwear & Layering",    slug: "knitwear-layering" },
-  { label: "Jackets & Outerwear",    slug: "jackets-outerwear" },
-  { label: "Pants & Jeans",          slug: "pants-jeans" },
-  { label: "Shorts",                 slug: "shorts" },
-  { label: "Sets",                   slug: "sets" },
-  { label: "Underwear & Essentials", slug: "underwear-essentials" },
-  { label: "Sportswear",             slug: "sportswear" },
-  { label: "Shoes",                  slug: "shoes" },
-  { label: "Accessories",            slug: "accessories" },
-];
-
-function sizesForCategory(category?: string): SizeOption[] {
-  if (category === "shoes") return SHOE_SIZES.map((s) => ({ ...s }));
-  if (category === "accessories") return ACCESSORY_SIZES.map((s) => ({ ...s }));
-  if (category === "pants-jeans" || category === "shorts") {
-    return WAIST_SIZES.map((s) => ({ ...s }));
-  }
-  return DEFAULT_SIZES.map((s) => ({ ...s }));
-}
-
-function categoryLabelForSlug(slug?: string) {
-  return CATEGORIES.find((c) => c.slug === (slug ?? "tops-shirts"))?.label ?? "";
-}
-
-function toSlug(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
-
-type FormColor = ColorVariant & { sizes: SizeOption[] };
-
-function blankColor(category?: string): FormColor {
-  return { name: "White", hex: "#FFFFFF", images: [""], sizes: sizesForCategory(category) };
-}
-
-function blankProduct(): Partial<Product> & { colors: FormColor[] } {
-  return {
-    id:          `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    slug:        "",
-    name:        "",
-    brand:       "",
-    category:    "tops-shirts",
-    description: "",
-    price:       null,
-    image:       "",
-    isNew:       false,
-    colors:      [blankColor("tops-shirts")],
-    sizes:       DEFAULT_SIZES.map((s) => ({ ...s })),
-    details:     [""],
-  };
-}
 
 type Props = {
   open:     boolean;
@@ -145,7 +62,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
     brand.toLowerCase().includes(brandSearch)
   );
   const categorySearch = categoryQuery.trim().toLowerCase();
-  const filteredCategories = CATEGORIES.filter((category) =>
+  const filteredCategories = PRODUCT_CATEGORIES.filter((category) =>
     category.label.toLowerCase().includes(categorySearch) ||
     category.slug.toLowerCase().includes(categorySearch)
   );
@@ -167,7 +84,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
 
     const timer = window.setTimeout(() => {
       if (product) {
-        const colors: FormColor[] = product.colors.map((c) => ({
+        const colors: ProductFormColor[] = product.colors.map((c) => ({
           ...c,
           images: c.images?.length ? c.images : [""],
           sizes:  c.sizes?.length  ? [...c.sizes] : (product.sizes ?? DEFAULT_SIZES).map((s) => ({ ...s })),
@@ -271,7 +188,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
   }
 
   function removeColor(i: number) {
-    setForm((f) => ({ ...f, colors: f.colors.filter((_, idx) => idx !== i) as FormColor[] }));
+    setForm((f) => ({ ...f, colors: f.colors.filter((_, idx) => idx !== i) as ProductFormColor[] }));
     setActiveColor((prev) => Math.max(0, prev >= i ? prev - 1 : prev));
   }
 
@@ -534,7 +451,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                             onFocus={() => setCategoryOpen(true)}
                             onChange={(e) => {
                               const value = e.target.value;
-                              const exact = CATEGORIES.find((c) =>
+                              const exact = PRODUCT_CATEGORIES.find((c) =>
                                 c.label.toLowerCase() === value.trim().toLowerCase() ||
                                 c.slug.toLowerCase() === value.trim().toLowerCase()
                               );

@@ -9,6 +9,7 @@ import { useCart } from "@/context/CartContext";
 import { ArrowLeftIcon } from "@/components/icons/ArrowLeftIcon";
 import { ArrowRightIcon } from "@/components/icons/ArrowRightIcon";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { areAllSizesOutOfStock, isPriceOnSale } from "@/lib/product-utils";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -23,7 +24,7 @@ export function ProductDetail({ product }: { product: Product }) {
   const color  = product.colors[colorIdx];
   const images = color.images;
   const sizes  = color.sizes?.length ? color.sizes : product.sizes;
-  const isOnSale = Boolean(product.price?.original.trim());
+  const isOnSale = isPriceOnSale(product.price);
   const isSizeFree = product.category === "accessories";
   const details = product.details.filter((detail) => detail.trim());
 
@@ -91,7 +92,7 @@ export function ProductDetail({ product }: { product: Product }) {
     setTimeout(() => setCartState("idle"), 2500);
   }
 
-  const allSizesOut = sizes.length > 0 && sizes.every((s) => !s.inStock);
+  const allSizesOut = areAllSizesOutOfStock(sizes);
 
   return (
     <>

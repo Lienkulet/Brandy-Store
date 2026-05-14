@@ -1,37 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ProductFormPanel } from "./ProductFormPanel";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
 import { ProductAdminCard } from "./ProductAdminCard";
-import { ProductsToolbar, type ProductFilter } from "./ProductsToolbar";
+import { ProductsToolbar } from "./ProductsToolbar";
 import { EmptyState } from "./OverviewContent";
 import type { Product } from "@/data/products";
-
-function isProductInStock(product: Product) {
-  return (product.sizes ?? []).some((size) => size.inStock);
-}
-
-function isProductOutOfStock(product: Product) {
-  const sizes = product.sizes ?? [];
-  return sizes.length > 0 && sizes.every((size) => !size.inStock);
-}
-
-function isProductOnSale(product: Product) {
-  return Boolean(product.price?.original.trim());
-}
-
-function matchesFilter(product: Product, filter: ProductFilter) {
-  if (filter === "in-stock") return isProductInStock(product);
-  if (filter === "out-of-stock") return isProductOutOfStock(product);
-  if (filter === "on-sale") return isProductOnSale(product);
-  if (filter === "new") return Boolean(product.isNew);
-  return true;
-}
+import { useProducts } from "@/hooks/useProducts";
+import {
+  getProductStats,
+  markProductOutOfStock,
+  matchesProductFilter,
+  matchesProductSearch,
+  type ProductFilter,
+} from "@/lib/product-utils";
+import { deleteProduct, saveProduct, updateProduct } from "@/services/productService";
 
 export function ProductsContent() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const { products, loading, refetch } = useProducts();
   const [search, setSearch]     = useState("");
   const [activeFilter, setActiveFilter] = useState<ProductFilter>("all");
 
@@ -42,59 +29,17 @@ export function ProductsContent() {
   const [deleting, setDeleting]         = useState(false);
   const [markingOutStockId, setMarkingOutStockId] = useState<string | null>(null);
 
-  async function fetchProducts() {
-    setLoading(true);
-    const res  = await fetch("/api/products");
-    const data = await res.json();
-    setProducts(Array.isArray(data) ? data : []);
-    setLoading(false);
-  }
-
-  useEffect(() => { fetchProducts(); }, []);
-
-  const normalizedSearch = search.trim().toLowerCase();
   const visible = useMemo(() => {
-    return products.filter((product) => {
-      if (!matchesFilter(product, activeFilter)) return false;
-      if (!normalizedSearch) return true;
-
-      const searchableText = [
-        product.name,
-        product.brand,
-        product.category,
-        product.slug,
-        product.description,
-        product.price?.current,
-        product.price?.original,
-        ...(product.details ?? []),
-        ...(product.colors ?? []).flatMap((color) => [
-          color.name,
-          color.hex,
-          ...(color.sizes ?? []).map((size) => size.label),
-        ]),
-        ...(product.sizes ?? []).map((size) => size.label),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      return searchableText.includes(normalizedSearch);
-    });
-  }, [activeFilter, normalizedSearch, products]);
-
-  const totalInStock  = products.filter(isProductInStock).length;
-  const totalOutStock = products.filter(isProductOutOfStock).length;
-  const totalOnSale   = products.filter(isProductOnSale).length;
-  const totalNew      = products.filter((p) => p.isNew).length;
+    return products.filter((product) =>
+      matchesProductFilter(product, activeFilter) && matchesProductSearch(product, search)
+    );
+  }, [activeFilter, products, search]);
+  const productStats = useMemo(() => getProductStats(products), [products]);
 
   async function handleSave(product: Product) {
     const isEdit = products.some((p) => p.id === product.id);
-    const res = await fetch(
-      isEdit ? `/api/products/${product.id}` : "/api/products",
-      { method: isEdit ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(product) }
-    );
-    if (!res.ok) throw new Error("Save failed");
-    await fetchProducts();
+    await saveProduct(product, isEdit);
+    await refetch();
     setPanelOpen(false);
     setEditing(null);
   }
@@ -102,31 +47,18 @@ export function ProductsContent() {
   async function handleDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
-    await fetch(`/api/products/${deleteTarget.id}`, { method: "DELETE" });
-    await fetchProducts();
+    await deleteProduct(deleteTarget.id);
+    await refetch();
     setDeleteTarget(null);
     setDeleting(false);
   }
 
   async function handleMarkOutOfStock(product: Product) {
     setMarkingOutStockId(product.id);
-    const outOfStockSizes = product.sizes.map((size) => ({ ...size, inStock: false }));
-    const updated: Product = {
-      ...product,
-      sizes: outOfStockSizes,
-      colors: product.colors.map((color) => ({
-        ...color,
-        sizes: (color.sizes ?? product.sizes).map((size) => ({ ...size, inStock: false })),
-      })),
-    };
 
     try {
-      const res = await fetch(`/api/products/${product.id}`, {
-        method:  "PUT",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(updated),
-      });
-      if (res.ok) await fetchProducts();
+      const updated = await updateProduct(markProductOutOfStock(product));
+      if (updated) await refetch();
     } finally {
       setMarkingOutStockId(null);
     }
@@ -139,11 +71,11 @@ export function ProductsContent() {
     <div>
       <ProductsToolbar
         loading={loading}
-        total={products.length}
-        totalInStock={totalInStock}
-        totalOutStock={totalOutStock}
-        totalOnSale={totalOnSale}
-        totalNew={totalNew}
+        total={productStats.total}
+        totalInStock={productStats.inStock}
+        totalOutStock={productStats.outOfStock}
+        totalOnSale={productStats.onSale}
+        totalNew={productStats.newArrivals}
         search={search}
         activeFilter={activeFilter}
         onSearch={setSearch}

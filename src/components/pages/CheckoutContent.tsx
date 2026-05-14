@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCart, type CartItem } from "@/context/CartContext";
 import Container from "@/components/layout/Container";
 import BlackBtn from "@/components/ui/BlackBtn";
+import { formatMDL, parseMDL } from "@/lib/money";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -18,11 +19,6 @@ const DELIVERY_OPTIONS: { value: DeliveryMethod; label: string; sublabel: string
   { value: "courier",    label: "Courier — Chișinău",    sublabel: "Same-day or next-day delivery"     },
   { value: "nationwide", label: "Nationwide delivery",   sublabel: "2–4 business days"                 },
 ];
-
-function parseMDL(str: string): number {
-  const n = parseInt(str.replace(/\s/g, "").replace("MDL", ""), 10);
-  return isNaN(n) ? 0 : n;
-}
 
 export function CheckoutContent() {
   const { items, itemCount, isHydrated, clearCart } = useCart();
@@ -44,7 +40,7 @@ export function CheckoutContent() {
   }, [isHydrated, itemCount, router, success]);
 
   const subtotal  = items.reduce((sum, i) => sum + parseMDL(i.price) * i.quantity, 0);
-  const formatted = subtotal.toLocaleString("ro-MD") + " MDL";
+  const formatted = formatMDL(subtotal);
 
   async function handlePlaceOrder() {
     if (!name.trim()) { setError("Please enter your full name."); return; }

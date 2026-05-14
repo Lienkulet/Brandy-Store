@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useCart } from "../../context/CartContext";
 import BlackBtn from "../ui/BlackBtn";
 import { ProductImage } from "../ui/ProductImage";
+import { isPriceOnSale } from "@/lib/product-utils";
 
 type ProductPrice = {
   original: string;
@@ -43,7 +44,7 @@ function ProductCard({ name, brand, image, price, href, isNew, quickAdd, sizeFre
   const sizeConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const inStockSizes = quickAdd?.sizes.filter((s) => s.inStock) ?? [];
-  const isOnSale = Boolean(price?.original.trim());
+  const isOnSale = isPriceOnSale(price);
   const isOutOfStock = Boolean(quickAdd && inStockSizes.length === 0);
 
   function handleQuickAdd(e: React.MouseEvent) {

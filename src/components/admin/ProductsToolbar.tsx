@@ -2,8 +2,7 @@
 
 import { PageHeader } from "./OverviewContent";
 import { SearchIcon } from "../icons/SearchIcon";
-
-export type ProductFilter = "all" | "in-stock" | "out-of-stock" | "on-sale" | "new";
+import type { ProductFilter } from "@/lib/product-utils";
 
 type Props = {
   loading:        boolean;

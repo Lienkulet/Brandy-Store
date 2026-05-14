@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import type { Product } from "@/data/products";
 import { ProductImage } from "../ui/ProductImage";
+import { countInStockSizes, isProductOnSale, isProductOutOfStock } from "@/lib/product-utils";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -24,9 +25,9 @@ export function ProductAdminCard({
   onMarkOutOfStock,
   markingOutOfStock = false,
 }: Props) {
-  const allOut     = product.sizes.every((s) => !s.inStock);
-  const stockCount = product.sizes.filter((s) => s.inStock).length;
-  const isOnSale   = Boolean(product.price?.original.trim());
+  const allOut     = isProductOutOfStock(product);
+  const stockCount = countInStockSizes(product);
+  const isOnSale   = isProductOnSale(product);
   const isSizeFree = product.category === "accessories";
 
   return (

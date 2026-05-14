@@ -1,24 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import { motion } from "framer-motion";
 import ProductCard from "@/components/cards/ProductCard";
 import type { Product } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 function Collection() {
-  const [items, setItems] = useState<Product[]>([]);
-
-  useEffect(() => {
-    fetch("/api/products")
-      .then((r) => r.json())
-      .then((data: unknown) => {
-        const list = Array.isArray(data) ? (data as Product[]) : [];
-        setItems(list.filter((p) => p.isNew).slice(0, 3));
-      })
-      .catch(() => {});
-  }, []);
+  const filterNewProducts = useCallback((product: Product) => Boolean(product.isNew), []);
+  const { products } = useProducts(filterNewProducts);
+  const items = products.slice(0, 3);
 
   return (
     <section

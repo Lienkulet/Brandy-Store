@@ -1,36 +1,26 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Container from "@/components/layout/Container";
 import ProductCard from "@/components/cards/ProductCard";
 import { categories, type Product } from "@/data/products";
 import { PALETTE } from "@/data/colors";
+import { useProducts } from "@/hooks/useProducts";
+import { parseMDL } from "@/lib/money";
+import { getProductSizesForCard } from "@/lib/product-utils";
+import {
+  ColorFilterDropdown,
+  FilterDropdown,
+  MobileFilterPanel,
+  SortDropdown,
+  type ProductFilters,
+  type SortKey,
+} from "./ShopFilters";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-type SortKey = "new-in" | "oldest" | "price-asc" | "price-desc";
-
-type Filters = {
-  brands: string[];
-  sizes:  string[];
-  colors: string[];
-};
-
-const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: "new-in",      label: "New In"              },
-  { key: "oldest",      label: "Oldest First"        },
-  { key: "price-asc",   label: "Price: Low to High"  },
-  { key: "price-desc",  label: "Price: High to Low"  },
-];
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function parseMDL(str: string): number {
-  return parseInt(str.replace(/\s/g, "").replace("MDL", ""), 10);
-}
 
 function applySort(list: Product[], sort: SortKey): Product[] {
   return [...list].sort((a, b) => {
@@ -42,7 +32,7 @@ function applySort(list: Product[], sort: SortKey): Product[] {
   });
 }
 
-function applyFilters(list: Product[], filters: Filters): Product[] {
+function applyFilters(list: Product[], filters: ProductFilters): Product[] {
   return list.filter((p) => {
     if (filters.brands.length && !filters.brands.includes(p.brand)) return false;
     if (filters.sizes.length  && !p.sizes.some((s)  => filters.sizes.includes(s.label)))   return false;
@@ -51,47 +41,20 @@ function applyFilters(list: Product[], filters: Filters): Product[] {
   });
 }
 
-function getCardSizes(product: Product, colorFilters: string[]): { label: string; inStock: boolean }[] {
-  const matchingColors = colorFilters.length
-    ? product.colors.filter((c) => colorFilters.includes(c.name))
-    : product.colors;
-
-  const allSizes = matchingColors.flatMap((c) =>
-    c.sizes?.length ? c.sizes : product.sizes
-  );
-
-  if (!allSizes.length) return product.sizes;
-
-  // Deduplicate by label; inStock = true if any color has it in stock
-  const map = new Map<string, boolean>();
-  for (const s of allSizes) {
-    map.set(s.label, (map.get(s.label) ?? false) || s.inStock);
-  }
-  return Array.from(map.entries()).map(([label, inStock]) => ({ label, inStock }));
-}
-
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: string; onlyNew?: boolean }) {
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [loading, setLoading]         = useState(true);
+  const filterProducts = useCallback(
+    (product: Product) => !onlyNew || Boolean(product.isNew),
+    [onlyNew]
+  );
+  const { products: allProducts, loading } = useProducts(filterProducts);
   const [category, setCategory]       = useState<string | null>(initialCategory ?? null);
-  const [filters, setFilters]         = useState<Filters>({ brands: [], sizes: [], colors: [] });
+  const [filters, setFilters]         = useState<ProductFilters>({ brands: [], sizes: [], colors: [] });
   const [sort, setSort]               = useState<SortKey>("new-in");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen]   = useState(false);
   const pillsRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    fetch("/api/products")
-      .then((r) => r.json())
-      .then((data) => {
-        const list = Array.isArray(data) ? data : [];
-        setAllProducts(onlyNew ? list.filter((p) => p.isNew) : list);
-      })
-      .catch(() => setAllProducts([]))
-      .finally(() => setLoading(false));
-  }, [onlyNew]);
 
   // Scroll active category pill into view on mobile
   useEffect(() => {
@@ -133,7 +96,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
   const activeFilterCount = filters.brands.length + filters.sizes.length + filters.colors.length;
   const categoryLabel     = categories.find((c) => c.slug === category)?.label ?? "All";
 
-  function toggleFilter(key: keyof Filters, value: string) {
+  function toggleFilter(key: keyof ProductFilters, value: string) {
     setFilters((prev) => {
       const arr = prev[key];
       return {
@@ -339,7 +302,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
                       quickAdd={{
                         productId: product.id,
                         colorName: product.colors[0].name,
-                        sizes:     getCardSizes(product, filters.colors),
+                        sizes:     getProductSizesForCard(product, filters.colors),
                         price:     product.price?.current ?? "Price on request",
                       }}
                     />
@@ -385,400 +348,3 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
   );
 }
 
-// ─── FilterDropdown ───────────────────────────────────────────────────────────
-
-function FilterDropdown({
-  label, options, selected, onToggle, open, onOpen,
-}: {
-  label:    string;
-  options:  { value: string; label: string }[];
-  selected: string[];
-  onToggle: (v: string) => void;
-  open:     boolean;
-  onOpen:   () => void;
-}) {
-  const ease = [0.22, 1, 0.36, 1] as const;
-  const count = selected.length;
-
-  return (
-    <div className="relative z-20">
-      <button
-        onClick={onOpen}
-        className={`cursor-pointer flex items-center gap-1.5 rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] transition-all duration-200 ${
-          count > 0 || open
-            ? "border-foreground bg-foreground text-white"
-            : "border-foreground/15 text-muted hover:border-foreground/30 hover:text-foreground"
-        }`}
-      >
-        {label}{count > 0 && ` (${count})`}
-        <motion.svg
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.2, ease }}
-          width="10" height="10" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </motion.svg>
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            className="absolute left-0 top-full z-20 mt-2 min-w-48 rounded-2xl border border-foreground/8 bg-card shadow-[0_12px_40px_rgba(95,77,57,0.12)]"
-            initial={{ opacity: 0, y: -6, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.97 }}
-            transition={{ duration: 0.18, ease }}
-          >
-            <div className="max-h-80 overflow-y-auto rounded-2xl p-2">
-              {options.map(({ value, label: optLabel }) => {
-                const checked = selected.includes(value);
-                return (
-                  <label
-                    key={value}
-                    className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150 hover:bg-foreground/4"
-                  >
-                    <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors duration-150 ${
-                      checked ? "border-foreground bg-foreground" : "border-foreground/25"
-                    }`}>
-                      {checked && (
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      )}
-                    </span>
-                    <input
-                      type="checkbox"
-                      className="sr-only"
-                      checked={checked}
-                      onChange={() => onToggle(value)}
-                    />
-                    <span className="text-[11px] font-medium text-foreground/80">{optLabel}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// ─── ColorFilterDropdown ──────────────────────────────────────────────────────
-
-function ColorFilterDropdown({
-  options, selected, onToggle, open, onOpen,
-}: {
-  options:  { name: string; hex: string }[];
-  selected: string[];
-  onToggle: (v: string) => void;
-  open:     boolean;
-  onOpen:   () => void;
-}) {
-  const ease = [0.22, 1, 0.36, 1] as const;
-  const count = selected.length;
-
-  return (
-    <div className="relative z-20">
-      <button
-        onClick={onOpen}
-        className={`cursor-pointer flex items-center gap-1.5 rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] transition-all duration-200 ${
-          count > 0 || open
-            ? "border-foreground bg-foreground text-white"
-            : "border-foreground/15 text-muted hover:border-foreground/30 hover:text-foreground"
-        }`}
-      >
-        Colour{count > 0 && ` (${count})`}
-        <motion.svg
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.2, ease }}
-          width="10" height="10" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </motion.svg>
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            className="absolute left-0 top-full z-20 mt-2 min-w-45 overflow-hidden rounded-2xl border border-foreground/8 bg-card shadow-[0_12px_40px_rgba(95,77,57,0.12)]"
-            initial={{ opacity: 0, y: -6, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.97 }}
-            transition={{ duration: 0.18, ease }}
-          >
-            <div className="max-h-64 overflow-y-auto p-2">
-              {options.map(({ name, hex }) => {
-                const checked = selected.includes(name);
-                return (
-                  <label
-                    key={name}
-                    className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150 hover:bg-foreground/4"
-                  >
-                    <span
-                      className={`relative h-5 w-5 shrink-0 rounded-full transition-all duration-150 ${
-                        checked ? "ring-2 ring-foreground ring-offset-1" : ""
-                      }`}
-                      style={{ backgroundColor: hex }}
-                    >
-                      <span className="absolute inset-0 rounded-full border border-black/10" />
-                    </span>
-                    <input
-                      type="checkbox"
-                      className="sr-only"
-                      checked={checked}
-                      onChange={() => onToggle(name)}
-                    />
-                    <span className="text-[11px] font-medium text-foreground/80">{name}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// ─── SortDropdown ─────────────────────────────────────────────────────────────
-
-function SortDropdown({
-  value, onChange, open, onOpen,
-}: {
-  value:    SortKey;
-  onChange: (v: SortKey) => void;
-  open:     boolean;
-  onOpen:   () => void;
-}) {
-  const ease = [0.22, 1, 0.36, 1] as const;
-  const label = SORT_OPTIONS.find((s) => s.key === value)!.label;
-
-  return (
-    <div className="relative z-20">
-      <button
-        onClick={onOpen}
-        className="cursor-pointer flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/50 hover:text-foreground transition-colors duration-200"
-      >
-        {label}
-        <motion.svg
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.2, ease }}
-          width="10" height="10" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </motion.svg>
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            className="absolute right-0 top-full z-20 mt-2 min-w-45 overflow-hidden rounded-2xl border border-foreground/8 bg-card shadow-[0_12px_40px_rgba(95,77,57,0.12)]"
-            initial={{ opacity: 0, y: -6, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.97 }}
-            transition={{ duration: 0.18, ease }}
-          >
-            <div className="p-2">
-              {SORT_OPTIONS.map((opt) => (
-                <button
-                  key={opt.key}
-                  onClick={() => onChange(opt.key)}
-                  className={`cursor-pointer flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-[11px] font-medium transition-colors duration-150 hover:bg-foreground/4 ${
-                    value === opt.key ? "text-foreground" : "text-foreground/55"
-                  }`}
-                >
-                  {opt.label}
-                  {value === opt.key && (
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  )}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// ─── MobileFilterPanel ────────────────────────────────────────────────────────
-
-function MobileFilterPanel({
-  filters, sort, resultCount, availableBrands, availableSizes, availableColors,
-  onToggle, onSort, onClear, onClose,
-}: {
-  filters:         Filters;
-  sort:            SortKey;
-  resultCount:     number;
-  availableBrands: string[];
-  availableSizes:  string[];
-  availableColors: { name: string; hex: string }[];
-  onToggle:        (key: keyof Filters, value: string) => void;
-  onSort:          (v: SortKey) => void;
-  onClear:         () => void;
-  onClose:         () => void;
-}) {
-  const ease = [0.22, 1, 0.36, 1] as const;
-  const activeFilterCount = filters.brands.length + filters.sizes.length + filters.colors.length;
-
-  return (
-    <motion.div
-      className="fixed inset-0 z-50 flex flex-col bg-background"
-      initial={{ y: "100%" }}
-      animate={{ y: 0 }}
-      exit={{ y: "100%" }}
-      transition={{ duration: 0.4, ease }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-foreground/8 px-5 py-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-foreground/60">
-          Filter & Sort
-        </p>
-        <div className="flex items-center gap-4">
-          {activeFilterCount > 0 && (
-            <button
-              onClick={onClear}
-              className="cursor-pointer text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/40 underline underline-offset-2"
-            >
-              Clear all
-            </button>
-          )}
-          <button onClick={onClose} className="cursor-pointer text-foreground/50 hover:text-foreground transition-colors">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Scrollable body */}
-      <div className="flex-1 overflow-y-auto px-5 py-6 space-y-8">
-
-        {/* Sort */}
-        <MobileSection title="Sort">
-          <div className="flex flex-wrap gap-2">
-            {SORT_OPTIONS.map((opt) => (
-              <button
-                key={opt.key}
-                onClick={() => onSort(opt.key)}
-                className={`cursor-pointer h-9 rounded-full px-4 text-[11px] font-semibold uppercase tracking-[0.14em] transition-colors duration-200 ${
-                  sort === opt.key
-                    ? "bg-foreground text-white"
-                    : "border border-foreground/15 text-muted hover:border-foreground/30 hover:text-foreground"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </MobileSection>
-
-        {/* Brand */}
-        {availableBrands.length > 0 && (
-          <MobileSection title="Brand">
-            <div className="flex flex-wrap gap-2">
-              {availableBrands.map((b) => {
-                const checked = filters.brands.includes(b);
-                return (
-                  <button
-                    key={b}
-                    onClick={() => onToggle("brands", b)}
-                    className={`cursor-pointer h-9 rounded-full px-4 text-[11px] font-semibold tracking-[0.12em] transition-colors duration-200 ${
-                      checked
-                        ? "bg-foreground text-white"
-                        : "border border-foreground/15 text-muted hover:border-foreground/30 hover:text-foreground"
-                    }`}
-                  >
-                    {b}
-                  </button>
-                );
-              })}
-            </div>
-          </MobileSection>
-        )}
-
-        {/* Size */}
-        {availableSizes.length > 0 && (
-          <MobileSection title="Size">
-            <div className="flex flex-wrap gap-2">
-              {availableSizes.map((s) => {
-                const checked = filters.sizes.includes(s);
-                return (
-                  <button
-                    key={s}
-                    onClick={() => onToggle("sizes", s)}
-                    className={`cursor-pointer h-10 min-w-12 rounded-xl px-3 text-[11px] font-semibold uppercase tracking-[0.12em] transition-all duration-200 ${
-                      checked
-                        ? "border border-foreground bg-foreground text-white"
-                        : "border border-foreground/20 text-foreground hover:border-foreground/50"
-                    }`}
-                  >
-                    {s}
-                  </button>
-                );
-              })}
-            </div>
-          </MobileSection>
-        )}
-
-        {/* Colour */}
-        {availableColors.length > 0 && (
-          <MobileSection title="Colour">
-            <div className="flex flex-wrap gap-3">
-              {availableColors.map(({ name, hex }) => {
-                const checked = filters.colors.includes(name);
-                return (
-                  <button
-                    key={name}
-                    onClick={() => onToggle("colors", name)}
-                    title={name}
-                    className={`cursor-pointer flex items-center gap-2 rounded-full border py-1.5 pl-1.5 pr-3 text-[11px] font-medium transition-all duration-200 ${
-                      checked
-                        ? "border-foreground text-foreground"
-                        : "border-foreground/15 text-muted hover:border-foreground/30"
-                    }`}
-                  >
-                    <span
-                      className={`relative h-5 w-5 shrink-0 rounded-full ${checked ? "ring-2 ring-foreground ring-offset-1" : ""}`}
-                      style={{ backgroundColor: hex }}
-                    >
-                      <span className="absolute inset-0 rounded-full border border-black/10" />
-                    </span>
-                    {name}
-                  </button>
-                );
-              })}
-            </div>
-          </MobileSection>
-        )}
-      </div>
-
-      {/* Footer */}
-      <div className="border-t border-foreground/8 px-5 py-4">
-        <button
-          onClick={onClose}
-          className="cursor-pointer w-full rounded-full bg-foreground py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition-colors duration-200 hover:bg-foreground/90"
-        >
-          Show {resultCount} {resultCount === 1 ? "piece" : "pieces"}
-        </button>
-      </div>
-    </motion.div>
-  );
-}
-
-function MobileSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/50">
-        {title}
-      </p>
-      {children}
-    </div>
-  );
-}
