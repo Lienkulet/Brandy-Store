@@ -36,13 +36,16 @@ const BRANDS = [
 ];
 
 const CATEGORIES = [
-  { label: "Tops & Shirts",          slug: "tops-shirts"          },
-  { label: "Knitwear & Layering",    slug: "knitwear-layering"    },
-  { label: "Jackets & Outerwear",    slug: "jackets-outerwear"    },
-  { label: "Pants & Jeans",          slug: "pants-jeans"          },
+  { label: "Tops & Shirts",          slug: "tops-shirts" },
+  { label: "Knitwear & Layering",    slug: "knitwear-layering" },
+  { label: "Jackets & Outerwear",    slug: "jackets-outerwear" },
+  { label: "Pants & Jeans",          slug: "pants-jeans" },
+  { label: "Shorts",                 slug: "shorts" },
+  { label: "Sets",                   slug: "sets" },
   { label: "Underwear & Essentials", slug: "underwear-essentials" },
-  { label: "Sportswear",             slug: "sportswear"           },
-  { label: "Shoes",                  slug: "shoes"                },
+  { label: "Sportswear",             slug: "sportswear" },
+  { label: "Shoes",                  slug: "shoes" },
+  { label: "Accessories",            slug: "accessories" },
 ];
 
 function sizesForCategory(category?: string): SizeOption[] {
