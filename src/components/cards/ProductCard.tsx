@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "../../context/CartContext";
 import BlackBtn from "../ui/BlackBtn";
+import { ProductImage } from "../ui/ProductImage";
 
 type ProductPrice = {
   original: string;
@@ -141,12 +141,11 @@ function ProductCard({ name, brand, image, price, href, isNew, quickAdd, sizeFre
           whileHover={{ scale: 1.05 }}
           transition={{ duration: 0.55, ease }}
         >
-          <Image
+          <ProductImage
             src={image}
             alt={name}
-            width={214}
-            height={260}
-            className="h-full w-full object-cover"
+            className="h-full w-full"
+            imageClassName="h-full w-full object-cover"
           />
         </motion.div>
 

@@ -8,6 +8,7 @@ import Container from "@/components/layout/Container";
 import { useCart } from "@/context/CartContext";
 import { ArrowLeftIcon } from "@/components/icons/ArrowLeftIcon";
 import { ArrowRightIcon } from "@/components/icons/ArrowRightIcon";
+import { ProductImage } from "@/components/ui/ProductImage";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -121,11 +122,11 @@ export function ProductDetail({ product }: { product: Product }) {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3, ease }}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <ProductImage
                       src={images[imageIdx]}
                       alt={`${product.name} - ${color.name}`}
-                      className="h-auto w-full object-contain"
+                      className="min-h-80 w-full rounded-2xl"
+                      imageClassName="h-auto w-full object-contain"
                     />
                   </motion.div>
                 </AnimatePresence>
@@ -152,11 +153,11 @@ export function ProductDetail({ product }: { product: Product }) {
                             : "opacity-35 hover:opacity-60"
                         }`}
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <ProductImage
                           src={item.src}
                           alt=""
-                          className="h-20 w-16 object-cover"
+                          className="h-20 w-16"
+                          imageClassName="h-full w-full object-cover"
                         />
                         {/* Color dot for other-colour thumbnails */}
                         {!isSameColor && (
@@ -481,17 +482,22 @@ export function ProductDetail({ product }: { product: Product }) {
               </p>
             )}
 
-            <motion.img
+            <motion.div
               key={`${colorIdx}-${imageIdx}`}
-              src={images[imageIdx]}
-              alt={`${product.name} — ${color.name}`}
-              className="max-h-[90vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl"
+              className="max-h-[90vh] max-w-[90vw] rounded-2xl shadow-2xl"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3, ease }}
               onClick={(e) => e.stopPropagation()}
-            />
+            >
+              <ProductImage
+                src={images[imageIdx]}
+                alt={`${product.name} — ${color.name}`}
+                className="max-h-[90vh] max-w-[90vw] rounded-2xl bg-transparent"
+                imageClassName="max-h-[90vh] max-w-[90vw] object-contain"
+              />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
