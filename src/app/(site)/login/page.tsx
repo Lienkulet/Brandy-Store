@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LoginContent } from "../../../components/LoginContent";
+import { LoginContent } from "../../../components/pages/LoginContent";
 
 export const metadata: Metadata = {
   title: "Sign In — Brandy Store",

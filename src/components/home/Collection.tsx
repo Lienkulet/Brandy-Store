@@ -1,40 +1,37 @@
 "use client";
 
 import { motion } from "framer-motion";
-import CategoryCard from "./cards/CategoryCard";
+import ProductCard from "@/components/cards/ProductCard";
 
-const categoryItems = [
+const collectionItems = [
   {
-    title: "Tops & Shirts",
-    image: "/assets/category/tops-shirts.png",
+    name: "Leather Penny Loafers",
+    description: "Built for every setting",
+    image: "/assets/product-loafers.png",
+    price: null,
   },
   {
-    title: "Pants & Jeans",
-    image: "/assets/category/pants-jeans.png",
+    name: "V-Neck Sleeveless Sweater Polo",
+    description: "Built for every setting",
+    image: "/assets/product-vest.png",
+    price: null,
   },
   {
-    title: "Knitwear & Layering",
-    image: "/assets/category/knitwear-layering.png",
-  },
-  {
-    title: "Jackets & Outerwear",
-    image: "/assets/category/jackets-outwear.png",
-  },
-  {
-    title: "Underwear & Essentials",
-    image: "/assets/category/underwear-essentials.png",
-  },
-  {
-    title: "Sportswear & Shoes",
-    image: "/assets/category/sportswear-shoes.png",
+    name: "Crochet Polo Shirt",
+    description: "Built for every setting",
+    image: "/assets/product-shirt.png",
+    price: null,
   },
 ] as const;
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-function Categories() {
+function Collection() {
   return (
-    <section className="mt-14">
+    <section
+      id="collection"
+      className="mx-auto mt-14 flex w-full max-w-280 flex-col"
+    >
       {/* Heading block */}
       <motion.div
         className="mb-8 text-center sm:mb-10"
@@ -44,9 +41,10 @@ function Categories() {
         transition={{ duration: 0.8, ease }}
       >
         <p className="font-serif text-2xl font-semibold uppercase tracking-[0.24em] text-foreground sm:text-3xl">
-          Shop by Category
+          New Collection
         </p>
 
+        {/* Animated divider */}
         <motion.div
           className="mx-auto mt-4 h-px bg-foreground/20"
           initial={{ width: 0 }}
@@ -56,20 +54,22 @@ function Categories() {
         />
 
         <p className="mx-auto mt-4 max-w-170 text-sm text-muted sm:text-base">
-          From sharp tailoring to everyday essentials — find your style.
+          Our latest collection, where classic and contemporary styles converge
+          in perfect harmony.
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-        {categoryItems.map((item, i) => (
+      {/* Cards grid — each card staggers in */}
+      <div className="grid gap-5 md:grid-cols-3">
+        {collectionItems.map((item, i) => (
           <motion.div
-            key={item.title}
+            key={item.name}
             initial={{ opacity: 0, y: 36 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.7, ease, delay: i * 0.14 }}
           >
-            <CategoryCard {...item} cta='Shop' />
+            <ProductCard {...item} />
           </motion.div>
         ))}
       </div>
@@ -77,4 +77,4 @@ function Categories() {
   );
 }
 
-export default Categories;
+export default Collection;

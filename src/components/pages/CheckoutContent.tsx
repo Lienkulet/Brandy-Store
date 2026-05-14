@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCart, type CartItem } from "../context/CartContext";
-import Container from "./layout/Container";
+import { useCart, type CartItem } from "@/context/CartContext";
+import Container from "@/components/layout/Container";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 

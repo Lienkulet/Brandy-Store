@@ -1,12 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Container from "./layout/Container";
+import Container from "@/components/layout/Container";
 import { ContactForm } from "./ContactForm";
-import { PhoneIcon } from "./icons/PhoneIcon";
-import { InstagramIcon } from "./icons/InstagramIcon";
-import { TelegramIcon } from "./icons/TelegramIcon";
-import { TikTokIcon } from "./icons/TikTokIcon";
+import { PhoneIcon } from "@/components/icons/PhoneIcon";
+import { InstagramIcon } from "@/components/icons/InstagramIcon";
+import { TelegramIcon } from "@/components/icons/TelegramIcon";
+import { TikTokIcon } from "@/components/icons/TikTokIcon";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 

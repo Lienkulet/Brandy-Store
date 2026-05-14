@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SizeGuideContent } from "../../../components/SizeGuideContent";
+import { SizeGuideContent } from "../../../components/pages/SizeGuideContent";
 
 export const metadata: Metadata = {
   title: "Size Guide — Brandy Store",

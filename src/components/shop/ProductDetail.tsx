@@ -4,9 +4,9 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Product } from "../data/products";
-import Container from "./layout/Container";
-import { useCart } from "../context/CartContext";
+import type { Product } from "@/data/products";
+import Container from "@/components/layout/Container";
+import { useCart } from "@/context/CartContext";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 

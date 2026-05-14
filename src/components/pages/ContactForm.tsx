@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import BlackBtn from "./ui/BlackBtn";
+import BlackBtn from "@/components/ui/BlackBtn";
 
 type Status = "idle" | "sending" | "sent";
 

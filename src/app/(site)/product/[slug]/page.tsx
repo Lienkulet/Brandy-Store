@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { supabaseAdmin } from "../../../../lib/supabase";
 import { categories, type Product } from "../../../../data/products";
-import { ProductDetail } from "../../../../components/ProductDetail";
+import { ProductDetail } from "../../../../components/shop/ProductDetail";
 
 type Props = {
   params: Promise<{ slug: string }>;

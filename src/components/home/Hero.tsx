@@ -6,7 +6,7 @@ import {
   useScroll,
   useTransform,
 } from "framer-motion";
-import GreyBtn from "./ui/GreyBtn";
+import GreyBtn from "@/components/ui/GreyBtn";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 const WORDS = "FOR THE GENTLEMAN IN EVERY ROOM".split(" ");

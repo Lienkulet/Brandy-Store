@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import Container from "./layout/Container";
-import BlackBtn from "./ui/BlackBtn";
+import Container from "@/components/layout/Container";
+import BlackBtn from "@/components/ui/BlackBtn";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 

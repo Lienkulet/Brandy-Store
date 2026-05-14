@@ -2,10 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Container from "./layout/Container";
-import ProductCard from "./cards/ProductCard";
-import { categories, type Product } from "../data/products";
-import { PALETTE } from "../data/colors";
+import Container from "@/components/layout/Container";
+import ProductCard from "@/components/cards/ProductCard";
+import { categories, type Product } from "@/data/products";
+import { PALETTE } from "@/data/colors";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 

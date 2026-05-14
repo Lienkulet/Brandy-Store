@@ -15,7 +15,7 @@ import { SearchIcon } from "../icons/SearchIcon";
 import { InstagramIcon } from "../icons/InstagramIcon";
 import { TelegramIcon } from "../icons/TelegramIcon";
 import { TikTokIcon } from "../icons/TikTokIcon";
-import { CartDrawer } from "../CartDrawer";
+import { CartDrawer } from "./CartDrawer";
 import { useCart } from "../../context/CartContext";
 
 const navigationItems = [

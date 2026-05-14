@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ShopContent } from "../../../components/ShopContent";
+import { ShopContent } from "../../../components/shop/ShopContent";
 
 export const metadata: Metadata = {
   title: "New Arrivals — Brandy Store",
