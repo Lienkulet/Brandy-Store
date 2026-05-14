@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Product } from "@/data/products";
 import Container from "@/components/layout/Container";
 import { useCart } from "@/context/CartContext";
+import { ArrowLeftIcon } from "@/components/icons/ArrowLeftIcon";
+import { ArrowRightIcon } from "@/components/icons/ArrowRightIcon";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -21,6 +22,43 @@ export function ProductDetail({ product }: { product: Product }) {
   const color  = product.colors[colorIdx];
   const images = color.images;
   const sizes  = color.sizes?.length ? color.sizes : product.sizes;
+
+  // Flat slider: all colours in fixed order, never reordered
+  const sliderImages = product.colors.flatMap((c, ci) =>
+    c.images.filter(Boolean).map((src, i) => ({ src, colorIdx: ci, imgIdx: i }))
+  );
+
+  const activeFlatIdx = sliderImages.findIndex(
+    (s) => s.colorIdx === colorIdx && s.imgIdx === imageIdx
+  );
+
+  const stripRef = useRef<HTMLDivElement>(null);
+  const [lightbox, setLightbox] = useState(false);
+
+  // Close lightbox on Escape, navigate with arrow keys
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") { setLightbox(false); return; }
+      if (e.key === "ArrowLeft")  navigateLightbox(-1);
+      if (e.key === "ArrowRight") navigateLightbox(1);
+    }
+    if (lightbox) document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [lightbox, activeFlatIdx]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function navigateLightbox(dir: 1 | -1) {
+    const next = sliderImages[(activeFlatIdx + dir + sliderImages.length) % sliderImages.length];
+    setColorIdx(next.colorIdx);
+    setImageIdx(next.imgIdx);
+  }
+
+  // Scroll active thumbnail into view when it changes
+  useEffect(() => {
+    const strip = stripRef.current;
+    if (!strip) return;
+    const thumb = strip.children[activeFlatIdx] as HTMLElement | undefined;
+    thumb?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [activeFlatIdx]);
 
   function handleColorChange(idx: number) {
     setColorIdx(idx);
@@ -51,15 +89,19 @@ export function ProductDetail({ product }: { product: Product }) {
   const allSizesOut = sizes.every((s) => !s.inStock);
 
   return (
+    <>
     <main className="min-h-dvh bg-background pt-28 pb-24 text-foreground sm:pt-32">
       <Container>
-        <div className="grid gap-10 lg:grid-cols-[1fr_1fr] lg:gap-16 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="grid gap-10 lg:grid-cols-[0.75fr_1fr] lg:gap-16 xl:grid-cols-[0.75fr_1fr]">
 
           {/* ── Left: Image Gallery ─────────────────────────────── */}
           <div className="lg:sticky lg:top-28 lg:self-start">
 
             {/* Main image */}
-            <div className="relative max-h-[65vh] overflow-hidden rounded-2xl bg-[#f7f4f0]">
+            <div
+              className="relative w-full h-[75vh] rounded-2xl overflow-hidden cursor-zoom-in"
+              onClick={() => setLightbox(true)}
+            >
               {product.isNew && (
                 <div className="absolute left-5 top-5 z-10 rounded-full bg-foreground px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white">
                   New In
@@ -68,45 +110,57 @@ export function ProductDetail({ product }: { product: Product }) {
               <AnimatePresence mode="wait">
                 <motion.div
                   key={`${colorIdx}-${imageIdx}`}
+                  className="absolute inset-0 rounded-2xl bg-[#f7f4f0] bg-no-repeat"
+                  style={{
+                    backgroundImage: `url(${images[imageIdx]})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "top center",
+                  }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3, ease }}
-                >
-                  <Image
-                    src={images[imageIdx]}
-                    alt={`${product.name} — ${color.name}`}
-                    width={800}
-                    height={400}
-                    className="aspect-4/5 w-full object-cover"
-                    priority
-                  />
-                </motion.div>
+                />
               </AnimatePresence>
             </div>
 
-            {/* Thumbnails */}
-            {images.length > 1 && (
-              <div className="mt-3 flex gap-2.5">
-                {images.map((src, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setImageIdx(i)}
-                    className={`cursor-pointer overflow-hidden rounded-xl bg-[#f7f4f0] transition-all duration-200 ${
-                      i === imageIdx
-                        ? "ring-2 ring-foreground ring-offset-2"
-                        : "opacity-50 hover:opacity-80"
-                    }`}
-                  >
-                    <Image
-                      src={src}
-                      alt={`View ${i + 1}`}
-                      width={80}
-                      height={100}
-                      className="h-20 w-16 object-cover"
-                    />
-                  </button>
-                ))}
+            {/* Thumbnail strip */}
+            {sliderImages.length > 1 && (
+              <div
+                ref={stripRef}
+                className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-none"
+              >
+                {sliderImages.map((item, fi) => {
+                  const isActive = fi === activeFlatIdx;
+                  const isSameColor = item.colorIdx === colorIdx;
+                  return (
+                    <button
+                      key={fi}
+                      onClick={() => { setColorIdx(item.colorIdx); setImageIdx(item.imgIdx); setSize(null); }}
+                      className={`relative cursor-pointer shrink-0 overflow-hidden rounded-xl bg-[#f7f4f0] transition-all duration-200 ${
+                        isActive
+                          ? "ring-2 ring-foreground ring-offset-2"
+                          : isSameColor
+                          ? "opacity-70 hover:opacity-100"
+                          : "opacity-35 hover:opacity-60"
+                      }`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={item.src}
+                        alt=""
+                        className="h-20 w-16 object-cover"
+                      />
+                      {/* Color dot for other-colour thumbnails */}
+                      {!isSameColor && (
+                        <span
+                          className="absolute bottom-1.5 right-1.5 h-2.5 w-2.5 rounded-full border border-white/60 shadow-sm"
+                          style={{ backgroundColor: product.colors[item.colorIdx].hex }}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -141,10 +195,10 @@ export function ProductDetail({ product }: { product: Product }) {
               {product.price ? (
                 <div className="flex items-baseline gap-3">
                   <span className="font-serif text-2xl font-semibold text-foreground">
-                    {product.price.current}
+                    {product.price.current} MDL
                   </span>
                   <span className="text-base text-foreground/40 line-through">
-                    {product.price.original}
+                    {product.price.original} MDL
                   </span>
                 </div>
               ) : (
@@ -263,12 +317,9 @@ export function ProductDetail({ product }: { product: Product }) {
               whileTap={allSizesOut ? {} : { scale: 0.985 }}
               transition={{ duration: 0.3, ease }}
             >
-              {/* Hover fill sweep (idle only) */}
+              {/* Hover fill (idle only) */}
               {!allSizesOut && cartState === "idle" && (
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-0 origin-left scale-x-0 rounded-full bg-[#f0ead8] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-100"
-                />
+                <span aria-hidden="true" className="absolute inset-0 origin-left scale-x-0 rounded-full bg-white/15 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-100" />
               )}
 
               {/* "Added" background flood */}
@@ -285,7 +336,7 @@ export function ProductDetail({ product }: { product: Product }) {
               </AnimatePresence>
 
               <span className={`relative z-10 transition-colors duration-300 delay-75 ${
-                cartState === "added" ? "text-white" : "text-white group-hover:text-foreground"
+                "text-white"
               }`}>
                 <AnimatePresence mode="wait">
                   {cartState === "added" ? (
@@ -349,5 +400,69 @@ export function ProductDetail({ product }: { product: Product }) {
         </div>
       </Container>
     </main>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightbox && (
+          <motion.div
+            className="fixed inset-0 z-100 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease }}
+            onClick={() => setLightbox(false)}
+          >
+            {/* Close */}
+            <button
+              onClick={() => setLightbox(false)}
+              className="cursor-pointer absolute right-5 top-5 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+
+            {/* Prev */}
+            {sliderImages.length > 1 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); navigateLightbox(-1); }}
+                className="cursor-pointer absolute left-5 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+              >
+                <ArrowLeftIcon size={18} />
+              </button>
+            )}
+
+            {/* Next */}
+            {sliderImages.length > 1 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); navigateLightbox(1); }}
+                className="cursor-pointer absolute right-5 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+              >
+                <ArrowRightIcon size={18} />
+              </button>
+            )}
+
+            {/* Counter */}
+            {sliderImages.length > 1 && (
+              <p className="absolute bottom-5 left-1/2 -translate-x-1/2 text-[11px] font-semibold tabular-nums text-white/50">
+                {activeFlatIdx + 1} / {sliderImages.length}
+              </p>
+            )}
+
+            <motion.img
+              key={`${colorIdx}-${imageIdx}`}
+              src={images[imageIdx]}
+              alt={`${product.name} — ${color.name}`}
+              className="max-h-[90vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3, ease }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

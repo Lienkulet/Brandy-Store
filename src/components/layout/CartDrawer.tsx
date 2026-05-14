@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect } from "react";
 import { useCart, type CartItem } from "@/context/CartContext";
+import BlackBtn from "@/components/ui/BlackBtn";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -239,12 +240,11 @@ function CartFooter({ onClose }: { onClose: () => void }) {
         <p className="font-serif text-lg font-semibold text-foreground">{formatted}</p>
       </div>
 
-      <button
+      <BlackBtn
+        name="Proceed to Checkout"
+        className="w-full"
         onClick={() => { onClose(); router.push("/checkout"); }}
-        className="cursor-pointer w-full rounded-full bg-foreground py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition-colors duration-300 hover:bg-foreground/85"
-      >
-        Proceed to Checkout
-      </button>
+      />
 
       <div className="mt-4 flex items-center justify-between">
         <p className="text-[10px] text-muted">Taxes and shipping at checkout.</p>

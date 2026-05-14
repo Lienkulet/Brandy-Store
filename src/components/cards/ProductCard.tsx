@@ -79,7 +79,7 @@ function ProductCard({ name, brand, description, image, price, href, isNew, quic
 
   return (
     <motion.article
-      className="soft-card group relative overflow-hidden rounded-3xl p-4 sm:p-5"
+      className="soft-card group relative overflow-hidden rounded-2xl p-3 sm:p-3"
       transition={{ duration: 0.35, ease }}
       style={{ boxShadow: "0 18px 40px rgba(95, 77, 57, 0.08)" }}
     >
@@ -96,7 +96,7 @@ function ProductCard({ name, brand, description, image, price, href, isNew, quic
       )}
 
       {/* Image */}
-      <div className="relative overflow-hidden rounded-[18px] bg-[#f7f4f0]">
+      <div className="relative overflow-hidden rounded-2xl bg-[#f7f4f0]">
         <motion.div
           className="will-change-transform"
           whileHover={{ scale: 1.05 }}
@@ -219,8 +219,8 @@ function ProductCard({ name, brand, description, image, price, href, isNew, quic
 
         {price ? (
           <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-foreground sm:text-base">
-            <span className="text-foreground/45 line-through">{price.original}</span>
-            <span>{price.current}</span>
+            <span className="text-foreground/45 line-through">{price.original}MDL</span>
+            <span>{price.current}MDL</span>
           </p>
         ) : (
           <div className="mt-4 h-6" aria-hidden="true" />

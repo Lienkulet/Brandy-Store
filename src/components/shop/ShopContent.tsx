@@ -51,6 +51,25 @@ function applyFilters(list: Product[], filters: Filters): Product[] {
   });
 }
 
+function getCardSizes(product: Product, colorFilters: string[]): { label: string; inStock: boolean }[] {
+  const matchingColors = colorFilters.length
+    ? product.colors.filter((c) => colorFilters.includes(c.name))
+    : product.colors;
+
+  const allSizes = matchingColors.flatMap((c) =>
+    c.sizes?.length ? c.sizes : product.sizes
+  );
+
+  if (!allSizes.length) return product.sizes;
+
+  // Deduplicate by label; inStock = true if any color has it in stock
+  const map = new Map<string, boolean>();
+  for (const s of allSizes) {
+    map.set(s.label, (map.get(s.label) ?? false) || s.inStock);
+  }
+  return Array.from(map.entries()).map(([label, inStock]) => ({ label, inStock }));
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: string; onlyNew?: boolean }) {
@@ -313,7 +332,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
                       quickAdd={{
                         productId: product.id,
                         colorName: product.colors[0].name,
-                        sizes:     product.sizes,
+                        sizes:     getCardSizes(product, filters.colors),
                         price:     product.price?.current ?? "Price on request",
                       }}
                     />

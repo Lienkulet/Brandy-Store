@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart, type CartItem } from "@/context/CartContext";
 import Container from "@/components/layout/Container";
+import BlackBtn from "@/components/ui/BlackBtn";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -101,12 +102,7 @@ export function CheckoutContent() {
           <p className="mb-8 text-sm leading-relaxed text-muted">
             Thank you! Our team will call you shortly to confirm the details and arrange payment.
           </p>
-          <Link
-            href="/shop"
-            className="inline-block rounded-full bg-foreground px-8 py-3.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition-colors duration-300 hover:bg-foreground/85"
-          >
-            Continue Shopping
-          </Link>
+          <BlackBtn href="/shop" name="Continue Shopping" />
         </motion.div>
       </main>
     );
@@ -291,15 +287,18 @@ export function CheckoutContent() {
               type="button"
               onClick={handlePlaceOrder}
               disabled={loading}
-              className="cursor-pointer mt-4 flex w-full items-center justify-center gap-2.5 rounded-full bg-foreground py-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition-colors duration-300 hover:bg-foreground/85 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="group cursor-pointer relative mt-4 flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-full bg-foreground py-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition-colors duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {loading && (
-                <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
-              )}
-              {loading ? "Placing order…" : "Place Order"}
+              <span aria-hidden="true" className="absolute inset-0 origin-left scale-x-0 rounded-full bg-white/15 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-100" />
+              <span className="relative z-10 flex items-center gap-2.5 text-white">
+                {loading && (
+                  <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                )}
+                {loading ? "Placing order…" : "Place Order"}
+              </span>
             </button>
 
             <p className="mt-4 text-center text-[10px] text-muted">
