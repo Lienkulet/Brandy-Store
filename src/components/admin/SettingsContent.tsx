@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { PageHeader } from "./OverviewContent";
-
-const ease = [0.22, 1, 0.36, 1] as const;
+import { ease } from "@/lib/animations";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 

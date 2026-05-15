@@ -5,8 +5,7 @@ import { motion } from "framer-motion";
 import type { Product } from "@/data/products";
 import { ProductImage } from "../ui/ProductImage";
 import { countInStockSizes, isProductOnSale, isProductOutOfStock } from "@/lib/product-utils";
-
-const ease = [0.22, 1, 0.36, 1] as const;
+import { ease } from "@/lib/animations";
 
 type Props = {
   product: Product;

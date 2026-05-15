@@ -5,8 +5,7 @@ import { motion } from "framer-motion";
 import ProductCard from "@/components/cards/ProductCard";
 import type { Product } from "@/data/products";
 import { useProducts } from "@/hooks/useProducts";
-
-const ease = [0.22, 1, 0.36, 1] as const;
+import { ease } from "@/lib/animations";
 
 function Collection() {
   const filterNewProducts = useCallback((product: Product) => Boolean(product.isNew), []);

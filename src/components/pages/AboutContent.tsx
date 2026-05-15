@@ -4,8 +4,7 @@ import { motion } from "framer-motion";
 import Container from "@/components/layout/Container";
 import BlackBtn from "@/components/ui/BlackBtn";
 import BrandStrip from "@/components/home/BrandStrip";
-
-const ease = [0.22, 1, 0.36, 1] as const;
+import { ease } from "@/lib/animations";
 
 const values = [
   {

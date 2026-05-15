@@ -7,8 +7,7 @@ import {
   useTransform,
 } from "framer-motion";
 import GreyBtn from "@/components/ui/GreyBtn";
-
-const ease = [0.22, 1, 0.36, 1] as const;
+import { ease } from "@/lib/animations";
 const WORDS = "FOR THE GENTLEMAN IN EVERY ROOM".split(" ");
 
 const wordContainer = {

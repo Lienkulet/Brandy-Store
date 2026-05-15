@@ -7,41 +7,15 @@ import ProductCard from "@/components/cards/ProductCard";
 import { categories, type Product } from "@/data/products";
 import { PALETTE } from "@/data/colors";
 import { useProducts } from "@/hooks/useProducts";
-import { parseMDL } from "@/lib/money";
 import { getProductSizesForCard } from "@/lib/product-utils";
+import { applySort, applyFilters, type ProductFilters, type SortKey } from "@/lib/shop-utils";
 import {
   ColorFilterDropdown,
   FilterDropdown,
   MobileFilterPanel,
   SortDropdown,
-  type ProductFilters,
-  type SortKey,
 } from "./ShopFilters";
-
-const ease = [0.22, 1, 0.36, 1] as const;
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-function applySort(list: Product[], sort: SortKey): Product[] {
-  return [...list].sort((a, b) => {
-    if (sort === "new-in")    return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
-    if (sort === "oldest")    return (a.isNew ? 1 : 0) - (b.isNew ? 1 : 0);
-    const ap = a.price ? parseMDL(a.price.current) : Infinity;
-    const bp = b.price ? parseMDL(b.price.current) : Infinity;
-    return sort === "price-asc" ? ap - bp : bp - ap;
-  });
-}
-
-function applyFilters(list: Product[], filters: ProductFilters): Product[] {
-  return list.filter((p) => {
-    if (filters.brands.length && !filters.brands.includes(p.brand)) return false;
-    if (filters.sizes.length  && !p.sizes.some((s)  => filters.sizes.includes(s.label)))   return false;
-    if (filters.colors.length && !p.colors.some((c) => filters.colors.includes(c.name)))   return false;
-    return true;
-  });
-}
-
-// ─── Main component ───────────────────────────────────────────────────────────
+import { ease } from "@/lib/animations";
 
 export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: string; onlyNew?: boolean }) {
   const filterProducts = useCallback(

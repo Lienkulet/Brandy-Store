@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader, EmptyState } from "./OverviewContent";
-
-const ease = [0.22, 1, 0.36, 1] as const;
+import { ease } from "@/lib/animations";
 
 export type OrderStatus = "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
 
@@ -187,8 +186,6 @@ function OrderRow({
   onToggle:       () => void;
   onStatusChange: (s: OrderStatus) => void;
 }) {
-  const ease = [0.22, 1, 0.36, 1] as const;
-
   return (
     <div className="border-b border-foreground/6 last:border-0">
       {/* Main row */}

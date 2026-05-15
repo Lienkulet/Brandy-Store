@@ -3,8 +3,7 @@
 import { motion } from "framer-motion";
 import Container from "@/components/layout/Container";
 import { SizeTabs } from "../shop/SizeTabs";
-
-const ease = [0.22, 1, 0.36, 1] as const;
+import { ease } from "@/lib/animations";
 
 const measurements = [
   {

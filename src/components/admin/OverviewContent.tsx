@@ -5,8 +5,7 @@ import { motion } from "framer-motion";
 import { useProducts } from "@/hooks/useProducts";
 import { parseMDL, formatMDL } from "@/lib/money";
 import { getProductStats } from "@/lib/product-utils";
-
-const ease = [0.22, 1, 0.36, 1] as const;
+import { ease } from "@/lib/animations";
 
 type SupabaseOrder = { id: string; subtotal: string; status: string; created_at: string; customer_name: string; customer_phone: string };
 

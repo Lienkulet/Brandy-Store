@@ -16,6 +16,7 @@ import { TelegramIcon } from "../icons/TelegramIcon";
 import { TikTokIcon } from "../icons/TikTokIcon";
 import { CartDrawer } from "./CartDrawer";
 import { useCart } from "../../context/CartContext";
+import { ease } from "@/lib/animations";
 
 const navigationItems = [
   { label: "New Arrivals", href: "/new-arrivals" },
@@ -35,8 +36,6 @@ const socialLinks = [
   { label: "Telegram",  href: "https://t.me/brandystoremd",              icon: TelegramIcon  },
   { label: "TikTok",    href: "https://www.tiktok.com/@brandystore11",   icon: TikTokIcon    },
 ];
-
-const ease = [0.22, 1, 0.36, 1] as const;
 
 const stagger = {
   hidden: {},
@@ -298,8 +297,6 @@ export function Navbar() {
 /* ─── Mobile menu overlay ─────────────────────────────────────────── */
 
 function MobileMenu({ onClose, pathname }: { onClose: () => void; pathname: string }) {
-  const ease = [0.22, 1, 0.36, 1] as const;
-
   return (
     <motion.div
       className="fixed inset-0 z-40 flex flex-col bg-[#1e1a17] px-6 pb-10 pt-28"

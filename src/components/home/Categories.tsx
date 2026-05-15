@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import CategoryCard from "@/components/cards/CategoryCard";
+import { ease } from "@/lib/animations";
 
 const categoryItems = [
   {
@@ -29,8 +30,6 @@ const categoryItems = [
     image: "/assets/category/sportswear-shoes.png",
   },
 ] as const;
-
-const ease = [0.22, 1, 0.36, 1] as const;
 
 function Categories() {
   return (

@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
-import { useCart } from "../../context/CartContext";
-import BlackBtn from "../ui/BlackBtn";
+import { motion } from "framer-motion";
 import { ProductImage } from "../ui/ProductImage";
 import { isPriceOnSale } from "@/lib/product-utils";
+import { ease } from "@/lib/animations";
+import { useQuickAdd } from "@/hooks/useQuickAdd";
+import { ProductCardBadges } from "./ProductCardBadges";
+import { QuickAddOverlay } from "./QuickAddOverlay";
 
 type ProductPrice = {
   original: string;
@@ -20,7 +21,7 @@ type QuickAddData = {
   price:     string;
 };
 
-type ProductCardProps = {
+export type ProductCardProps = {
   name:        string;
   brand?:      string;
   description: string;
@@ -32,76 +33,19 @@ type ProductCardProps = {
   sizeFree?:   boolean;
 };
 
-const ease = [0.22, 1, 0.36, 1] as const;
-
-type Step = "idle" | "sizes" | "added";
-
 function ProductCard({ name, brand, image, price, href, isNew, quickAdd, sizeFree = false }: ProductCardProps) {
-  const [step, setStep] = useState<Step>("idle");
-  const [recentlyAddedSize, setRecentlyAddedSize] = useState<string | null>(null);
-  const { addItem } = useCart();
-  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const sizeConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const inStockSizes = quickAdd?.sizes.filter((s) => s.inStock) ?? [];
-  const isOnSale = isPriceOnSale(price);
+  const isOnSale     = isPriceOnSale(price);
   const isOutOfStock = Boolean(quickAdd && inStockSizes.length === 0);
 
-  function handleQuickAdd(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (sizeFree) {
-      addAndConfirm("One Size");
-    } else if (inStockSizes.length === 1) {
-      addAndConfirm(inStockSizes[0].label);
-    } else {
-      setStep("sizes");
-    }
-  }
-
-  function handleSizeClick(e: React.MouseEvent, sizeLabel: string) {
-    e.preventDefault();
-    e.stopPropagation();
-    addAndConfirm(sizeLabel, { keepSizesOpen: true });
-  }
-
-  function addAndConfirm(sizeLabel: string, options?: { keepSizesOpen?: boolean }) {
-    if (!quickAdd) return;
-    addItem({
-      id:        `${quickAdd.productId}-${quickAdd.colorName}-${sizeLabel}`,
-      productId: quickAdd.productId,
-      name,
-      brand:     brand ?? "",
-      size:      sizeLabel,
-      color:     quickAdd.colorName,
-      price:     quickAdd.price,
-      image,
-    });
-    if (options?.keepSizesOpen) {
-      setStep("sizes");
-      setRecentlyAddedSize(sizeLabel);
-      if (sizeConfirmTimer.current) clearTimeout(sizeConfirmTimer.current);
-      sizeConfirmTimer.current = setTimeout(() => setRecentlyAddedSize(null), 950);
-      return;
-    }
-
-    setStep("added");
-    if (resetTimer.current) clearTimeout(resetTimer.current);
-    resetTimer.current = setTimeout(() => setStep("idle"), 1800);
-  }
-
-  function handleDismiss(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    setStep("idle");
-  }
-
-  useEffect(() => {
-    return () => {
-      if (resetTimer.current) clearTimeout(resetTimer.current);
-      if (sizeConfirmTimer.current) clearTimeout(sizeConfirmTimer.current);
-    };
-  }, []);
+  const { step, recentlyAddedSize, handleQuickAdd, handleSizeClick, handleDismiss } = useQuickAdd({
+    name,
+    brand,
+    image,
+    quickAdd: quickAdd ?? { productId: "", colorName: "", price: "" },
+    sizeFree,
+    inStockSizes,
+  });
 
   return (
     <motion.article
@@ -109,31 +53,11 @@ function ProductCard({ name, brand, image, price, href, isNew, quickAdd, sizeFre
       transition={{ duration: 0.35, ease }}
       style={{ boxShadow: "0 18px 40px rgba(95, 77, 57, 0.08)" }}
     >
-      {/* Stretched link overlay */}
       {href && (
         <Link href={href} className="absolute inset-0 z-10" aria-label={name} />
       )}
 
-      {/* Badges */}
-      {(isNew || isOnSale || isOutOfStock) && (
-        <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-1.5">
-          {isNew && (
-            <div className="rounded-full bg-foreground px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white">
-              New In
-            </div>
-          )}
-          {isOnSale && (
-            <div className="rounded-full bg-red-500 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white">
-              Sale
-            </div>
-          )}
-          {isOutOfStock && (
-            <div className="rounded-full bg-white/90 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-foreground/60 backdrop-blur-sm">
-              Out of stock
-            </div>
-          )}
-        </div>
-      )}
+      <ProductCardBadges isNew={isNew} isOnSale={isOnSale} isOutOfStock={isOutOfStock} />
 
       {/* Image */}
       <div className="relative aspect-4/5 shrink-0 overflow-hidden bg-[#f7f4f0]">
@@ -150,107 +74,15 @@ function ProductCard({ name, brand, image, price, href, isNew, quickAdd, sizeFre
           />
         </motion.div>
 
-        {/* Quick-add overlay — sits above stretched link */}
-        {quickAdd && inStockSizes.length > 0 && (
-          <div className="absolute inset-x-0 bottom-0 z-20 p-3">
-            <AnimatePresence mode="wait">
-
-              {/* Idle: "Add to Bag" button, only visible on group hover */}
-              {step === "idle" && (
-                <motion.div
-                  key="add"
-                  initial={false}
-                  exit={{ opacity: 0, y: 6 }}
-                  transition={{ duration: 0.2, ease }}
-                >
-                  <BlackBtn
-                    name="Add to Bag"
-                    onClick={handleQuickAdd}
-                    className="h-10 w-full translate-y-3 opacity-0 shadow-[0_12px_30px_rgba(30,26,23,0.18)] transition-all delay-75 duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/card:translate-y-0 group-hover/card:opacity-100 group-hover/card:delay-150"
-                  />
-                </motion.div>
-              )}
-
-              {/* Sizes: pill row */}
-              {step === "sizes" && (
-                <motion.div
-                  key="sizes"
-                  className="rounded-2xl bg-background/92 p-2 backdrop-blur-sm"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 6 }}
-                  transition={{ duration: 0.22, ease }}
-                >
-                  <div className="mb-2 flex items-center justify-between px-1">
-                    <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
-                      Select size
-                    </span>
-                    <button
-                      onClick={handleDismiss}
-                      className="cursor-pointer text-foreground/35 hover:text-foreground transition-colors"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {inStockSizes.map((s) => (
-                      <button
-                        key={s.label}
-                        onClick={(e) => handleSizeClick(e, s.label)}
-                        className={`cursor-pointer h-8 min-w-10 rounded-lg border px-2 text-[10px] font-semibold uppercase tracking-widest transition-all duration-200 ${
-                          recentlyAddedSize === s.label
-                            ? "border-foreground bg-foreground text-white"
-                            : "border-foreground/15 text-foreground hover:border-foreground hover:bg-foreground hover:text-white"
-                        }`}
-                      >
-                        <span className="inline-flex min-w-4 items-center justify-center">
-                          {recentlyAddedSize === s.label ? (
-                            <motion.svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              initial={{ scale: 0.5, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ duration: 0.18, ease }}
-                            >
-                              <polyline points="20 6 9 17 4 12" />
-                            </motion.svg>
-                          ) : s.label}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Added: confirmation */}
-              {step === "added" && (
-                <motion.div
-                  key="added"
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-foreground py-2.5"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.22, ease }}
-                >
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
-                    Added
-                  </span>
-                </motion.div>
-              )}
-
-            </AnimatePresence>
-          </div>
+        {quickAdd && (
+          <QuickAddOverlay
+            step={step}
+            inStockSizes={inStockSizes}
+            recentlyAddedSize={recentlyAddedSize}
+            onQuickAdd={handleQuickAdd}
+            onSizeClick={handleSizeClick}
+            onDismiss={handleDismiss}
+          />
         )}
       </div>
 

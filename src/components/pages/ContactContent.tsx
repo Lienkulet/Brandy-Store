@@ -7,8 +7,7 @@ import { PhoneIcon } from "@/components/icons/PhoneIcon";
 import { InstagramIcon } from "@/components/icons/InstagramIcon";
 import { TelegramIcon } from "@/components/icons/TelegramIcon";
 import { TikTokIcon } from "@/components/icons/TikTokIcon";
-
-const ease = [0.22, 1, 0.36, 1] as const;
+import { ease } from "@/lib/animations";
 
 const channels = [
   {

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { ease } from "@/lib/animations";
 
 const brands = [
   "Loro Piana",
@@ -24,8 +25,6 @@ const brands = [
   "Tony Montana",
   "Vaganza",
 ];
-
-const ease = [0.22, 1, 0.36, 1] as const;
 
 function BrandStrip() {
   return (

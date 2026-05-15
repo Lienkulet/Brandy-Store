@@ -1,8 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-
-const ease = [0.22, 1, 0.36, 1] as const;
+import { ease } from "@/lib/animations";
 
 type Props = {
   open:        boolean;
@@ -18,14 +17,14 @@ export function DeleteConfirmModal({ open, productName, onConfirm, onCancel, loa
       {open && (
         <>
           <motion.div
-            className="fixed inset-0 z-[70] bg-foreground/30 backdrop-blur-sm"
+            className="fixed inset-0 z-70 bg-foreground/30 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease }}
             onClick={onCancel}
           />
-          <div className="fixed inset-0 z-[71] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-71 flex items-center justify-center p-4">
             <motion.div
               className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-[0_24px_60px_rgba(95,77,57,0.15)]"
               initial={{ opacity: 0, scale: 0.95, y: 8 }}

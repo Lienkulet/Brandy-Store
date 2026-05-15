@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import GreyBtn from "../ui/GreyBtn";
+import { ease } from "@/lib/animations";
 
 type CategoryCardProps = {
   title: string;
@@ -11,8 +12,6 @@ type CategoryCardProps = {
   image: string;
   href?: string;
 };
-
-const ease = [0.22, 1, 0.36, 1] as const;
 
 const MotionLink = motion(Link);
 

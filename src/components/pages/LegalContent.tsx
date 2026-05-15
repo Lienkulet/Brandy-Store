@@ -2,8 +2,7 @@
 
 import { motion } from "framer-motion";
 import Container from "@/components/layout/Container";
-
-const ease = [0.22, 1, 0.36, 1] as const;
+import { ease } from "@/lib/animations";
 
 export type LegalSection = {
   heading: string;

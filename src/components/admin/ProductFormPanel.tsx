@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Product } from "@/data/products";
-import { PALETTE } from "@/data/colors";
 import {
   ACCESSORY_SIZES,
   BRANDS,
@@ -16,8 +15,9 @@ import {
   toSlug,
   type ProductFormColor,
 } from "./productFormModel";
-
-const ease = [0.22, 1, 0.36, 1] as const;
+import { ease } from "@/lib/animations";
+import { FormSection, FormField, FormDivider } from "./form/FormPrimitives";
+import { ProductColorEditor } from "./form/ProductColorEditor";
 
 type Props = {
   open:     boolean;
@@ -40,7 +40,6 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
 
   // Drag / drop state
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
-  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // objectURL → File, uploaded only on save
   const pendingFiles = useRef<Record<string, File>>({});
@@ -543,7 +542,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                   </label>
                 </FormSection>
 
-                <Divider />
+                <FormDivider />
 
                 {/* ── Pricing ────────────────────────────────────── */}
                 <FormSection title="Pricing">
@@ -598,7 +597,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                   </AnimatePresence>
                 </FormSection>
 
-                <Divider />
+                <FormDivider />
 
                 {/* ── Colours ─────────────────────────────────────── */}
                 <FormSection title="Colours">
@@ -649,190 +648,37 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                   </div>
 
                   {/* Active colour panel */}
-                  {form.colors[activeColor] && (() => {
-                    const c  = form.colors[activeColor];
-                    const ci = activeColor;
-                    return (
-                      <div className="rounded-2xl border border-foreground/8 bg-foreground/1.5 p-4 space-y-5">
-
-                        {/* Colour name + swatch picker */}
-                        <div className="flex items-center gap-3">
-                          <div className="relative shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => setColorPaletteOpen(colorPaletteOpen === ci ? null : ci)}
-                              className="h-8 w-8 cursor-pointer rounded-full border border-foreground/20 shadow-sm transition-transform duration-150 hover:scale-110"
-                              style={{ backgroundColor: c.hex }}
-                              title="Pick colour"
-                            />
-                            <AnimatePresence>
-                              {colorPaletteOpen === ci && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                                  exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                                  transition={{ duration: 0.18, ease }}
-                                  className="absolute left-0 top-full z-50 mt-2 rounded-2xl border border-foreground/8 bg-white p-3 shadow-[0_12px_40px_rgba(95,77,57,0.14)]"
-                                  style={{ minWidth: "11rem" }}
-                                >
-                                  <p className="mb-2.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-foreground/35">
-                                    Colour palette
-                                  </p>
-                                  <div className="grid grid-cols-4 gap-2">
-                                    {PALETTE.map((p) => (
-                                      <button
-                                        key={p.name}
-                                        type="button"
-                                        title={p.name}
-                                        onClick={() => pickColorSwatch(ci, p.hex, p.name)}
-                                        className={`h-7 w-7 rounded-full border transition-transform duration-100 hover:scale-110 ${
-                                          c.hex === p.hex
-                                            ? "border-foreground ring-2 ring-foreground ring-offset-1"
-                                            : "border-black/10"
-                                        }`}
-                                        style={{ backgroundColor: p.hex }}
-                                      />
-                                    ))}
-                                  </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                          <p className="text-sm font-semibold text-foreground">{c.name}</p>
-                        </div>
-
-                        {/* Images */}
-                        <div className="space-y-3">
-                          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-foreground/35">Images</p>
-
-                          <div
-                            onDragOver={(e) => { e.preventDefault(); setDraggingIdx(ci); }}
-                            onDragLeave={() => setDraggingIdx(null)}
-                            onDrop={(e) => handleDrop(ci, e)}
-                            onClick={() => fileInputRefs.current[ci]?.click()}
-                            className={`cursor-pointer flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed py-5 transition-colors duration-200 ${
-                              draggingIdx === ci
-                                ? "border-foreground/40 bg-foreground/5"
-                                : "border-foreground/12 hover:border-foreground/25 hover:bg-foreground/3"
-                            }`}
-                          >
-                              <svg className="text-foreground/30" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                <polyline points="17 8 12 3 7 8" />
-                                <line x1="12" y1="3" x2="12" y2="15" />
-                              </svg>
-                            <p className="text-[10px] font-semibold text-foreground/35">Drop or click to upload</p>
-                          </div>
-                          <input
-                            ref={(el) => { fileInputRefs.current[ci] = el; }}
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            className="hidden"
-                            onChange={(e) => e.target.files && uploadFiles(ci, e.target.files)}
-                          />
-
-                          {c.images.some((u) => u.trim()) && (
-                            <div className="space-y-1.5">
-                              {c.images.map((url, ii) => (
-                                <div key={ii} className="flex items-center gap-2">
-                                  {/* First image indicator */}
-                                  <div className={`shrink-0 w-3 ${ii === 0 && ci === 0 ? "text-amber-400" : "text-transparent"}`}>
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                                    </svg>
-                                  </div>
-                                  <div className="h-9 w-7 shrink-0 overflow-hidden rounded-lg bg-[#f7f4f0]">
-                                    {url.trim() && (
-                                      // eslint-disable-next-line @next/next/no-img-element
-                                      <img src={url} alt="" className="h-full w-full object-cover" />
-                                    )}
-                                  </div>
-                                  <input
-                                    className="input-field flex-1 font-mono text-[10px]"
-                                    value={url}
-                                    onChange={(e) => {
-                                      const imgs = [...c.images];
-                                      imgs[ii] = e.target.value;
-                                      setColorImages(ci, imgs);
-                                    }}
-                                    placeholder="or paste a URL…"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const imgs = c.images.filter((_, idx) => idx !== ii);
-                                      setColorImages(ci, imgs.length ? imgs : [""]);
-                                    }}
-                                    className="cursor-pointer shrink-0 text-foreground/25 transition-colors hover:text-red-400"
-                                  >
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                                    </svg>
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          {ci === 0 && <p className="text-[9px] text-muted">First image of the first colour is used as the product card thumbnail.</p>}
-                        </div>
-
-                        {/* Sizes */}
-                        {form.category === "accessories" ? (
-                          <div className="space-y-3">
-                            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-foreground/35">Stock</p>
-                            <button
-                              type="button"
-                              role="switch"
-                              aria-checked={Boolean(c.sizes?.[0]?.inStock)}
-                              onClick={() => setAccessoryStock(!c.sizes?.[0]?.inStock)}
-                              className={`relative h-9 rounded-full px-4 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors duration-200 ${
-                                c.sizes?.[0]?.inStock
-                                  ? "bg-foreground text-white"
-                                  : "border border-foreground/15 text-foreground/45"
-                              }`}
-                            >
-                              {c.sizes?.[0]?.inStock ? "In stock" : "Out of stock"}
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between gap-3">
-                              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-foreground/35">Sizes in stock</p>
-                              <button
-                                type="button"
-                                onClick={applyCategorySizes}
-                                className="cursor-pointer text-[9px] font-semibold uppercase tracking-[0.14em] text-foreground/45 underline underline-offset-4 transition-colors hover:text-foreground"
-                              >
-                                Use category sizes
-                              </button>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {(c.sizes ?? []).map((s) => (
-                                <button
-                                  key={s.label}
-                                  type="button"
-                                  onClick={() => toggleColorSize(ci, s.label)}
-                                  className={`cursor-pointer h-9 min-w-11 rounded-xl border px-3 text-[10px] font-semibold uppercase tracking-[0.12em] transition-all duration-200 ${
-                                    s.inStock
-                                      ? "border-foreground bg-foreground text-white!"
-                                      : "border-foreground/15 text-foreground/40 hover:border-foreground/30"
-                                  }`}
-                                >
-                                  {s.label}
-                                </button>
-                              ))}
-                            </div>
-                            <p className="text-[9px] text-muted">Tap a size to toggle stock for this colour.</p>
-                          </div>
-                        )}
-
-                      </div>
-                    );
-                  })()}
+                  {form.colors[activeColor] && (
+                    <ProductColorEditor
+                      color={form.colors[activeColor]}
+                      colorIdx={activeColor}
+                      category={form.category ?? "tops-shirts"}
+                      isFirstColor={activeColor === 0}
+                      paletteOpen={colorPaletteOpen === activeColor}
+                      dragging={draggingIdx === activeColor}
+                      onPaletteToggle={() => setColorPaletteOpen(colorPaletteOpen === activeColor ? null : activeColor)}
+                      onPickSwatch={(hex, name) => pickColorSwatch(activeColor, hex, name)}
+                      onDragOver={(e) => { e.preventDefault(); setDraggingIdx(activeColor); }}
+                      onDragLeave={() => setDraggingIdx(null)}
+                      onDrop={(e) => handleDrop(activeColor, e)}
+                      onFileChange={(files) => uploadFiles(activeColor, files)}
+                      onImageUrlChange={(ii, value) => {
+                        const imgs = [...form.colors[activeColor].images];
+                        imgs[ii] = value;
+                        setColorImages(activeColor, imgs);
+                      }}
+                      onImageRemove={(ii) => {
+                        const imgs = form.colors[activeColor].images.filter((_, idx) => idx !== ii);
+                        setColorImages(activeColor, imgs.length ? imgs : [""]);
+                      }}
+                      onToggleSize={(label) => toggleColorSize(activeColor, label)}
+                      onSetAccessoryStock={setAccessoryStock}
+                      onApplyCategorySizes={applyCategorySizes}
+                    />
+                  )}
                 </FormSection>
 
-                <Divider />
+                <FormDivider />
 
                 {/* ── Product details ─────────────────────────────── */}
                 <FormSection title="Product details">
@@ -902,26 +748,3 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
   );
 }
 
-function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-4">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/40">{title}</p>
-      {children}
-    </div>
-  );
-}
-
-function FormField({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/55">
-        {label}{required && <span className="ml-0.5 text-foreground/35">*</span>}
-      </label>
-      {children}
-    </div>
-  );
-}
-
-function Divider() {
-  return <div className="h-px bg-foreground/6" />;
-}

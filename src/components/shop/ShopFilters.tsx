@@ -1,16 +1,9 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-
-const ease = [0.22, 1, 0.36, 1] as const;
-
-export type SortKey = "new-in" | "oldest" | "price-asc" | "price-desc";
-
-export type ProductFilters = {
-  brands: string[];
-  sizes: string[];
-  colors: string[];
-};
+import { ease } from "@/lib/animations";
+import type { SortKey, ProductFilters } from "@/lib/shop-utils";
+export type { SortKey, ProductFilters } from "@/lib/shop-utils";
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "new-in", label: "New In" },

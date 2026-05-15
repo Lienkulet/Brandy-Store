@@ -9,8 +9,7 @@ import { useCart, type CartItem } from "@/context/CartContext";
 import Container from "@/components/layout/Container";
 import BlackBtn from "@/components/ui/BlackBtn";
 import { formatMDL, parseMDL } from "@/lib/money";
-
-const ease = [0.22, 1, 0.36, 1] as const;
+import { ease } from "@/lib/animations";
 
 type DeliveryMethod = "pickup" | "courier" | "nationwide";
 

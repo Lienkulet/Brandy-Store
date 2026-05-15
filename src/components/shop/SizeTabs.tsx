@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
-const ease = [0.22, 1, 0.36, 1] as const;
+import { ease } from "@/lib/animations";
 
 const tabs = ["Tops & Shirts", "Trousers & Jeans", "Footwear", "Underwear & Socks"] as const;
 type Tab = (typeof tabs)[number];

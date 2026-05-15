@@ -1,13 +1,15 @@
 import Link from "next/link";
+import type { MouseEventHandler } from "react";
 
 type GreyBtnProps = {
   name: string;
   type?: "button" | "submit" | "reset";
   className?: string;
   href?: string;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
 };
 
-function GreyBtn({ name, type = "button", className = "", href }: GreyBtnProps) {
+function GreyBtn({ name, type = "button", className = "", href, onClick }: GreyBtnProps) {
   const styles =
     `group cursor-pointer relative inline-flex h-11 items-center justify-center overflow-hidden rounded-full border border-white/40 bg-transparent px-7 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition-[border-color] duration-300 hover:border-white/80 ${className}`.trim();
 
@@ -26,7 +28,7 @@ function GreyBtn({ name, type = "button", className = "", href }: GreyBtnProps) 
     return <Link href={href} className={styles}>{content}</Link>;
   }
 
-  return <button type={type} className={styles}>{content}</button>;
+  return <button type={type} className={styles} onClick={onClick}>{content}</button>;
 }
 
 export default GreyBtn;

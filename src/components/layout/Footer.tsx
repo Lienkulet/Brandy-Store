@@ -8,6 +8,7 @@ import { InstagramIcon } from "../icons/InstagramIcon";
 import { TelegramIcon } from "../icons/TelegramIcon";
 import { TikTokIcon } from "../icons/TikTokIcon";
 import { PhoneIcon } from "../icons/PhoneIcon";
+import { ease } from "@/lib/animations";
 
 const productLinks = [
   { label: "New Arrivals",       href: "/new-arrivals"  },
@@ -41,8 +42,6 @@ const socialLinks = [
   { label: "TikTok",    href: "https://www.tiktok.com/@brandystore11",   icon: TikTokIcon    },
   { label: "Phone",     href: "tel:+373000000000",                       icon: PhoneIcon     },
 ];
-
-const ease = [0.22, 1, 0.36, 1] as const;
 
 const columns = [
   { title: "Product",    items: productLinks  },
