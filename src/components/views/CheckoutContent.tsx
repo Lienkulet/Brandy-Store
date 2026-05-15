@@ -10,6 +10,9 @@ import Container from "@/components/layout/Container";
 import BlackBtn from "@/components/ui/BlackBtn";
 import { formatMDL, parseMDL } from "@/lib/money";
 import { ease } from "@/lib/animations";
+import CheckIcon from "@/components/icons/CheckIcon";
+import InfoIcon from "@/components/icons/InfoIcon";
+import SpinnerIcon from "@/components/icons/SpinnerIcon";
 
 type DeliveryMethod = "pickup" | "courier" | "nationwide";
 
@@ -89,9 +92,7 @@ export function CheckoutContent() {
           transition={{ duration: 0.6, ease }}
         >
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-foreground/6">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-foreground">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
+            <CheckIcon size={28} />
           </div>
           <h1 className="mb-3 font-serif text-3xl font-semibold">Order received</h1>
           <p className="mb-8 text-sm leading-relaxed text-muted">
@@ -248,15 +249,7 @@ export function CheckoutContent() {
 
             {/* Operator note */}
             <div className="mt-4 flex gap-3 rounded-2xl bg-foreground/4 px-5 py-4">
-              <svg
-                className="mt-0.5 shrink-0 text-foreground/40"
-                width="15" height="15" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
+              <span className="mt-0.5 shrink-0 text-foreground/40"><InfoIcon /></span>
               <p className="text-[11px] leading-relaxed text-foreground/55">
                 After placing your order, one of our team members will call you to confirm the details and arrange payment.
               </p>
@@ -286,12 +279,7 @@ export function CheckoutContent() {
             >
               <span aria-hidden="true" className="absolute inset-0 origin-left scale-x-0 rounded-full bg-white/15 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-100" />
               <span className="relative z-10 flex items-center gap-2.5 text-white">
-                {loading && (
-                  <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                )}
+                {loading && <SpinnerIcon size={14} />}
                 {loading ? "Placing order…" : "Place Order"}
               </span>
             </button>

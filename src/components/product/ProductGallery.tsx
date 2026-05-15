@@ -35,8 +35,10 @@ export function ProductGallery({
       <div className="flex items-start gap-3">
 
         {/* Main image */}
-        <div
-          className="relative min-w-0 flex-1 cursor-zoom-in overflow-hidden rounded-2xl bg-[#f7f4f0]"
+        <button
+          type="button"
+          aria-label="Open image lightbox"
+          className="relative min-w-0 flex-1 cursor-zoom-in overflow-hidden rounded-2xl bg-[#f7f4f0] text-left"
           onClick={onOpenLightbox}
         >
           {product.isNew && (
@@ -61,7 +63,7 @@ export function ProductGallery({
               />
             </motion.div>
           </AnimatePresence>
-        </div>
+        </button>
 
         {/* Thumbnail strip */}
         {sliderImages.length > 1 && (

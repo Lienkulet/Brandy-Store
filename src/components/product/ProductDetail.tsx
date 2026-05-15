@@ -11,6 +11,7 @@ import { useGallery } from "@/hooks/useGallery";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductLightbox } from "@/components/product/ProductLightbox";
 import { areAllSizesOutOfStock, isPriceOnSale } from "@/lib/product-utils";
+import CheckIcon from "@/components/icons/CheckIcon";
 
 export function ProductDetail({ product }: { product: Product }) {
   const [selectedSize, setSize]   = useState<string | null>(null);
@@ -249,9 +250,7 @@ export function ProductDetail({ product }: { product: Product }) {
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.35, ease, delay: 0.15 }}
                       >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
+                        <CheckIcon size={13} />
                         Added to Bag
                       </motion.span>
                     ) : (

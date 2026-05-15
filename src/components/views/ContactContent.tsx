@@ -3,42 +3,10 @@
 import { motion } from "framer-motion";
 import Container from "@/components/layout/Container";
 import { ContactForm } from "@/components/views/ContactForm";
-import { PhoneIcon } from "@/components/icons/PhoneIcon";
-import { InstagramIcon } from "@/components/icons/InstagramIcon";
-import { TelegramIcon } from "@/components/icons/TelegramIcon";
-import { TikTokIcon } from "@/components/icons/TikTokIcon";
+import { ArrowRightIcon } from "@/components/icons/ArrowRightIcon";
+import LocationIcon from "@/components/icons/LocationIcon";
 import { ease } from "@/lib/animations";
-
-const channels = [
-  {
-    label: "Phone",
-    handle: "+373 XXX XXX XXX",
-    description: "Call or WhatsApp us directly",
-    href: "tel:+373000000000",
-    icon: <PhoneIcon />,
-  },
-  {
-    label: "Instagram",
-    handle: "@brandystoremd",
-    description: "DM us on Instagram",
-    href: "https://www.instagram.com/brandystoremd",
-    icon: <InstagramIcon />,
-  },
-  {
-    label: "Telegram",
-    handle: "@brandystoremd",
-    description: "Message us on Telegram",
-    href: "https://t.me/brandystoremd",
-    icon: <TelegramIcon />,
-  },
-  {
-    label: "TikTok",
-    handle: "@brandystore11",
-    description: "Follow us on TikTok",
-    href: "https://www.tiktok.com/@brandystore11",
-    icon: <TikTokIcon />,
-  },
-];
+import { contactChannels } from "@/data/contact-channels";
 
 export function ContactContent() {
   return (
@@ -74,7 +42,7 @@ export function ContactContent() {
 
         <div className="grid gap-12 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
 
-          {/* Left — contact channels */}
+          {/* Left — contact contactChannels */}
           <div className="space-y-4">
             <motion.p
               className="mb-6 text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/50"
@@ -85,9 +53,10 @@ export function ContactContent() {
             >
               Reach us on
             </motion.p>
-            {channels.map((ch, i) => (
+            <ul className="space-y-4">
+            {contactChannels.map((ch, i) => (
+              <li key={ch.label}>
               <motion.a
-                key={ch.label}
                 href={ch.href}
                 target={ch.href.startsWith("http") ? "_blank" : undefined}
                 rel={ch.href.startsWith("http") ? "noopener noreferrer" : undefined}
@@ -109,15 +78,13 @@ export function ContactContent() {
                   </p>
                   <p className="mt-0.5 text-xs text-muted">{ch.description}</p>
                 </div>
-                <svg
-                  className="-translate-x-1 text-foreground/25 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
-                  width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-                >
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
+                <span className="-translate-x-1 text-foreground/25 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
+                  <ArrowRightIcon size={16} />
+                </span>
               </motion.a>
+              </li>
             ))}
+            </ul>
           </div>
 
           {/* Right — contact form */}
@@ -155,10 +122,7 @@ export function ContactContent() {
             {/* Map label bar */}
             <div className="flex items-center justify-between border-b border-foreground/8 bg-foreground/2 px-5 py-3.5">
               <div className="flex items-center gap-2.5">
-                <svg className="h-4 w-4 text-foreground/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
-                  <circle cx="12" cy="9" r="2.5" />
-                </svg>
+                <span className="text-foreground/50"><LocationIcon size={16} /></span>
                 <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/60">
                   Brandy Store — Chișinău, Moldova
                 </span>

@@ -3,6 +3,9 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ease } from "@/lib/animations";
 import type { SortKey, ProductFilters } from "@/lib/shop-utils";
+import ChevronIcon from "@/components/icons/ChevronIcon";
+import CheckIcon from "@/components/icons/CheckIcon";
+import CloseIcon from "@/components/icons/CloseIcon";
 export type { SortKey, ProductFilters } from "@/lib/shop-utils";
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
@@ -38,7 +41,7 @@ export function FilterDropdown({
         }`}
       >
         {label}{count > 0 && ` (${count})`}
-        <Chevron open={open} />
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2, ease }} className="flex shrink-0"><ChevronIcon size={10} /></motion.span>
       </button>
 
       <AnimatePresence>
@@ -99,7 +102,7 @@ export function ColorFilterDropdown({
         }`}
       >
         Colour{count > 0 && ` (${count})`}
-        <Chevron open={open} />
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2, ease }} className="flex shrink-0"><ChevronIcon size={10} /></motion.span>
       </button>
 
       <AnimatePresence>
@@ -155,7 +158,7 @@ export function SortDropdown({
         className="cursor-pointer flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/50 hover:text-foreground transition-colors duration-200"
       >
         {label}
-        <Chevron open={open} />
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2, ease }} className="flex shrink-0"><ChevronIcon size={10} /></motion.span>
       </button>
 
       <AnimatePresence>
@@ -177,7 +180,7 @@ export function SortDropdown({
                   }`}
                 >
                   {option.label}
-                  {value === option.key && <CheckIcon />}
+                  {value === option.key && <CheckIcon size={10} />}
                 </button>
               ))}
             </div>
@@ -227,7 +230,7 @@ export function MobileFilterPanel({
             </button>
           )}
           <button onClick={onClose} className="cursor-pointer text-foreground/50 hover:text-foreground transition-colors" aria-label="Close filters">
-            <CloseIcon />
+            <CloseIcon size={18} />
           </button>
         </div>
       </div>
@@ -370,9 +373,9 @@ function MobileSection({ title, children }: { title: string; children: React.Rea
 function CheckboxMark({ checked }: { checked: boolean }) {
   return (
     <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors duration-150 ${
-      checked ? "border-foreground bg-foreground" : "border-foreground/25"
+      checked ? "border-foreground bg-foreground text-white" : "border-foreground/25"
     }`}>
-      {checked && <CheckIcon className="text-white" />}
+      {checked && <CheckIcon size={10} />}
     </span>
   );
 }
@@ -390,32 +393,3 @@ function ColorSwatch({ hex, active }: { hex: string; active: boolean }) {
   );
 }
 
-function Chevron({ open }: { open: boolean }) {
-  return (
-    <motion.svg
-      animate={{ rotate: open ? 180 : 0 }}
-      transition={{ duration: 0.2, ease }}
-      width="10" height="10" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-    >
-      <polyline points="6 9 12 15 18 9" />
-    </motion.svg>
-  );
-}
-
-function CheckIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  );
-}

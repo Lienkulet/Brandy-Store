@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import BlackBtn from "@/components/ui/BlackBtn";
 import { ease } from "@/lib/animations";
 import type { QuickAddStep } from "@/hooks/useQuickAdd";
+import CloseIcon from "@/components/icons/CloseIcon";
+import CheckIcon from "@/components/icons/CheckIcon";
 
 type Props = {
   step:              QuickAddStep;
@@ -60,9 +62,7 @@ export function QuickAddOverlay({
                 onClick={onDismiss}
                 className="cursor-pointer text-foreground/35 hover:text-foreground transition-colors"
               >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <CloseIcon size={12} />
               </button>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -78,21 +78,14 @@ export function QuickAddOverlay({
                 >
                   <span className="inline-flex min-w-4 items-center justify-center">
                     {recentlyAddedSize === s.label ? (
-                      <motion.svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                      <motion.span
+                        className="flex"
                         initial={{ scale: 0.5, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ duration: 0.18, ease }}
                       >
-                        <polyline points="20 6 9 17 4 12" />
-                      </motion.svg>
+                        <CheckIcon size={12} />
+                      </motion.span>
                     ) : s.label}
                   </span>
                 </button>
@@ -110,9 +103,7 @@ export function QuickAddOverlay({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.22, ease }}
           >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
+            <CheckIcon size={11} />
             <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
               Added
             </span>

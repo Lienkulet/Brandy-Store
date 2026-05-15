@@ -3,33 +3,7 @@
 import { motion } from "framer-motion";
 import CategoryCard from "@/components/cards/CategoryCard";
 import { ease } from "@/lib/animations";
-
-const categoryItems = [
-  {
-    title: "Tops & Shirts",
-    image: "/assets/category/tops-shirts.png",
-  },
-  {
-    title: "Pants & Jeans",
-    image: "/assets/category/pants-jeans.png",
-  },
-  {
-    title: "Knitwear & Layering",
-    image: "/assets/category/knitwear-layering.png",
-  },
-  {
-    title: "Jackets & Outerwear",
-    image: "/assets/category/jackets-outwear.png",
-  },
-  {
-    title: "Underwear & Essentials",
-    image: "/assets/category/underwear-essentials.png",
-  },
-  {
-    title: "Sportswear & Shoes",
-    image: "/assets/category/sportswear-shoes.png",
-  },
-] as const;
+import { HOME_CATEGORIES } from "@/data/home-categories";
 
 function Categories() {
   return (
@@ -60,7 +34,7 @@ function Categories() {
       </motion.div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-        {categoryItems.map((item, i) => (
+        {HOME_CATEGORIES.map((item, i) => (
           <motion.div
             key={item.title}
             initial={{ opacity: 0, y: 36 }}

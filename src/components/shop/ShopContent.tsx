@@ -15,6 +15,7 @@ import {
   MobileFilterPanel,
   SortDropdown,
 } from "@/components/shop/ShopFilters";
+import FilterIcon from "@/components/icons/FilterIcon";
 import { ease } from "@/lib/animations";
 
 export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: string; onlyNew?: boolean }) {
@@ -221,9 +222,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
                   onClick={() => setMobileOpen(true)}
                   className="cursor-pointer flex items-center gap-1.5 md:hidden rounded-full border border-foreground/20 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/60 hover:border-foreground/40 hover:text-foreground transition-colors duration-200"
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <line x1="4" y1="6" x2="20" y2="6" /><line x1="8" y1="12" x2="20" y2="12" /><line x1="12" y1="18" x2="20" y2="18" />
-                  </svg>
+                  <FilterIcon />
                   Filter{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
                 </button>
               </div>

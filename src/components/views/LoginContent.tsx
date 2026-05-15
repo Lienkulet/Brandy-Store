@@ -5,6 +5,9 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ease } from "@/lib/animations";
+import EyeOffIcon from "@/components/icons/EyeOffIcon";
+import EyeIcon from "@/components/icons/EyeIcon";
+import SpinnerIcon from "@/components/icons/SpinnerIcon";
 
 type Status = "idle" | "loading" | "error";
 
@@ -110,18 +113,7 @@ export function LoginContent() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-foreground/35 transition-colors duration-150 hover:text-foreground"
                 aria-label={showPass ? "Hide password" : "Show password"}
               >
-                {showPass ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                    <line x1="1" y1="1" x2="23" y2="23" />
-                  </svg>
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                )}
+                {showPass ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
           </div>
@@ -146,9 +138,7 @@ export function LoginContent() {
           >
             {status === "loading" ? (
               <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                </svg>
+                <SpinnerIcon size={13} />
                 Signing in…
               </span>
             ) : "Sign In"}

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { ArrowLeftIcon } from "@/components/icons/ArrowLeftIcon";
 import { ArrowRightIcon } from "@/components/icons/ArrowRightIcon";
+import CloseIcon from "@/components/icons/CloseIcon";
 import { ease } from "@/lib/animations";
 
 type Props = {
@@ -45,9 +46,7 @@ export function ProductLightbox({
             onClick={onClose}
             className="cursor-pointer absolute right-5 top-5 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <CloseIcon size={16} />
           </button>
 
           {totalImages > 1 && (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ImageIcon from "@/components/icons/ImageIcon";
 
 type ProductImageProps = {
   src?: string | null;
@@ -29,11 +30,7 @@ export function ProductImage({
 
       {showFallback ? (
         <div className="flex h-full min-h-32 w-full flex-col items-center justify-center gap-2 px-4 text-center text-foreground/30">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <path d="m21 15-5-5L5 21" />
-          </svg>
+          <ImageIcon />
           <span className="text-[10px] font-semibold uppercase tracking-[0.16em]">
             Image unavailable
           </span>

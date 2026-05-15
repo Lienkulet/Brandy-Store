@@ -11,30 +11,16 @@ import {
 } from "framer-motion";
 import { AccountIcon } from "@/components/icons/Account";
 import { CartIcon } from "@/components/icons/CartIcon";
-import { InstagramIcon } from "@/components/icons/InstagramIcon";
-import { TelegramIcon } from "@/components/icons/TelegramIcon";
-import { TikTokIcon } from "@/components/icons/TikTokIcon";
 import { CartDrawer } from "@/components/layout/CartDrawer";
 import { useCart } from "@/context/CartContext";
 import { ease } from "@/lib/animations";
-
-const navigationItems = [
-  { label: "New Arrivals", href: "/new-arrivals" },
-  { label: "Shop",         href: "/shop"         },
-  { label: "The Story",    href: "/about"        },
-  { label: "Contact",      href: "/contact"      },
-];
+import { navigationItems } from "@/data/nav-links";
+import { MobileMenu } from "@/components/layout/nav/MobileMenu";
 
 const actionItems = [
   // { label: "Search",  icon: SearchIcon  },
   { label: "Cart",    icon: CartIcon    },
   { label: "Account", icon: AccountIcon },
-];
-
-const socialLinks = [
-  { label: "Instagram", href: "https://www.instagram.com/brandystoremd", icon: InstagramIcon },
-  { label: "Telegram",  href: "https://t.me/brandystoremd",              icon: TelegramIcon  },
-  { label: "TikTok",    href: "https://www.tiktok.com/@brandystore11",   icon: TikTokIcon    },
 ];
 
 const stagger = {
@@ -294,84 +280,3 @@ export function Navbar() {
   );
 }
 
-/* ─── Mobile menu overlay ─────────────────────────────────────────── */
-
-function MobileMenu({ onClose, pathname }: { onClose: () => void; pathname: string }) {
-  return (
-    <motion.div
-      className="fixed inset-0 z-40 flex flex-col bg-[#1e1a17] px-6 pb-10 pt-28"
-      initial={{ opacity: 0, y: -16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
-      transition={{ duration: 0.35, ease }}
-    >
-      {/* Nav links */}
-      <nav className="flex-1 flex flex-col justify-center gap-1">
-        {navigationItems.map((item, i) => {
-          const isActive = pathname === item.href;
-          return (
-            <motion.div
-              key={item.label}
-              initial={{ opacity: 0, x: -24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -16 }}
-              transition={{ duration: 0.4, ease, delay: 0.05 + i * 0.07 }}
-            >
-              <Link
-                href={item.href}
-                onClick={onClose}
-                className="group flex items-baseline gap-4 py-4 border-b border-white/8"
-              >
-                <span className="w-5 text-[10px] font-semibold tabular-nums text-white/25">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span
-                  className={`font-serif text-4xl font-semibold uppercase tracking-[0.04em] transition-colors duration-200 sm:text-5xl ${
-                    isActive ? "text-white" : "text-white/60 group-hover:text-white"
-                  }`}
-                >
-                  {item.label}
-                </span>
-                {isActive && (
-                  <span className="ml-auto text-[10px] font-semibold uppercase tracking-[0.18em] text-white/30">
-                    Current
-                  </span>
-                )}
-              </Link>
-            </motion.div>
-          );
-        })}
-      </nav>
-
-      {/* Bottom bar */}
-      <motion.div
-        className="flex items-center justify-between pt-8"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.4, ease, delay: 0.35 }}
-      >
-        {/* Social icons */}
-        <div className="flex items-center gap-5">
-          {socialLinks.map(({ label, href, icon: Icon }) => (
-            <a
-              key={label}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={label}
-              className="text-white/40 transition-colors duration-200 hover:text-white"
-            >
-              <Icon />
-            </a>
-          ))}
-        </div>
-
-        {/* Tagline */}
-        <p className="font-serif text-sm italic text-white/25">
-          Dressed for every room.
-        </p>
-      </motion.div>
-    </motion.div>
-  );
-}
