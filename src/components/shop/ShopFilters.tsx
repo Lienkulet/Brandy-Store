@@ -34,10 +34,10 @@ export function FilterDropdown({
     <div className="relative z-20">
       <button
         onClick={onOpen}
-        className={`cursor-pointer flex items-center gap-1.5 rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] transition-all duration-200 ${
+        className={`cursor-pointer flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ${
           count > 0 || open
-            ? "border-foreground bg-foreground text-white"
-            : "border-foreground/15 text-muted hover:border-foreground/30 hover:text-foreground"
+            ? "text-foreground"
+            : "text-foreground/50 hover:text-foreground/75"
         }`}
       >
         {label}{count > 0 && ` (${count})`}
@@ -95,10 +95,10 @@ export function ColorFilterDropdown({
     <div className="relative z-20">
       <button
         onClick={onOpen}
-        className={`cursor-pointer flex items-center gap-1.5 rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] transition-all duration-200 ${
+        className={`cursor-pointer flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ${
           count > 0 || open
-            ? "border-foreground bg-foreground text-white"
-            : "border-foreground/15 text-muted hover:border-foreground/30 hover:text-foreground"
+            ? "text-foreground"
+            : "text-foreground/50 hover:text-foreground/75"
         }`}
       >
         Colour{count > 0 && ` (${count})`}
@@ -155,7 +155,7 @@ export function SortDropdown({
     <div className="relative z-20">
       <button
         onClick={onOpen}
-        className="cursor-pointer flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/50 hover:text-foreground transition-colors duration-200"
+        className={`cursor-pointer flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ${open ? "text-foreground" : "text-foreground/50 hover:text-foreground/75"}`}
       >
         {label}
         <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2, ease }} className="flex shrink-0"><ChevronIcon size={10} /></motion.span>
@@ -193,7 +193,7 @@ export function SortDropdown({
 
 export function MobileFilterPanel({
   filters, sort, resultCount, availableBrands, availableSizes, availableColors,
-  onToggle, onSort, onClear, onClose,
+  onToggle, onToggleSale, onSort, onClear, onClose,
 }: {
   filters: ProductFilters;
   sort: SortKey;
@@ -201,12 +201,13 @@ export function MobileFilterPanel({
   availableBrands: string[];
   availableSizes: string[];
   availableColors: ColorOption[];
-  onToggle: (key: keyof ProductFilters, value: string) => void;
+  onToggle: (key: "brands" | "sizes" | "colors", value: string) => void;
+  onToggleSale: () => void;
   onSort: (value: SortKey) => void;
   onClear: () => void;
   onClose: () => void;
 }) {
-  const activeFilterCount = filters.brands.length + filters.sizes.length + filters.colors.length;
+  const activeFilterCount = filters.brands.length + filters.sizes.length + filters.colors.length + (filters.onSale ? 1 : 0);
 
   return (
     <motion.div
@@ -310,6 +311,19 @@ export function MobileFilterPanel({
             </div>
           </MobileSection>
         )}
+
+        <MobileSection title="Offers">
+          <button
+            onClick={onToggleSale}
+            className={`cursor-pointer h-9 rounded-full px-4 text-[11px] font-semibold uppercase tracking-[0.14em] transition-colors duration-200 ${
+              filters.onSale
+                ? "bg-foreground text-white"
+                : "border border-foreground/15 text-muted hover:border-foreground/30 hover:text-foreground"
+            }`}
+          >
+            On Sale
+          </button>
+        </MobileSection>
       </div>
 
       <div className="border-t border-foreground/8 px-5 py-4">

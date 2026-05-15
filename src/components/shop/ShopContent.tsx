@@ -18,6 +18,7 @@ import {
 import FilterIcon from "@/components/icons/FilterIcon";
 import { ease } from "@/lib/animations";
 
+
 export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: string; onlyNew?: boolean }) {
   const filterProducts = useCallback(
     (product: Product) => !onlyNew || Boolean(product.isNew),
@@ -25,7 +26,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
   );
   const { products: allProducts, loading } = useProducts(filterProducts);
   const [category, setCategory]       = useState<string | null>(initialCategory ?? null);
-  const [filters, setFilters]         = useState<ProductFilters>({ brands: [], sizes: [], colors: [] });
+  const [filters, setFilters]         = useState<ProductFilters>({ brands: [], sizes: [], colors: [], onSale: false });
   const [sort, setSort]               = useState<SortKey>("new-in");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen]   = useState(false);
@@ -68,10 +69,12 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
   // Final filtered + sorted list
   const visible = applySort(applyFilters(categoryProducts, filters), sort);
 
-  const activeFilterCount = filters.brands.length + filters.sizes.length + filters.colors.length;
+  const activeFilterCount = filters.brands.length + filters.sizes.length + filters.colors.length + (filters.onSale ? 1 : 0);
   const categoryLabel     = categories.find((c) => c.slug === category)?.label ?? "All";
 
-  function toggleFilter(key: keyof ProductFilters, value: string) {
+  type ArrayFilterKey = "brands" | "sizes" | "colors";
+
+  function toggleFilter(key: ArrayFilterKey, value: string) {
     setFilters((prev) => {
       const arr = prev[key];
       return {
@@ -82,13 +85,13 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
   }
 
   function clearFilters() {
-    setFilters({ brands: [], sizes: [], colors: [] });
+    setFilters({ brands: [], sizes: [], colors: [], onSale: false });
     setSort("new-in");
   }
 
   function changeCategory(nextCategory: string | null) {
     setCategory(nextCategory);
-    setFilters({ brands: [], sizes: [], colors: [] });
+    setFilters({ brands: [], sizes: [], colors: [], onSale: false });
   }
 
   const closeDropdown = () => setOpenDropdown(null);
@@ -125,34 +128,47 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
           </motion.p>
         </motion.div>
 
-        {/* Category pills */}
+        {/* Category nav */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease, delay: 0.45 }}
         >
-          <div
-            ref={pillsRef}
-            className="mb-4 flex gap-2 overflow-x-auto pb-1"
-            style={{ scrollbarWidth: "none" }}
-          >
-            {categories.map((cat) => {
-              const isActive = category === cat.slug;
-              return (
-                <button
-                  key={cat.label}
-                  data-active={isActive}
-                  onClick={() => changeCategory(cat.slug)}
-                  className={`cursor-pointer shrink-0 h-9 rounded-full px-5 text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors duration-200 ${
-                    isActive
-                      ? "bg-foreground text-white"
-                      : "border border-foreground/15 text-muted hover:border-foreground/30 hover:text-foreground"
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              );
-            })}
+          <div className="relative mb-0">
+            <div
+              ref={pillsRef}
+              className="flex gap-7 overflow-x-auto pb-3"
+              style={{ scrollbarWidth: "none" }}
+            >
+              {categories.map((cat) => {
+                const isActive = category === cat.slug;
+                return (
+                  <button
+                    key={cat.label}
+                    data-active={isActive}
+                    onClick={() => changeCategory(cat.slug)}
+                    className={`group relative cursor-pointer shrink-0 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ${
+                      isActive
+                        ? "text-foreground"
+                        : "text-foreground/35 hover:text-foreground/65"
+                    }`}
+                  >
+                    {cat.label}
+                    {isActive ? (
+                      <motion.span
+                        layoutId="category-underline"
+                        className="absolute bottom-0 left-0 right-0 h-px bg-foreground"
+                        transition={{ duration: 0.25, ease }}
+                      />
+                    ) : (
+                      <span className="absolute bottom-0 left-0 right-0 h-px origin-left scale-x-0 bg-foreground/30 transition-transform duration-200 group-hover:scale-x-100" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Right-edge fade for overflow hint */}
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-linear-to-l from-background to-transparent" />
           </div>
 
           {/* Filter bar (desktop) + count row */}
@@ -160,7 +176,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
 
             {/* Desktop filters row */}
             <div className="mb-4 hidden items-center justify-between md:flex">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-6">
                 <FilterDropdown
                   label="Brand"
                   options={availableBrands.map((b) => ({ value: b, label: b }))}
@@ -186,14 +202,24 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
                   open={openDropdown === "color"}
                   onOpen={() => setOpenDropdown(openDropdown === "color" ? null : "color")}
                 />
-                {activeFilterCount > 0 && (
-                  <button
-                    onClick={clearFilters}
-                    className="cursor-pointer ml-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/40 underline underline-offset-2 hover:text-foreground transition-colors duration-200"
-                  >
-                    Clear
-                  </button>
-                )}
+                <button
+                  onClick={() => setFilters((prev) => ({ ...prev, onSale: !prev.onSale }))}
+                  className={`group relative cursor-pointer text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ${
+                    filters.onSale ? "text-foreground" : "text-foreground/50 hover:text-foreground/75"
+                  }`}
+                >
+                  On Sale
+                  {filters.onSale ? (
+                    <motion.span
+                      layoutId="sale-underline"
+                      className="absolute left-0 right-0 h-px bg-foreground"
+                      style={{ top: "calc(100% + 4px)" }}
+                      transition={{ duration: 0.25, ease }}
+                    />
+                  ) : (
+                    <span className="absolute left-0 right-0 h-px origin-left scale-x-0 bg-foreground/30 transition-transform duration-200 group-hover:scale-x-100" style={{ top: "calc(100% + 4px)" }} />
+                  )}
+                </button>
               </div>
 
               <SortDropdown
@@ -311,6 +337,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
             availableSizes={availableSizes}
             availableColors={availableColors}
             onToggle={toggleFilter}
+            onToggleSale={() => setFilters((prev) => ({ ...prev, onSale: !prev.onSale }))}
             onSort={setSort}
             onClear={clearFilters}
             onClose={() => setMobileOpen(false)}
