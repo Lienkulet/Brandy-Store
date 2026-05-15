@@ -1,91 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { PageHeader, EmptyState } from "./OverviewContent";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import { ease } from "@/lib/animations";
+import { type OrderStatus, STATUS_LABELS } from "@/lib/order-utils";
+import { useOrders } from "@/hooks/useOrders";
+import { OrderRow } from "./OrderRow";
+import { PageHeader, EmptyState } from "./OverviewContent";
 
-export type OrderStatus = "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
+export type { OrderStatus } from "@/lib/order-utils";
+export type { Order } from "@/lib/order-utils";
 
-export type Order = {
-  id:        string;
-  createdAt: string;
-  customer:  { name: string; phone: string; address?: string };
-  delivery:  "pickup" | "courier" | "nationwide";
-  items:     { name: string; brand: string; size: string; color: string; price: string; quantity: number; image: string }[];
-  subtotal:  string;
-  status:    OrderStatus;
-};
-
-const STATUS_STYLES: Record<OrderStatus, string> = {
-  pending:   "bg-amber-50 text-amber-700 border-amber-200",
-  confirmed: "bg-blue-50 text-blue-700 border-blue-200",
-  shipped:   "bg-violet-50 text-violet-700 border-violet-200",
-  delivered: "bg-green-50 text-green-700 border-green-200",
-  cancelled: "bg-red-50 text-red-500 border-red-200",
-};
-
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending:   "Pending",
-  confirmed: "Confirmed",
-  shipped:   "Shipped",
-  delivered: "Delivered",
-  cancelled: "Cancelled",
-};
-
-const DELIVERY_LABELS = {
-  pickup:     "Pickup",
-  courier:    "Courier — Chișinău",
-  nationwide: "Nationwide",
-};
-
-type SupabaseOrder = {
-  id: string;
-  created_at: string;
-  customer_name: string;
-  customer_phone: string;
-  customer_address?: string;
-  delivery: "pickup" | "courier" | "nationwide";
-  items: Order["items"];
-  subtotal: string;
-  status: OrderStatus;
-};
-
-function toOrder(o: SupabaseOrder): Order {
-  return {
-    id: o.id,
-    createdAt: o.created_at,
-    customer: { name: o.customer_name, phone: o.customer_phone, address: o.customer_address },
-    delivery: o.delivery,
-    items: o.items,
-    subtotal: o.subtotal,
-    status: o.status,
-  };
-}
+const FILTER_TABS = ["all", "pending", "confirmed", "shipped", "delivered", "cancelled"] as const;
+type FilterTab = typeof FILTER_TABS[number];
 
 export function OrdersContent() {
-  const [orders, setOrders]       = useState<Order[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [expanded, setExpanded]   = useState<string | null>(null);
-  const [filter, setFilter]       = useState<OrderStatus | "all">("all");
-
-  useEffect(() => {
-    fetch("/api/orders")
-      .then((r) => r.json())
-      .then((data: SupabaseOrder[]) => setOrders(Array.isArray(data) ? data.map(toOrder) : []))
-      .catch(() => setOrders([]))
-      .finally(() => setLoading(false));
-  }, []);
+  const { orders, loading, updateStatus } = useOrders();
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [filter, setFilter]     = useState<FilterTab>("all");
 
   const visible = filter === "all" ? orders : orders.filter((o) => o.status === filter);
 
-  async function updateStatus(id: string, status: OrderStatus) {
-    setOrders((prev) => prev.map((o) => o.id === id ? { ...o, status } : o));
-    await fetch(`/api/orders/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
+  function toggleExpanded(id: string) {
+    setExpanded((prev) => (prev === id ? null : id));
   }
 
   return (
@@ -97,193 +34,129 @@ export function OrdersContent() {
         </p>
       </div>
 
-      {/* Status filter tabs */}
-      <div className="mt-6 flex flex-wrap gap-2">
-        {(["all", "pending", "confirmed", "shipped", "delivered", "cancelled"] as const).map((s) => {
-          const count = s === "all" ? orders.length : orders.filter((o) => o.status === s).length;
-          return (
-            <button
-              key={s}
-              onClick={() => setFilter(s)}
-              className={`cursor-pointer h-8 rounded-full border px-4 text-[10px] font-semibold uppercase tracking-[0.14em] transition-all duration-200 ${
-                filter === s
-                  ? "border-foreground bg-foreground text-white"
-                  : "border-foreground/12 text-foreground/50 hover:border-foreground/30 hover:text-foreground"
-              }`}
-            >
-              {s === "all" ? "All" : STATUS_LABELS[s]}
-              {count > 0 && <span className="ml-1.5 opacity-60">{count}</span>}
-            </button>
-          );
-        })}
-      </div>
+      <FilterTabs filter={filter} orders={orders} onSelect={setFilter} />
 
-      {/* Table */}
-      <motion.div
-        className="mt-4 overflow-hidden rounded-2xl border border-foreground/8 bg-white"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease }}
-      >
-        {loading ? (
-          <div className="divide-y divide-foreground/6">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 px-5 py-4">
-                <div className="flex-1 space-y-2">
-                  <div className="h-3 w-32 animate-pulse rounded bg-foreground/8" />
-                  <div className="h-2.5 w-24 animate-pulse rounded bg-foreground/6" />
-                </div>
-                <div className="hidden h-2.5 w-20 animate-pulse rounded bg-foreground/6 sm:block" />
-                <div className="hidden h-2.5 w-16 animate-pulse rounded bg-foreground/6 sm:block" />
-                <div className="h-5 w-16 animate-pulse rounded-full bg-foreground/8" />
-              </div>
-            ))}
-          </div>
-        ) : visible.length === 0 ? (
-          <EmptyState
-            icon={
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <path d="M16 10a4 4 0 0 1-8 0" />
-              </svg>
-            }
-            message={filter === "all" ? "No orders yet" : `No ${STATUS_LABELS[filter as OrderStatus].toLowerCase()} orders`}
-            sub="Orders placed by customers will appear here."
+      <OrderTable loading={loading} filter={filter}>
+        {visible.map((order) => (
+          <OrderRow
+            key={order.id}
+            order={order}
+            expanded={expanded === order.id}
+            onToggle={() => toggleExpanded(order.id)}
+            onStatusChange={(s) => updateStatus(order.id, s)}
           />
-        ) : (
-          <>
-            {/* Header row */}
-            <div className="hidden grid-cols-[1fr_120px_100px_120px_80px] gap-4 border-b border-foreground/8 px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/35 sm:grid">
-              <span>Customer</span>
-              <span>Date</span>
-              <span>Total</span>
-              <span>Delivery</span>
-              <span>Status</span>
-            </div>
-
-            {visible.map((order) => (
-              <OrderRow
-                key={order.id}
-                order={order}
-                expanded={expanded === order.id}
-                onToggle={() => setExpanded((v) => v === order.id ? null : order.id)}
-                onStatusChange={(s) => updateStatus(order.id, s)}
-              />
-            ))}
-          </>
-        )}
-      </motion.div>
+        ))}
+      </OrderTable>
     </div>
   );
 }
 
-function OrderRow({
-  order, expanded, onToggle, onStatusChange,
+function FilterTabs({
+  filter, orders, onSelect,
 }: {
-  order:          Order;
-  expanded:       boolean;
-  onToggle:       () => void;
-  onStatusChange: (s: OrderStatus) => void;
+  filter:   FilterTab;
+  orders:   { status: OrderStatus }[];
+  onSelect: (f: FilterTab) => void;
 }) {
   return (
-    <div className="border-b border-foreground/6 last:border-0">
-      {/* Main row */}
-      <button
-        onClick={onToggle}
-        className="cursor-pointer grid w-full grid-cols-[1fr_auto] gap-4 px-5 py-4 text-left transition-colors duration-150 hover:bg-foreground/2 sm:grid-cols-[1fr_120px_100px_120px_80px]"
-      >
-        <div>
-          <p className="text-sm font-semibold text-foreground">{order.customer.name}</p>
-          <p className="text-[11px] text-muted">{order.customer.phone}</p>
-        </div>
-        <p className="hidden text-[11px] text-muted sm:block">
-          {new Date(order.createdAt).toLocaleDateString("ro-MD")}
-        </p>
-        <p className="hidden text-sm font-semibold text-foreground sm:block">{order.subtotal}</p>
-        <p className="hidden text-[11px] text-muted sm:block">{DELIVERY_LABELS[order.delivery]}</p>
-        <span className={`self-start rounded-full border px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] sm:self-center ${STATUS_STYLES[order.status]}`}>
-          {STATUS_LABELS[order.status]}
-        </span>
-      </button>
+    <div className="mt-6 flex flex-wrap gap-2">
+      {FILTER_TABS.map((tab) => {
+        const count = tab === "all"
+          ? orders.length
+          : orders.filter((o) => o.status === tab).length;
 
-      {/* Expanded detail */}
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease }}
-            className="overflow-hidden"
+        return (
+          <button
+            key={tab}
+            onClick={() => onSelect(tab)}
+            className={`cursor-pointer h-8 rounded-full border px-4 text-[10px] font-semibold uppercase tracking-[0.14em] transition-all duration-200 ${
+              filter === tab
+                ? "border-foreground bg-foreground text-white"
+                : "border-foreground/12 text-foreground/50 hover:border-foreground/30 hover:text-foreground"
+            }`}
           >
-            <div className="border-t border-foreground/6 bg-[#faf8f5] px-5 py-5">
-
-              {/* Items */}
-              <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/40">
-                Items
-              </p>
-              <ul className="mb-5 space-y-3">
-                {order.items.map((item, i) => (
-                  <li key={i} className="flex items-center gap-3">
-                    <div className="h-12 w-9 shrink-0 overflow-hidden rounded-lg bg-white">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[11px] font-semibold text-foreground">{item.name}</p>
-                      <p className="text-[10px] text-muted">
-                        {item.size === "One Size" ? item.color : `${item.color} · ${item.size}`} · Qty {item.quantity}
-                      </p>
-                    </div>
-                    <p className="text-[11px] font-semibold text-foreground">{item.price}</p>
-                  </li>
-                ))}
-              </ul>
-
-              {/* Order info row */}
-              <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <InfoBlock label="Delivery" value={DELIVERY_LABELS[order.delivery]} />
-                {order.customer.address && (
-                  <InfoBlock label="Address" value={order.customer.address} />
-                )}
-                <InfoBlock label="Subtotal" value={order.subtotal} />
-              </div>
-
-              {/* Status changer */}
-              <div>
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/40">
-                  Update status
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {(Object.keys(STATUS_LABELS) as OrderStatus[]).map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => onStatusChange(s)}
-                      className={`cursor-pointer rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] transition-all duration-150 ${
-                        order.status === s
-                          ? STATUS_STYLES[s]
-                          : "border-foreground/12 text-foreground/40 hover:border-foreground/30 hover:text-foreground"
-                      }`}
-                    >
-                      {STATUS_LABELS[s]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {tab === "all" ? "All" : STATUS_LABELS[tab]}
+            {count > 0 && <span className="ml-1.5 opacity-60">{count}</span>}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-function InfoBlock({ label, value }: { label: string; value: string }) {
+function OrderTable({
+  loading, filter, children,
+}: {
+  loading:  boolean;
+  filter:   FilterTab;
+  children: React.ReactNode;
+}) {
+  const emptyMessage = filter === "all"
+    ? "No orders yet"
+    : `No ${STATUS_LABELS[filter as OrderStatus].toLowerCase()} orders`;
+
   return (
-    <div>
-      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/35">{label}</p>
-      <p className="mt-0.5 text-[11px] font-medium text-foreground">{value}</p>
+    <motion.div
+      className="mt-4 overflow-hidden rounded-2xl border border-foreground/8 bg-white"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease }}
+    >
+      {loading ? (
+        <OrdersSkeleton />
+      ) : !hasChildren(children) ? (
+        <EmptyState icon={<OrdersIcon />} message={emptyMessage} sub="Orders placed by customers will appear here." />
+      ) : (
+        <>
+          <OrdersTableHeader />
+          {children}
+        </>
+      )}
+    </motion.div>
+  );
+}
+
+function OrdersTableHeader() {
+  return (
+    <div className="hidden grid-cols-[1fr_120px_100px_120px_80px] gap-4 border-b border-foreground/8 px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/35 sm:grid">
+      <span>Customer</span>
+      <span>Date</span>
+      <span>Total</span>
+      <span>Delivery</span>
+      <span>Status</span>
     </div>
   );
+}
+
+function OrdersSkeleton() {
+  return (
+    <div className="divide-y divide-foreground/6">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-4 px-5 py-4">
+          <div className="flex-1 space-y-2">
+            <div className="h-3 w-32 animate-pulse rounded bg-foreground/8" />
+            <div className="h-2.5 w-24 animate-pulse rounded bg-foreground/6" />
+          </div>
+          <div className="hidden h-2.5 w-20 animate-pulse rounded bg-foreground/6 sm:block" />
+          <div className="hidden h-2.5 w-16 animate-pulse rounded bg-foreground/6 sm:block" />
+          <div className="h-5 w-16 animate-pulse rounded-full bg-foreground/8" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function OrdersIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <path d="M16 10a4 4 0 0 1-8 0" />
+    </svg>
+  );
+}
+
+function hasChildren(children: React.ReactNode): boolean {
+  const arr = Array.isArray(children) ? children : [children];
+  return arr.some(Boolean);
 }

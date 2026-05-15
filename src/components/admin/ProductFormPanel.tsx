@@ -83,7 +83,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
 
     const timer = window.setTimeout(() => {
       if (product) {
-        const colors: ProductFormColor[] = product.colors.map((c) => ({
+        const colors = product.colors.map((c) => ({
           ...c,
           images: c.images?.length ? c.images : [""],
           sizes:  c.sizes?.length  ? [...c.sizes] : (product.sizes ?? DEFAULT_SIZES).map((s) => ({ ...s })),
