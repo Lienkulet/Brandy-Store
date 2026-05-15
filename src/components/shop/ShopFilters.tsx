@@ -53,7 +53,7 @@ export function FilterDropdown({
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ duration: 0.18, ease }}
           >
-            <div className="max-h-80 overflow-y-auto rounded-2xl p-2">
+            <div className="max-h-80 overflow-y-auto rounded-2xl p-2 bg-background">
               {options.map(({ value, label: optionLabel }) => {
                 const checked = selected.includes(value);
                 return (
