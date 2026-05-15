@@ -18,6 +18,10 @@ import {
 import { ease } from "@/lib/animations";
 import { FormSection, FormField, FormDivider } from "@/components/admin/form/FormPrimitives";
 import { ProductColorEditor } from "@/components/admin/form/ProductColorEditor";
+import CloseIcon from "@/components/icons/CloseIcon";
+import ChevronIcon from "@/components/icons/ChevronIcon";
+import CheckIcon from "@/components/icons/CheckIcon";
+import PlusIcon from "@/components/icons/PlusIcon";
 
 type Props = {
   open:     boolean;
@@ -345,9 +349,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                 onClick={onClose}
                 className="cursor-pointer flex h-8 w-8 items-center justify-center rounded-full text-foreground/40 hover:bg-foreground/6 hover:text-foreground transition-colors"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <CloseIcon size={16} />
               </button>
             </div>
 
@@ -391,15 +393,13 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                             className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center justify-center text-foreground/40"
                             aria-label="Toggle brand options"
                           >
-                            <motion.svg
+                            <motion.span
                               animate={{ rotate: brandOpen ? 180 : 0 }}
                               transition={{ duration: 0.2, ease }}
-                              width="12" height="12" viewBox="0 0 24 24" fill="none"
-                              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-                              className="shrink-0"
+                              className="flex shrink-0"
                             >
-                              <polyline points="6 9 12 15 18 9" />
-                            </motion.svg>
+                              <ChevronIcon />
+                            </motion.span>
                           </button>
                           <AnimatePresence>
                             {brandOpen && (
@@ -422,11 +422,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                                         }`}
                                       >
                                         {b}
-                                        {form.brand === b && (
-                                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                            <polyline points="20 6 9 17 4 12" />
-                                          </svg>
-                                        )}
+                                        {form.brand === b && <CheckIcon />}
                                       </button>
                                     ))
                                   ) : (
@@ -466,15 +462,13 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                             className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center justify-center text-foreground/40"
                             aria-label="Toggle category options"
                           >
-                            <motion.svg
+                            <motion.span
                               animate={{ rotate: categoryOpen ? 180 : 0 }}
                               transition={{ duration: 0.2, ease }}
-                              width="12" height="12" viewBox="0 0 24 24" fill="none"
-                              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-                              className="shrink-0"
+                              className="flex shrink-0"
                             >
-                              <polyline points="6 9 12 15 18 9" />
-                            </motion.svg>
+                              <ChevronIcon />
+                            </motion.span>
                           </button>
                           <AnimatePresence>
                             {categoryOpen && (
@@ -501,11 +495,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                                         }`}
                                       >
                                         {c.label}
-                                        {(form.category ?? "tops-shirts") === c.slug && (
-                                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                            <polyline points="20 6 9 17 4 12" />
-                                          </svg>
-                                        )}
+                                        {(form.category ?? "tops-shirts") === c.slug && <CheckIcon />}
                                       </button>
                                     ))
                                   ) : (
@@ -626,9 +616,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                             className="cursor-pointer absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-white shadow-sm transition-opacity hover:bg-red-600"
                             title="Remove colour"
                           >
-                            <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
+                            <CloseIcon size={7} />
                           </button>
                         )}
                       </div>
@@ -641,9 +629,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                       className="cursor-pointer flex h-8 w-8 items-center justify-center rounded-full border-2 border-dashed border-foreground/20 text-foreground/35 transition-colors hover:border-foreground/40 hover:text-foreground/60"
                       title="Add colour"
                     >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                      </svg>
+                      <PlusIcon />
                     </button>
                   </div>
 
@@ -651,7 +637,6 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                   {form.colors[activeColor] && (
                     <ProductColorEditor
                       color={form.colors[activeColor]}
-                      colorIdx={activeColor}
                       category={form.category ?? "tops-shirts"}
                       isFirstColor={activeColor === 0}
                       paletteOpen={colorPaletteOpen === activeColor}
@@ -697,9 +682,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                           onClick={() => removeDetail(i)}
                           className="cursor-pointer shrink-0 text-foreground/25 transition-colors hover:text-red-400"
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                          </svg>
+                          <CloseIcon size={14} />
                         </button>
                       </div>
                     ))}

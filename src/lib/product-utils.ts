@@ -91,6 +91,19 @@ export function markProductOutOfStock(product: Product): Product {
   };
 }
 
+export function getProductEmptyStateMessage(search: string, filter: ProductFilter): string {
+  const label: Record<ProductFilter, string> = {
+    all:           "all products",
+    "in-stock":    "in-stock products",
+    "out-of-stock": "out-of-stock products",
+    "on-sale":     "sale products",
+    new:           "new products",
+  };
+  const trimmed = search.trim();
+  if (!trimmed) return `No ${label[filter]} match this filter.`;
+  return `Nothing matches "${trimmed}" within ${label[filter]}. Try another product name, brand, category, color, size, or price.`;
+}
+
 export function getProductSizesForCard(product: Product, colorFilters: string[]): SizeOption[] {
   const matchingColors = colorFilters.length
     ? product.colors.filter((color) => colorFilters.includes(color.name))
