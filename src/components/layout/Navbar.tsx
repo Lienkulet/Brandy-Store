@@ -9,13 +9,13 @@ import {
   useScroll, useTransform, useMotionTemplate,
   type Variants,
 } from "framer-motion";
-import { AccountIcon } from "../icons/Account";
-import { CartIcon } from "../icons/CartIcon";
-import { InstagramIcon } from "../icons/InstagramIcon";
-import { TelegramIcon } from "../icons/TelegramIcon";
-import { TikTokIcon } from "../icons/TikTokIcon";
-import { CartDrawer } from "./CartDrawer";
-import { useCart } from "../../context/CartContext";
+import { AccountIcon } from "@/components/icons/Account";
+import { CartIcon } from "@/components/icons/CartIcon";
+import { InstagramIcon } from "@/components/icons/InstagramIcon";
+import { TelegramIcon } from "@/components/icons/TelegramIcon";
+import { TikTokIcon } from "@/components/icons/TikTokIcon";
+import { CartDrawer } from "@/components/layout/CartDrawer";
+import { useCart } from "@/context/CartContext";
 import { ease } from "@/lib/animations";
 
 const navigationItems = [

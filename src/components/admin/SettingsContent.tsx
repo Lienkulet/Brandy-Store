@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { PageHeader } from "./OverviewContent";
+import { PageHeader } from "@/components/admin/OverviewContent";
 import { ease } from "@/lib/animations";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";

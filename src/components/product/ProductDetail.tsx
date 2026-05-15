@@ -8,8 +8,8 @@ import Container from "@/components/layout/Container";
 import { useCart } from "@/context/CartContext";
 import { ease } from "@/lib/animations";
 import { useGallery } from "@/hooks/useGallery";
-import { ProductGallery } from "./ProductGallery";
-import { ProductLightbox } from "./ProductLightbox";
+import { ProductGallery } from "@/components/product/ProductGallery";
+import { ProductLightbox } from "@/components/product/ProductLightbox";
 import { areAllSizesOutOfStock, isPriceOnSale } from "@/lib/product-utils";
 
 export function ProductDetail({ product }: { product: Product }) {

@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ease } from "@/lib/animations";
 import { PALETTE } from "@/data/colors";
-import type { ProductFormColor } from "../productFormModel";
+import type { ProductFormColor } from "@/lib/product-form-model";
 
 type Props = {
   color:        ProductFormColor;

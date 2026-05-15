@@ -1,7 +1,7 @@
 "use client";
 
-import { PageHeader } from "./OverviewContent";
-import { SearchIcon } from "../icons/SearchIcon";
+import { PageHeader } from "@/components/admin/OverviewContent";
+import { SearchIcon } from "@/components/icons/SearchIcon";
 import type { ProductFilter } from "@/lib/product-utils";
 
 type Props = {

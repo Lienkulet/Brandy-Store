@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { Product } from "@/data/products";
-import { ProductImage } from "../ui/ProductImage";
+import { ProductImage } from "@/components/ui/ProductImage";
 import { countInStockSizes, isProductOnSale, isProductOutOfStock } from "@/lib/product-utils";
 import { ease } from "@/lib/animations";
 

@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Container from "@/components/layout/Container";
-import { SizeTabs } from "../shop/SizeTabs";
+import { SizeTabs } from "@/components/product/SizeTabs";
 import { ease } from "@/lib/animations";
 
 const measurements = [

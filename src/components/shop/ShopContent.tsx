@@ -14,7 +14,7 @@ import {
   FilterDropdown,
   MobileFilterPanel,
   SortDropdown,
-} from "./ShopFilters";
+} from "@/components/shop/ShopFilters";
 import { ease } from "@/lib/animations";
 
 export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: string; onlyNew?: boolean }) {

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { Product } from "@/data/products";
-import { fetchProducts as fetchProductsFromApi } from "@/services/productService";
+import { fetchProducts as fetchProductsFromApi } from "@/lib/product-service";
 
 export function useProducts(filter?: (product: Product) => boolean) {
   const [products, setProducts] = useState<Product[]>([]);

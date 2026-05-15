@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ProductFormPanel } from "./ProductFormPanel";
-import { DeleteConfirmModal } from "./DeleteConfirmModal";
-import { ProductAdminCard } from "./ProductAdminCard";
-import { ProductsToolbar } from "./ProductsToolbar";
-import { EmptyState } from "./OverviewContent";
+import { ProductFormPanel } from "@/components/admin/ProductFormPanel";
+import { DeleteConfirmModal } from "@/components/admin/DeleteConfirmModal";
+import { ProductAdminCard } from "@/components/admin/ProductAdminCard";
+import { ProductsToolbar } from "@/components/admin/ProductsToolbar";
+import { EmptyState } from "@/components/admin/OverviewContent";
 import type { Product } from "@/data/products";
 import { useProducts } from "@/hooks/useProducts";
 import {
@@ -15,7 +15,7 @@ import {
   matchesProductSearch,
   type ProductFilter,
 } from "@/lib/product-utils";
-import { deleteProduct, saveProduct, updateProduct } from "@/services/productService";
+import { deleteProduct, saveProduct, updateProduct } from "@/lib/product-service";
 
 export function ProductsContent() {
   const { products, loading, refetch } = useProducts();

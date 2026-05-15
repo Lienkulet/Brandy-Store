@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { ShopContent } from "../../../../components/shop/ShopContent";
-import { categories } from "../../../../data/products";
+import { ShopContent } from "@/components/shop/ShopContent";
+import { categories } from "@/data/products";
 
 type Props = {
   params: Promise<{ category: string }>;

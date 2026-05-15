@@ -5,8 +5,8 @@ import { motion } from "framer-motion";
 import { ease } from "@/lib/animations";
 import { type OrderStatus, STATUS_LABELS } from "@/lib/order-utils";
 import { useOrders } from "@/hooks/useOrders";
-import { OrderRow } from "./OrderRow";
-import { PageHeader, EmptyState } from "./OverviewContent";
+import { OrderRow } from "@/components/admin/OrderRow";
+import { PageHeader, EmptyState } from "@/components/admin/OverviewContent";
 
 export type { OrderStatus } from "@/lib/order-utils";
 export type { Order } from "@/lib/order-utils";

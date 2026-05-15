@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LegalContent } from "../../../../components/pages/LegalContent";
+import { LegalContent } from "@/components/views/LegalContent";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions — Brandy Store",

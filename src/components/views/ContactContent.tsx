@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Container from "@/components/layout/Container";
-import { ContactForm } from "./ContactForm";
+import { ContactForm } from "@/components/views/ContactForm";
 import { PhoneIcon } from "@/components/icons/PhoneIcon";
 import { InstagramIcon } from "@/components/icons/InstagramIcon";
 import { TelegramIcon } from "@/components/icons/TelegramIcon";

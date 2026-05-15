@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ProductImage } from "../ui/ProductImage";
+import { ProductImage } from "@/components/ui/ProductImage";
 import { isPriceOnSale } from "@/lib/product-utils";
 import { ease } from "@/lib/animations";
 import { useQuickAdd } from "@/hooks/useQuickAdd";
-import { ProductCardBadges } from "./ProductCardBadges";
-import { QuickAddOverlay } from "./QuickAddOverlay";
+import { ProductCardBadges } from "@/components/cards/ProductCardBadges";
+import { QuickAddOverlay } from "@/components/cards/QuickAddOverlay";
 
 type ProductPrice = {
   original: string;

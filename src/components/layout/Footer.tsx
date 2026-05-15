@@ -3,11 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import Container from "./Container";
-import { InstagramIcon } from "../icons/InstagramIcon";
-import { TelegramIcon } from "../icons/TelegramIcon";
-import { TikTokIcon } from "../icons/TikTokIcon";
-import { PhoneIcon } from "../icons/PhoneIcon";
+import Container from "@/components/layout/Container";
+import { InstagramIcon } from "@/components/icons/InstagramIcon";
+import { TelegramIcon } from "@/components/icons/TelegramIcon";
+import { TikTokIcon } from "@/components/icons/TikTokIcon";
+import { PhoneIcon } from "@/components/icons/PhoneIcon";
 import { ease } from "@/lib/animations";
 
 const productLinks = [

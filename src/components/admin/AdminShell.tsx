@@ -6,13 +6,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ease } from "@/lib/animations";
-import ExternalLinkIcon from "../icons/ExternalLinkIcon";
-import LogoutIcon from "../icons/LogoutIcon";
-import MenuIcon from "../icons/MenuIcon";
-import OrderIcon from "../icons/OrderIcon";
-import OverviewIcon from "../icons/OverviewIcon";
-import ProductsIcon from "../icons/ProductsIcon";
-import SettingsIcon from "../icons/SettingsIcon";
+import ExternalLinkIcon from "@/components/icons/ExternalLinkIcon";
+import LogoutIcon from "@/components/icons/LogoutIcon";
+import MenuIcon from "@/components/icons/MenuIcon";
+import OrderIcon from "@/components/icons/OrderIcon";
+import OverviewIcon from "@/components/icons/OverviewIcon";
+import ProductsIcon from "@/components/icons/ProductsIcon";
+import SettingsIcon from "@/components/icons/SettingsIcon";
 
 const NAV = [
   {

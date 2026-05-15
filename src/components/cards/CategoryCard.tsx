@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import GreyBtn from "../ui/GreyBtn";
+import GreyBtn from "@/components/ui/GreyBtn";
 import { ease } from "@/lib/animations";
 
 type CategoryCardProps = {

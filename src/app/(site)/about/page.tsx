@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AboutContent } from "../../../components/pages/AboutContent";
+import { AboutContent } from "@/components/views/AboutContent";
 
 export const metadata: Metadata = {
   title: "The Story — Brandy Store",

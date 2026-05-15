@@ -14,10 +14,10 @@ import {
   sizesForCategory,
   toSlug,
   type ProductFormColor,
-} from "./productFormModel";
+} from "@/lib/product-form-model";
 import { ease } from "@/lib/animations";
-import { FormSection, FormField, FormDivider } from "./form/FormPrimitives";
-import { ProductColorEditor } from "./form/ProductColorEditor";
+import { FormSection, FormField, FormDivider } from "@/components/admin/form/FormPrimitives";
+import { ProductColorEditor } from "@/components/admin/form/ProductColorEditor";
 
 type Props = {
   open:     boolean;
