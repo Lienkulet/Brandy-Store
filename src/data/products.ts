@@ -1,6 +1,7 @@
 export type ColorVariant = {
   name: string;
   hex: string;
+  accents?: string[];
   images: string[];
   sizes?: SizeOption[];
 };
@@ -27,7 +28,8 @@ export type Product = {
 
 export const categories = [
   { label: "All",                    slug: null                   },
-  { label: "Tops & Shirts",          slug: "tops-shirts" },
+  { label: "T-Shirts & Polo",        slug: "t-shirts" },
+  { label: "Shirts",                 slug: "shirts" },
   { label: "Knitwear & Layering",    slug: "knitwear-layering" },
   { label: "Jackets & Outerwear",    slug: "jackets-outerwear" },
   { label: "Pants & Jeans",          slug: "pants-jeans" },

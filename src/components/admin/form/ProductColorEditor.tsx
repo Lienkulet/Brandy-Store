@@ -14,6 +14,8 @@ type Props = {
   dragging:     boolean;
   onPaletteToggle:      () => void;
   onPickSwatch:         (hex: string, name: string) => void;
+  onPickAccent:         (idx: number, hex: string, name: string) => void;
+  onRemoveAccent:       (idx: number) => void;
   onDragOver:           (e: React.DragEvent) => void;
   onDragLeave:          () => void;
   onDrop:               (e: React.DragEvent) => void;
@@ -29,7 +31,7 @@ type Props = {
 
 export function ProductColorEditor({
   color: c, category, isFirstColor, paletteOpen, usedHexes, dragging,
-  onPaletteToggle, onPickSwatch, onDragOver, onDragLeave, onDrop,
+  onPaletteToggle, onPickSwatch, onPickAccent, onRemoveAccent, onDragOver, onDragLeave, onDrop,
   onFileChange, onImageUrlChange, onImageRemove, onImageReorder, onAddUrl,
   onToggleSize, onSetAccessoryStock, onApplyCategorySizes,
 }: Props) {
@@ -38,10 +40,13 @@ export function ProductColorEditor({
       <ColorSwatchPicker
         hex={c.hex}
         name={c.name}
+        accents={c.accents ?? []}
         paletteOpen={paletteOpen}
         usedHexes={usedHexes}
         onToggle={onPaletteToggle}
         onPickSwatch={onPickSwatch}
+        onPickAccent={onPickAccent}
+        onRemoveAccent={onRemoveAccent}
       />
       <ColorImageUploader
         images={c.images}

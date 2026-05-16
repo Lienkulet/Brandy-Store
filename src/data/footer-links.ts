@@ -13,7 +13,8 @@ export const productLinks = [
 ];
 
 export const categoryLinks = [
-  { label: "Tops & Shirts",          href: "/shop/tops-shirts"          },
+  { label: "T-Shirts & Polo",        href: "/shop/t-shirts"             },
+  { label: "Shirts",                 href: "/shop/shirts"               },
   { label: "Knitwear & Layering",    href: "/shop/knitwear-layering"    },
   { label: "Jackets & Outerwear",    href: "/shop/jackets-outerwear"    },
   { label: "Pants & Jeans",          href: "/shop/pants-jeans"          },

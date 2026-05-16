@@ -12,7 +12,7 @@ export const BRANDS = [
   "Armani Exchange",
   "Tommy Hilfiger",
   "Calvin Klein",
-  "POLO RALPH LAUREN",
+  "Polo RALPH LAUREN",
   "Lacoste",
   "Massimo Dutti",
   "Zara",

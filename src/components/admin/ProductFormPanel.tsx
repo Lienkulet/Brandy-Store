@@ -19,6 +19,7 @@ import { PALETTE } from "@/data/colors";
 import { ease } from "@/lib/animations";
 import { FormSection, FormField, FormDivider } from "@/components/admin/form/FormPrimitives";
 import { ProductColorEditor } from "@/components/admin/form/ProductColorEditor";
+import { SwatchCircle } from "@/components/ui/SwatchCircle";
 import CloseIcon from "@/components/icons/CloseIcon";
 import ChevronIcon from "@/components/icons/ChevronIcon";
 import CheckIcon from "@/components/icons/CheckIcon";
@@ -38,13 +39,17 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
   const [saving, setSaving]         = useState(false);
   const [error, setError]           = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
-  const [categoryQuery, setCategoryQuery] = useState(categoryLabelForSlug("tops-shirts"));
+  const [categoryQuery, setCategoryQuery] = useState(categoryLabelForSlug("t-shirts"));
 
   // Active colour tab
   const [activeColor, setActiveColor] = useState(0);
 
-  // Drag / drop state
+  // File drop state (per color panel)
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
+
+  // Color swatch drag-to-reorder state
+  const [colorDragSrc,  setColorDragSrc]  = useState<number | null>(null);
+  const [colorDragOver, setColorDragOver] = useState<number | null>(null);
 
   // objectURL → File, uploaded only on save
   const pendingFiles = useRef<Record<string, File>>({});
@@ -183,6 +188,16 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
     }));
   }
 
+  function reorderColors(from: number, to: number) {
+    setForm((f) => {
+      const colors = [...f.colors];
+      const [item] = colors.splice(from, 1);
+      colors.splice(to, 0, item);
+      return { ...f, colors: colors as ProductFormColor[] };
+    });
+    setActiveColor(to);
+  }
+
   function addColor() {
     setForm((f) => {
       const usedHexes = new Set(f.colors.map((c) => c.hex.toLowerCase()));
@@ -201,13 +216,38 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
     setActiveColor((prev) => Math.max(0, prev >= i ? prev - 1 : prev));
   }
 
-  function pickColorSwatch(ci: number, hex: string, name: string) {
+  function colorAutoName(hex: string, accents: string[]): string {
+    const find = (h: string) => PALETTE.find((p) => p.hex === h)?.name ?? h;
+    return [find(hex), ...accents.map(find)].join(" / ");
+  }
+
+  function pickColorSwatch(ci: number, hex: string, _name: string) {
     setForm((f) => {
       const colors = [...f.colors];
-      colors[ci] = { ...colors[ci], hex, name };
+      const accents = colors[ci].accents ?? [];
+      colors[ci] = { ...colors[ci], hex, name: colorAutoName(hex, accents) };
       return { ...f, colors };
     });
     setColorPaletteOpen(null);
+  }
+
+  function pickAccent(ci: number, idx: number, hex: string, _name: string) {
+    setForm((f) => {
+      const colors = [...f.colors];
+      const accents = [...(colors[ci].accents ?? [])];
+      accents[idx] = hex;
+      colors[ci] = { ...colors[ci], accents, name: colorAutoName(colors[ci].hex, accents) };
+      return { ...f, colors };
+    });
+  }
+
+  function removeAccent(ci: number, idx: number) {
+    setForm((f) => {
+      const colors = [...f.colors];
+      const accents = (colors[ci].accents ?? []).filter((_, i) => i !== idx);
+      colors[ci] = { ...colors[ci], accents, name: colorAutoName(colors[ci].hex, accents) };
+      return { ...f, colors };
+    });
   }
 
   // ── Image drop — store locally, upload on save ────────────────────
@@ -506,11 +546,11 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                                           setCategoryOpen(false);
                                         }}
                                         className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-[12px] transition-colors duration-150 hover:bg-foreground/4 ${
-                                          (form.category ?? "tops-shirts") === c.slug ? "font-semibold text-foreground" : "text-foreground/70"
+                                          (form.category ?? "t-shirts") === c.slug ? "font-semibold text-foreground" : "text-foreground/70"
                                         }`}
                                       >
                                         {c.label}
-                                        {(form.category ?? "tops-shirts") === c.slug && <CheckIcon />}
+                                        {(form.category ?? "t-shirts") === c.slug && <CheckIcon />}
                                       </button>
                                     ))
                                   ) : (
@@ -610,20 +650,27 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                   {/* Swatch tab row */}
                   <div className="flex flex-wrap items-center gap-2" ref={paletteRef}>
                     {form.colors.map((c, ci) => (
-                      <div key={ci} className="relative">
-                        {/* Active ring + remove badge */}
+                      <div
+                        key={ci}
+                        className={`relative transition-opacity duration-150 ${colorDragSrc === ci ? "opacity-40" : ""} ${colorDragOver === ci && colorDragSrc !== ci ? "ring-2 ring-foreground ring-offset-2 rounded-full" : ""}`}
+                        draggable
+                        onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; setColorDragSrc(ci); setColorDragOver(null); }}
+                        onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (ci !== colorDragSrc) setColorDragOver(ci); }}
+                        onDrop={(e) => { e.preventDefault(); if (colorDragSrc !== null && colorDragSrc !== ci) reorderColors(colorDragSrc, ci); setColorDragSrc(null); setColorDragOver(null); }}
+                        onDragEnd={() => { setColorDragSrc(null); setColorDragOver(null); }}
+                      >
                         <button
                           type="button"
                           onClick={() => setActiveColor(ci)}
                           title={c.name}
-                          className={`relative h-8 w-8 cursor-pointer rounded-full border transition-all duration-200 ${
+                          className={`relative cursor-grab active:cursor-grabbing rounded-full border transition-all duration-200 ${
                             activeColor === ci
                               ? "border-foreground ring-2 ring-foreground ring-offset-2 scale-110"
-                              : "border-black/10 opacity-60 hover:opacity-100 hover:scale-105"
+                              : "border-black/10 hover:scale-105"
                           }`}
-                          style={{ backgroundColor: c.hex }}
-                        />
-                        {/* Remove on non-active, only if >1 colour */}
+                        >
+                          <SwatchCircle hex={c.hex} accents={c.accents ?? []} size={32} />
+                        </button>
                         {form.colors.length > 1 && activeColor === ci && (
                           <button
                             type="button"
@@ -654,7 +701,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                   {form.colors[activeColor] && (
                     <ProductColorEditor
                       color={form.colors[activeColor]}
-                      category={form.category ?? "tops-shirts"}
+                      category={form.category ?? "t-shirts"}
                       isFirstColor={activeColor === 0}
                       paletteOpen={colorPaletteOpen === activeColor}
                       usedHexes={form.colors
@@ -663,6 +710,8 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                       dragging={draggingIdx === activeColor}
                       onPaletteToggle={() => setColorPaletteOpen(colorPaletteOpen === activeColor ? null : activeColor)}
                       onPickSwatch={(hex, name) => pickColorSwatch(activeColor, hex, name)}
+                      onPickAccent={(idx, hex, name) => pickAccent(activeColor, idx, hex, name)}
+                      onRemoveAccent={(idx) => removeAccent(activeColor, idx)}
                       onDragOver={(e) => { e.preventDefault(); setDraggingIdx(activeColor); }}
                       onDragLeave={() => setDraggingIdx(null)}
                       onDrop={(e) => handleDrop(activeColor, e)}

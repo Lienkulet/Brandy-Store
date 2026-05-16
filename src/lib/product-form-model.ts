@@ -35,7 +35,7 @@ export const ACCESSORY_SIZES: SizeOption[] = [
 ];
 
 export const BRANDS = [
-  "Loro Piana", "Boss", "Hugo", "Polo", "Zegna",
+  "Loro Piana", "Boss", "Hugo", "Polo Ralph Lauren", "Zegna",
   "Armani Exchange", "Tommy Hilfiger", "Calvin Klein",
   "Brunello Cucinelli", "Emporio Armani", "Lacoste",
   "Brango", "Tony Montana", "Etro", "Tom Ford",
@@ -43,7 +43,8 @@ export const BRANDS = [
 ];
 
 export const PRODUCT_CATEGORIES = [
-  { label: "Tops & Shirts", slug: "tops-shirts" },
+  { label: "T-Shirts & Polo", slug: "t-shirts" },
+  { label: "Shirts", slug: "shirts" },
   { label: "Knitwear & Layering", slug: "knitwear-layering" },
   { label: "Jackets & Outerwear", slug: "jackets-outerwear" },
   { label: "Pants & Jeans", slug: "pants-jeans" },
@@ -66,7 +67,7 @@ export function sizesForCategory(category?: string): SizeOption[] {
 }
 
 export function categoryLabelForSlug(slug?: string): string {
-  return PRODUCT_CATEGORIES.find((category) => category.slug === (slug ?? "tops-shirts"))?.label ?? "";
+  return PRODUCT_CATEGORIES.find((category) => category.slug === (slug ?? "t-shirts"))?.label ?? "";
 }
 
 export function toSlug(name: string): string {
@@ -74,7 +75,7 @@ export function toSlug(name: string): string {
 }
 
 export function blankColor(category?: string): ProductFormColor {
-  return { name: "White", hex: "#FFFFFF", images: [""], sizes: sizesForCategory(category) };
+  return { name: "White", hex: "#FFFFFF", accents: [], images: [""], sizes: sizesForCategory(category) };
 }
 
 export function blankProduct(): ProductFormState {
@@ -83,12 +84,12 @@ export function blankProduct(): ProductFormState {
     slug: "",
     name: "",
     brand: "",
-    category: "tops-shirts",
+    category: "t-shirts",
     description: "",
     price: null,
     image: "",
     isNew: false,
-    colors: [blankColor("tops-shirts")],
+    colors: [blankColor("t-shirts")],
     sizes: cloneSizes(DEFAULT_SIZES),
     details: [""],
   };

@@ -12,6 +12,7 @@ import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductLightbox } from "@/components/product/ProductLightbox";
 import { areAllSizesOutOfStock, isPriceOnSale } from "@/lib/product-utils";
 import CheckIcon from "@/components/icons/CheckIcon";
+import { SwatchCircle } from "@/components/ui/SwatchCircle";
 
 export function ProductDetail({ product }: { product: Product }) {
   const [selectedSize, setSize]   = useState<string | null>(null);
@@ -139,14 +140,13 @@ export function ProductDetail({ product }: { product: Product }) {
                       key={c.name}
                       onClick={() => handleColorSelect(i)}
                       title={c.name}
-                      className={`relative h-7 w-7 cursor-pointer rounded-full transition-all duration-200 ${
+                      className={`relative cursor-pointer rounded-full transition-all duration-200 ${
                         i === colorIdx
                           ? "ring-2 ring-foreground ring-offset-2"
                           : "hover:ring-2 hover:ring-foreground/30 hover:ring-offset-2"
                       }`}
-                      style={{ backgroundColor: c.hex }}
                     >
-                      <span className="absolute inset-0 rounded-full border border-black/10" aria-hidden="true" />
+                      <SwatchCircle hex={c.hex} accents={c.accents} size={28} className="border border-black/10" />
                     </button>
                   ))}
                 </div>
