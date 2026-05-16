@@ -647,9 +647,10 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
 
                 {/* ── Colours ─────────────────────────────────────── */}
                 <FormSection title="Colours">
+                  <div ref={paletteRef} className="space-y-4">
 
                   {/* Swatch tab row */}
-                  <div className="flex flex-wrap items-center gap-2" ref={paletteRef}>
+                  <div className="flex flex-wrap items-center gap-2">
                     {form.colors.map((c, ci) => (
                       <div
                         key={ci}
@@ -735,6 +736,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                       onApplyCategorySizes={applyCategorySizes}
                     />
                   )}
+                  </div>
                 </FormSection>
 
                 <FormDivider />
