@@ -1,40 +1,51 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState, useTransition } from "react";
 import { ProductFormPanel } from "@/components/admin/ProductFormPanel";
 import { DeleteConfirmModal } from "@/components/admin/DeleteConfirmModal";
 import { ProductAdminCard } from "@/components/admin/ProductAdminCard";
 import { ProductsToolbar } from "@/components/admin/ProductsToolbar";
 import { ProductsSkeleton } from "@/components/admin/products/ProductsSkeleton";
 import { EmptyState } from "@/components/admin/AdminPrimitives";
-import type { Product } from "@/data/products";
-import { useProducts } from "@/hooks/useProducts";
-import {
-  getProductStats,
-  markProductOutOfStock,
-  matchesProductFilter,
-  matchesProductSearch,
-  getProductEmptyStateMessage,
-  type ProductFilter,
-} from "@/lib/product-utils";
+import { useAdminProducts } from "@/hooks/useAdminProducts";
+import { useDebounce } from "@/hooks/useDebounce";
+import { markProductOutOfStock, type ProductFilter } from "@/lib/product-utils";
 import { deleteProduct, saveProduct, updateProduct } from "@/lib/product-service";
 import { SearchIcon } from "@/components/icons/SearchIcon";
+import ChevronIcon from "@/components/icons/ChevronIcon";
+import type { Product } from "@/data/products";
 
 export function ProductsContent() {
-  const { products, loading, refetch } = useProducts();
-  const [search, setSearch]           = useState("");
+  const [search, setSearch]         = useState("");
   const [activeFilter, setActiveFilter] = useState<ProductFilter>("all");
-  const [panelOpen, setPanelOpen]     = useState(false);
-  const [editing, setEditing]         = useState<Product | null>(null);
+  const [page, setPage]             = useState(1);
+  const [panelOpen, setPanelOpen]   = useState(false);
+  const [editing, setEditing]       = useState<Product | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
-  const [deleting, setDeleting]       = useState(false);
+  const [deleting, setDeleting]     = useState(false);
   const [markingOutStockId, setMarkingOutStockId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
-  const visible = useMemo(
-    () => products.filter((p) => matchesProductFilter(p, activeFilter) && matchesProductSearch(p, search)),
-    [activeFilter, products, search],
-  );
-  const productStats = useMemo(() => getProductStats(products), [products]);
+  const debouncedSearch = useDebounce(search, 300);
+
+  const { products, total, loading, refetch } = useAdminProducts({
+    page,
+    search: debouncedSearch,
+    filter: activeFilter,
+  });
+
+  const pageSize   = 20;
+  const totalPages = Math.ceil(total / pageSize);
+  const isBusy     = loading || isPending;
+
+  function handleFilterChange(f: ProductFilter) {
+    startTransition(() => { setActiveFilter(f); setPage(1); });
+  }
+
+  function handleSearchChange(v: string) {
+    setSearch(v);
+    startTransition(() => setPage(1));
+  }
 
   async function handleSave(product: Product) {
     const isEdit = products.some((p) => p.id === product.id);
@@ -69,25 +80,21 @@ export function ProductsContent() {
   return (
     <main>
       <ProductsToolbar
-        loading={loading}
-        total={productStats.total}
-        totalInStock={productStats.inStock}
-        totalOutStock={productStats.outOfStock}
-        totalOnSale={productStats.onSale}
-        totalNew={productStats.newArrivals}
+        loading={isBusy}
+        total={total}
         search={search}
         activeFilter={activeFilter}
-        onSearch={setSearch}
-        onClearSearch={() => setSearch("")}
-        onFilterChange={setActiveFilter}
+        onSearch={handleSearchChange}
+        onClearSearch={() => handleSearchChange("")}
+        onFilterChange={handleFilterChange}
         onCreate={openCreate}
       />
 
-      {loading && <ProductsSkeleton />}
+      {isBusy && <ProductsSkeleton />}
 
-      {!loading && visible.length > 0 && (
+      {!isBusy && products.length > 0 && (
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {visible.map((product, i) => (
+          {products.map((product, i) => (
             <ProductAdminCard
               key={product.id}
               product={product}
@@ -101,13 +108,63 @@ export function ProductsContent() {
         </div>
       )}
 
-      {!loading && products.length > 0 && visible.length === 0 && (
+      {!isBusy && products.length === 0 && (
         <div className="mt-5 rounded-2xl border border-foreground/8 bg-white">
           <EmptyState
             icon={<SearchIcon />}
             message="No products found"
-            sub={getProductEmptyStateMessage(search, activeFilter)}
+            sub={search ? `No results for "${search}"` : "Try a different filter"}
           />
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between">
+          <p className="text-[11px] text-foreground/40">
+            Page {page} of {totalPages}
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage((p) => p - 1)}
+              disabled={page === 1}
+              className="cursor-pointer flex h-8 w-8 items-center justify-center rounded-lg border border-foreground/10 text-foreground/50 transition-colors hover:border-foreground/25 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+            >
+              <span className="rotate-90"><ChevronIcon size={10} /></span>
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+              .reduce<(number | "…")[]>((acc, p, i, arr) => {
+                if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push("…");
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, i) =>
+                p === "…" ? (
+                  <span key={`ellipsis-${i}`} className="px-1 text-[11px] text-foreground/30">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p as number)}
+                    className={`cursor-pointer h-8 w-8 rounded-lg border text-[11px] font-semibold transition-colors ${
+                      page === p
+                        ? "border-foreground bg-foreground text-white"
+                        : "border-foreground/10 text-foreground/50 hover:border-foreground/25 hover:text-foreground"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+
+            <button
+              onClick={() => setPage((p) => p + 1)}
+              disabled={page === totalPages}
+              className="cursor-pointer flex h-8 w-8 items-center justify-center rounded-lg border border-foreground/10 text-foreground/50 transition-colors hover:border-foreground/25 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+            >
+              <span className="-rotate-90"><ChevronIcon size={10} /></span>
+            </button>
+          </div>
         </div>
       )}
 

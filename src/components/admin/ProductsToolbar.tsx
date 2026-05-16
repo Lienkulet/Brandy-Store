@@ -10,10 +10,6 @@ import type { ProductFilter } from "@/lib/product-utils";
 type Props = {
   loading:        boolean;
   total:          number;
-  totalInStock:   number;
-  totalOutStock:  number;
-  totalOnSale:    number;
-  totalNew:       number;
   search:         string;
   activeFilter:   ProductFilter;
   onSearch:       (v: string) => void;
@@ -22,25 +18,16 @@ type Props = {
   onCreate:       () => void;
 };
 
-
 export function ProductsToolbar({
-  loading, total, totalInStock, totalOutStock, totalOnSale, totalNew,
-  search, activeFilter, onSearch, onClearSearch, onFilterChange, onCreate,
+  loading, total, search, activeFilter, onSearch, onClearSearch, onFilterChange, onCreate,
 }: Props) {
-  const counts: Record<ProductFilter, number> = {
-    all:           total,
-    "in-stock":    totalInStock,
-    "out-of-stock": totalOutStock,
-    "on-sale":     totalOnSale,
-    new:           totalNew,
-  };
 
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <PageHeader
           title="Products"
-          subtitle={loading ? "Loading…" : `${total} products · ${totalInStock} in stock · ${totalOutStock} fully out`}
+          subtitle={loading ? "Loading…" : `${total} products`}
         />
         <button
           onClick={onCreate}
@@ -88,7 +75,9 @@ export function ProductsToolbar({
               }`}
             >
               {filter.label}
-              <span className="ml-1.5 opacity-60">{counts[filter.value]}</span>
+              {activeFilter === filter.value && total > 0 && (
+                <span className="ml-1.5 opacity-60">{total}</span>
+              )}
             </button>
           ))}
         </div>

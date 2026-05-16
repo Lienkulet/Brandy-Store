@@ -41,13 +41,45 @@ function fromRow(r: any): Product {
   };
 }
 
-export async function GET() {
-  const { data, error } = await supabaseAdmin
+const PAGE_SIZE = 20;
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = req.nextUrl;
+  const pageParam = searchParams.get("page");
+
+  // No page param → shop path, return all products
+  if (!pageParam) {
+    const { data, error } = await supabaseAdmin
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: true });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json((data ?? []).map(fromRow));
+  }
+
+  // Admin paginated path
+  const page   = Math.max(1, parseInt(pageParam));
+  const search = searchParams.get("search")?.trim() ?? "";
+  const filter = searchParams.get("filter") ?? "all";
+
+  let query = supabaseAdmin
     .from("products")
-    .select("*")
-    .order("created_at", { ascending: true });
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+
+  if (search) {
+    query = query.or(`name.ilike.%${search}%,brand.ilike.%${search}%`);
+  }
+
+  if (filter === "new")          query = query.eq("is_new", true);
+  if (filter === "in-stock")     query = query.filter("sizes", "cs", '[{"inStock":true}]');
+  if (filter === "out-of-stock") query = query.not("sizes", "cs", '[{"inStock":true}]');
+  if (filter === "on-sale")      query = query.not("price", "is", null).filter("price->>original", "neq", "price->>current");
+
+  const { data, count, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json((data ?? []).map(fromRow));
+  return NextResponse.json({ data: (data ?? []).map(fromRow), total: count ?? 0, pageSize: PAGE_SIZE });
 }
 
 export async function POST(req: NextRequest) {
