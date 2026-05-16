@@ -113,7 +113,7 @@ export function ProductsContent() {
           <EmptyState
             icon={<SearchIcon />}
             message="No products found"
-            sub={search ? `No results for "${search}"` : "Try a different filter"}
+            sub={search ? `No results for "${search}"` : "Try adjusting your filters or explore other categories."}
           />
         </div>
       )}

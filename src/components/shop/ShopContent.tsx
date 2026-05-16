@@ -336,8 +336,8 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
               </>
             ) : (
               <div className="flex flex-col items-center py-24 text-center">
-                <p className="font-serif text-2xl font-semibold text-foreground">No results.</p>
-                <p className="mt-3 text-sm text-muted">Try adjusting your filters.</p>
+                <p className="font-serif text-2xl font-semibold text-foreground">No products found</p>
+                <p className="mt-3 text-sm text-muted">Try adjusting your filters or explore other categories.</p>
                 <button
                   onClick={clearFilters}
                   className="cursor-pointer mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground underline underline-offset-4 hover:text-muted transition-colors duration-200"
