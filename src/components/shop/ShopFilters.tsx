@@ -141,6 +141,64 @@ export function ColorFilterDropdown({
   );
 }
 
+const AVAILABILITY_OPTIONS = [
+  { value: "in-stock",     label: "In Stock" },
+  { value: "out-of-stock", label: "Out of Stock" },
+] as const;
+
+export function AvailabilityDropdown({
+  value, onChange, open, onOpen,
+}: {
+  value: "" | "in-stock" | "out-of-stock";
+  onChange: (value: "" | "in-stock" | "out-of-stock") => void;
+  open: boolean;
+  onOpen: () => void;
+}) {
+  const active = value !== "";
+  const label  = AVAILABILITY_OPTIONS.find((o) => o.value === value)?.label ?? "Availability";
+
+  return (
+    <div className="relative z-20">
+      <button
+        onClick={onOpen}
+        className={`cursor-pointer flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ${
+          active || open ? "text-foreground" : "text-foreground/50 hover:text-foreground/75"
+        }`}
+      >
+        {label}
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2, ease }} className="flex shrink-0"><ChevronIcon size={10} /></motion.span>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="absolute left-0 top-full z-20 mt-2 min-w-40 overflow-hidden rounded-2xl border border-foreground/8 bg-card shadow-[0_12px_40px_rgba(95,77,57,0.12)]"
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.18, ease }}
+          >
+            <div className="p-2">
+              {AVAILABILITY_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => onChange(value === option.value ? "" : option.value)}
+                  className={`cursor-pointer flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-[11px] font-medium transition-colors duration-150 hover:bg-foreground/4 ${
+                    value === option.value ? "text-foreground" : "text-foreground/55"
+                  }`}
+                >
+                  {option.label}
+                  {value === option.value && <CheckIcon size={10} />}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function SortDropdown({
   value, onChange, open, onOpen,
 }: {
@@ -193,7 +251,7 @@ export function SortDropdown({
 
 export function MobileFilterPanel({
   filters, sort, resultCount, availableBrands, availableSizes, availableColors,
-  onToggle, onToggleSale, onSort, onClear, onClose,
+  onToggle, onToggleSale, onChangeAvailability, onSort, onClear, onClose,
 }: {
   filters: ProductFilters;
   sort: SortKey;
@@ -203,11 +261,12 @@ export function MobileFilterPanel({
   availableColors: ColorOption[];
   onToggle: (key: "brands" | "sizes" | "colors", value: string) => void;
   onToggleSale: () => void;
+  onChangeAvailability: (value: "" | "in-stock" | "out-of-stock") => void;
   onSort: (value: SortKey) => void;
   onClear: () => void;
   onClose: () => void;
 }) {
-  const activeFilterCount = filters.brands.length + filters.sizes.length + filters.colors.length + (filters.onSale ? 1 : 0);
+  const activeFilterCount = filters.brands.length + filters.sizes.length + filters.colors.length + (filters.onSale ? 1 : 0) + (filters.availability ? 1 : 0);
 
   return (
     <motion.div
@@ -311,6 +370,24 @@ export function MobileFilterPanel({
             </div>
           </MobileSection>
         )}
+
+        <MobileSection title="Availability">
+          <div className="flex flex-wrap gap-2">
+            {(["in-stock", "out-of-stock"] as const).map((v) => (
+              <button
+                key={v}
+                onClick={() => onChangeAvailability(filters.availability === v ? "" : v)}
+                className={`cursor-pointer h-9 rounded-full px-4 text-[11px] font-semibold uppercase tracking-[0.14em] transition-colors duration-200 ${
+                  filters.availability === v
+                    ? "bg-foreground text-white"
+                    : "border border-foreground/15 text-muted hover:border-foreground/30 hover:text-foreground"
+                }`}
+              >
+                {v === "in-stock" ? "In Stock" : "Out of Stock"}
+              </button>
+            ))}
+          </div>
+        </MobileSection>
 
         <MobileSection title="Offers">
           <button

@@ -1,6 +1,7 @@
 export type OrderStatus = "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
 
 export type OrderItem = {
+  productId?: string;
   name:     string;
   brand:    string;
   size:     string;

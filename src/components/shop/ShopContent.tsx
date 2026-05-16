@@ -10,6 +10,7 @@ import { useProducts } from "@/hooks/useProducts";
 import { getProductSizesForCard } from "@/lib/product-utils";
 import { applySort, applyFilters, type ProductFilters, type SortKey } from "@/lib/shop-utils";
 import {
+  AvailabilityDropdown,
   ColorFilterDropdown,
   FilterDropdown,
   MobileFilterPanel,
@@ -26,7 +27,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
   );
   const { products: allProducts, loading } = useProducts(filterProducts);
   const [category, setCategory]       = useState<string | null>(initialCategory ?? null);
-  const [filters, setFilters]         = useState<ProductFilters>({ brands: [], sizes: [], colors: [], onSale: false });
+  const [filters, setFilters]         = useState<ProductFilters>({ brands: [], sizes: [], colors: [], onSale: false, availability: "" });
   const [sort, setSort]               = useState<SortKey>("new-in");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen]   = useState(false);
@@ -69,7 +70,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
   // Final filtered + sorted list
   const visible = applySort(applyFilters(categoryProducts, filters), sort);
 
-  const activeFilterCount = filters.brands.length + filters.sizes.length + filters.colors.length + (filters.onSale ? 1 : 0);
+  const activeFilterCount = filters.brands.length + filters.sizes.length + filters.colors.length + (filters.onSale ? 1 : 0) + (filters.availability ? 1 : 0);
   const categoryLabel     = categories.find((c) => c.slug === category)?.label ?? "All";
 
   type ArrayFilterKey = "brands" | "sizes" | "colors";
@@ -85,13 +86,13 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
   }
 
   function clearFilters() {
-    setFilters({ brands: [], sizes: [], colors: [], onSale: false });
+    setFilters({ brands: [], sizes: [], colors: [], onSale: false, availability: "" });
     setSort("new-in");
   }
 
   function changeCategory(nextCategory: string | null) {
     setCategory(nextCategory);
-    setFilters({ brands: [], sizes: [], colors: [], onSale: false });
+    setFilters({ brands: [], sizes: [], colors: [], onSale: false, availability: "" });
   }
 
   const closeDropdown = () => setOpenDropdown(null);
@@ -201,6 +202,12 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
                   onToggle={(v) => toggleFilter("colors", v)}
                   open={openDropdown === "color"}
                   onOpen={() => setOpenDropdown(openDropdown === "color" ? null : "color")}
+                />
+                <AvailabilityDropdown
+                  value={filters.availability}
+                  onChange={(v) => setFilters((prev) => ({ ...prev, availability: v }))}
+                  open={openDropdown === "availability"}
+                  onOpen={() => setOpenDropdown(openDropdown === "availability" ? null : "availability")}
                 />
                 <button
                   onClick={() => setFilters((prev) => ({ ...prev, onSale: !prev.onSale }))}
@@ -338,6 +345,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
             availableColors={availableColors}
             onToggle={toggleFilter}
             onToggleSale={() => setFilters((prev) => ({ ...prev, onSale: !prev.onSale }))}
+            onChangeAvailability={(v) => setFilters((prev) => ({ ...prev, availability: v }))}
             onSort={setSort}
             onClear={clearFilters}
             onClose={() => setMobileOpen(false)}

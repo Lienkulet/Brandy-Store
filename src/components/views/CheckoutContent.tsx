@@ -61,7 +61,7 @@ export function CheckoutContent() {
           customer_address: delivery !== "pickup" ? address.trim() : undefined,
           delivery,
           items: items.map((i) => ({
-            name: i.name, brand: i.brand, size: i.size,
+            productId: i.productId, name: i.name, brand: i.brand, size: i.size,
             color: i.color, price: i.price, quantity: i.quantity, image: i.image,
           })),
           subtotal: formatted,

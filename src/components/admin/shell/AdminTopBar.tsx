@@ -26,7 +26,7 @@ export function AdminTopBar({ pathname, onMenuOpen }: Props) {
       </p>
 
       <Link
-        href="/"
+        href="/shop"
         target="_blank"
         className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/40 transition-colors duration-200 hover:text-foreground"
       >
