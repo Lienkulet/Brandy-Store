@@ -1,14 +1,14 @@
 "use client";
 
-import { useCallback, useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Container from "@/components/layout/Container";
 import ProductCard from "@/components/cards/ProductCard";
-import { categories, type Product } from "@/data/products";
+import { categories } from "@/data/products";
 import { PALETTE } from "@/data/colors";
-import { useProducts } from "@/hooks/useProducts";
+import { useShopProducts } from "@/hooks/useShopProducts";
 import { getProductSizesForCard } from "@/lib/product-utils";
-import { applySort, applyFilters, type ProductFilters, type SortKey } from "@/lib/shop-utils";
+import { type ProductFilters, type SortKey } from "@/lib/shop-utils";
 import {
   AvailabilityDropdown,
   ColorFilterDropdown,
@@ -17,21 +17,24 @@ import {
   SortDropdown,
 } from "@/components/shop/ShopFilters";
 import FilterIcon from "@/components/icons/FilterIcon";
+import SpinnerIcon from "@/components/icons/SpinnerIcon";
 import { ease } from "@/lib/animations";
 
 
 export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: string; onlyNew?: boolean }) {
-  const filterProducts = useCallback(
-    (product: Product) => !onlyNew || Boolean(product.isNew),
-    [onlyNew]
-  );
-  const { products: allProducts, loading } = useProducts(filterProducts);
-  const [category, setCategory]       = useState<string | null>(initialCategory ?? null);
-  const [filters, setFilters]         = useState<ProductFilters>({ brands: [], sizes: [], colors: [], onSale: false, availability: "" });
-  const [sort, setSort]               = useState<SortKey>("new-in");
+  const [category, setCategory]         = useState<string | null>(initialCategory ?? null);
+  const [filters, setFilters]           = useState<ProductFilters>({ brands: [], sizes: [], colors: [], onSale: false, availability: "" });
+  const [sort, setSort]                 = useState<SortKey>("new-in");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [mobileOpen, setMobileOpen]   = useState(false);
+  const [mobileOpen, setMobileOpen]     = useState(false);
   const pillsRef = useRef<HTMLDivElement>(null);
+
+  const { products, total, loading, loadingMore, hasMore, loadMore } = useShopProducts({
+    category,
+    filters,
+    sort,
+    onlyNew,
+  });
 
   // Scroll active category pill into view on mobile
   useEffect(() => {
@@ -44,11 +47,6 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
     document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [mobileOpen]);
-
-  // Derive available options from category-filtered products (before sub-filters)
-  const categoryProducts = category
-    ? allProducts.filter((p) => p.category === category)
-    : allProducts;
 
   const ALL_BRANDS = [
     "Loro Piana", "Boss", "Hugo", "Polo", "Zegna",
@@ -66,9 +64,6 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
     ? ["30", "31", "32", "33", "34", "36", "38"]
     : ["XS", "S", "M", "L", "XL", "XXL"];
   const availableColors = PALETTE;
-
-  // Final filtered + sorted list
-  const visible = applySort(applyFilters(categoryProducts, filters), sort);
 
   const activeFilterCount = filters.brands.length + filters.sizes.length + filters.colors.length + (filters.onSale ? 1 : 0) + (filters.availability ? 1 : 0);
   const categoryLabel     = categories.find((c) => c.slug === category)?.label ?? "All";
@@ -125,7 +120,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
           >
             {onlyNew
               ? "The latest additions to our collection."
-              : "Carefully selected menswear from the world’s finest houses."}
+              : "Carefully selected menswear from the world's finest houses."}
           </motion.p>
         </motion.div>
 
@@ -247,9 +242,11 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
               </p>
 
               <div className="flex items-center gap-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/40">
-                  {visible.length} {visible.length === 1 ? "piece" : "pieces"}
-                </p>
+                {!loading && (
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/40">
+                    {total} {total === 1 ? "piece" : "pieces"}
+                  </p>
+                )}
                 {/* Mobile filter button */}
                 <button
                   onClick={() => setMobileOpen(true)}
@@ -287,35 +284,56 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
                   </div>
                 ))}
               </div>
-            ) : visible.length > 0 ? (
-              <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
-                {visible.map((product, i) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 24 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease, delay: i * 0.06 }}
-                  >
-                    <ProductCard
-                      name={product.name}
-                      brand={product.brand}
-                      description={product.description}
-                      image={product.image}
-                      price={product.price}
-                      href={`/product/${product.slug}`}
-                      isNew={product.isNew}
-                      sizeFree={product.category === "accessories"}
-                      quickAdd={{
-                        productId: product.id,
-                        slug:      product.slug,
-                        colorName: product.colors[0].name,
-                        sizes:     getProductSizesForCard(product, filters.colors),
-                        price:     product.price?.current ?? "Price on request",
-                      }}
-                    />
-                  </motion.div>
-                ))}
-              </div>
+            ) : products.length > 0 ? (
+              <>
+                <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+                  {products.map((product, i) => (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, y: 24 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, ease, delay: Math.min(i, 7) * 0.06 }}
+                    >
+                      <ProductCard
+                        name={product.name}
+                        brand={product.brand}
+                        description={product.description}
+                        image={product.image}
+                        price={product.price}
+                        href={`/product/${product.slug}`}
+                        isNew={product.isNew}
+                        sizeFree={product.category === "accessories"}
+                        quickAdd={{
+                          productId: product.id,
+                          slug:      product.slug,
+                          colorName: product.colors[0].name,
+                          sizes:     getProductSizesForCard(product, filters.colors),
+                          price:     product.price?.current ?? "Price on request",
+                        }}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+
+                {hasMore && (
+                  <div className="mt-12 flex justify-center">
+                    <button
+                      onClick={loadMore}
+                      disabled={loadingMore}
+                      className="cursor-pointer flex items-center gap-2.5 rounded-full border border-foreground/20 px-8 py-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/60 transition-colors duration-200 hover:border-foreground/40 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                    >
+                      {loadingMore ? (
+                        <>
+                          <span className="animate-spin"><SpinnerIcon /></span>
+                          Loading…
+                        </>
+                      ) : (
+                        `Load more`
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="flex flex-col items-center py-24 text-center">
                 <p className="font-serif text-2xl font-semibold text-foreground">No results.</p>
@@ -331,7 +349,6 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
           </motion.div>
         </AnimatePresence>
 
-
       </Container>
 
       {/* Mobile filter panel */}
@@ -340,7 +357,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
           <MobileFilterPanel
             filters={filters}
             sort={sort}
-            resultCount={visible.length}
+            resultCount={total}
             availableBrands={availableBrands}
             availableSizes={availableSizes}
             availableColors={availableColors}
@@ -356,4 +373,3 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
     </main>
   );
 }
-

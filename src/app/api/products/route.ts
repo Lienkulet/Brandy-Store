@@ -57,6 +57,49 @@ export async function GET(req: NextRequest) {
     return NextResponse.json((data ?? []).map(fromRow));
   }
 
+  const mode = searchParams.get("mode");
+
+  // Shop paginated path
+  if (mode === "shop") {
+    const page         = Math.max(1, parseInt(pageParam));
+    const category     = searchParams.get("category") ?? "";
+    const brands       = searchParams.getAll("brand");
+    const sizes        = searchParams.getAll("size");
+    const colors       = searchParams.getAll("color");
+    const onSale       = searchParams.get("onSale") === "true";
+    const onlyNew      = searchParams.get("onlyNew") === "true";
+    const availability = searchParams.get("availability") ?? "";
+    const sort         = searchParams.get("sort") ?? "new-in";
+
+    let query = supabaseAdmin
+      .from("products")
+      .select("*", { count: "exact" })
+      .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+
+    // Sort
+    if (sort === "new-in")     query = query.order("is_new", { ascending: false }).order("created_at", { ascending: false });
+    else if (sort === "oldest") query = query.order("created_at", { ascending: true });
+    else                       query = query.order("created_at", { ascending: false });
+
+    if (category)                        query = query.eq("category", category);
+    if (onlyNew)                         query = query.eq("is_new", true);
+    if (onSale)                          query = query.not("price", "is", null).filter("price->>original", "neq", "price->>current");
+    if (brands.length)                   query = query.in("brand", brands);
+    if (availability === "in-stock")     query = query.filter("sizes", "cs", '[{"inStock":true}]');
+    if (availability === "out-of-stock") query = query.not("sizes", "cs", '[{"inStock":true}]');
+
+    if (sizes.length) {
+      query = query.or(sizes.map((s) => `sizes.cs.${JSON.stringify([{ label: s }])}`).join(","));
+    }
+    if (colors.length) {
+      query = query.or(colors.map((c) => `colors.cs.${JSON.stringify([{ name: c }])}`).join(","));
+    }
+
+    const { data, count, error } = await query;
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ data: (data ?? []).map(fromRow), total: count ?? 0, pageSize: PAGE_SIZE });
+  }
+
   // Admin paginated path
   const page   = Math.max(1, parseInt(pageParam));
   const search = searchParams.get("search")?.trim() ?? "";
