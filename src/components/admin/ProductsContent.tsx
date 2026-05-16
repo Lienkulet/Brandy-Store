@@ -8,6 +8,7 @@ import { ProductsToolbar } from "@/components/admin/ProductsToolbar";
 import { ProductsSkeleton } from "@/components/admin/products/ProductsSkeleton";
 import { EmptyState } from "@/components/admin/AdminPrimitives";
 import { useAdminProducts } from "@/hooks/useAdminProducts";
+import { useAdminProductCounts } from "@/hooks/useAdminProductCounts";
 import { useDebounce } from "@/hooks/useDebounce";
 import { markProductOutOfStock, type ProductFilter } from "@/lib/product-utils";
 import { deleteProduct, saveProduct, updateProduct } from "@/lib/product-service";
@@ -27,6 +28,8 @@ export function ProductsContent() {
   const [isPending, startTransition] = useTransition();
 
   const debouncedSearch = useDebounce(search, 300);
+
+  const filterCounts = useAdminProductCounts(debouncedSearch);
 
   const { products, total, loading, refetch } = useAdminProducts({
     page,
@@ -82,6 +85,7 @@ export function ProductsContent() {
       <ProductsToolbar
         loading={isBusy}
         total={total}
+        filterCounts={filterCounts}
         search={search}
         activeFilter={activeFilter}
         onSearch={handleSearchChange}

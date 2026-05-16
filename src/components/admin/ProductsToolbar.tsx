@@ -7,9 +7,12 @@ import CloseIcon from "@/components/icons/CloseIcon";
 import { PRODUCT_FILTERS } from "@/data/product-filters";
 import type { ProductFilter } from "@/lib/product-utils";
 
+type FilterCounts = Record<ProductFilter, number>;
+
 type Props = {
   loading:        boolean;
   total:          number;
+  filterCounts:   FilterCounts;
   search:         string;
   activeFilter:   ProductFilter;
   onSearch:       (v: string) => void;
@@ -19,7 +22,7 @@ type Props = {
 };
 
 export function ProductsToolbar({
-  loading, total, search, activeFilter, onSearch, onClearSearch, onFilterChange, onCreate,
+  loading, total, filterCounts, search, activeFilter, onSearch, onClearSearch, onFilterChange, onCreate,
 }: Props) {
 
   return (
@@ -75,9 +78,7 @@ export function ProductsToolbar({
               }`}
             >
               {filter.label}
-              {activeFilter === filter.value && total > 0 && (
-                <span className="ml-1.5 opacity-60">{total}</span>
-              )}
+              <span className="ml-1.5 opacity-60">{filterCounts[filter.value]}</span>
             </button>
           ))}
         </div>

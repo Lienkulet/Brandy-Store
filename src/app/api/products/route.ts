@@ -100,6 +100,27 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ data: (data ?? []).map(fromRow), total: count ?? 0, pageSize: PAGE_SIZE });
   }
 
+  // Admin filter counts (all filters in parallel)
+  if (mode === "counts") {
+    const search  = searchParams.get("search")?.trim() ?? "";
+    const filters = ["all", "in-stock", "out-of-stock", "on-sale", "new"] as const;
+
+    const results = await Promise.all(
+      filters.map(async (f) => {
+        let q = supabaseAdmin.from("products").select("*", { count: "exact", head: true });
+        if (search) q = q.or(`name.ilike.%${search}%,brand.ilike.%${search}%`);
+        if (f === "new")          q = q.eq("is_new", true);
+        if (f === "in-stock")     q = q.filter("sizes", "cs", '[{"inStock":true}]');
+        if (f === "out-of-stock") q = q.not("sizes", "cs", '[{"inStock":true}]');
+        if (f === "on-sale")      q = q.not("price", "is", null).filter("price->>original", "neq", "price->>current");
+        const { count } = await q;
+        return [f, count ?? 0] as const;
+      })
+    );
+
+    return NextResponse.json(Object.fromEntries(results));
+  }
+
   // Admin paginated path
   const page   = Math.max(1, parseInt(pageParam));
   const search = searchParams.get("search")?.trim() ?? "";

@@ -7,19 +7,19 @@ import CloseIcon from "@/components/icons/CloseIcon";
 import PlusIcon from "@/components/icons/PlusIcon";
 
 type Props = {
-  hex:          string;
-  name:         string;
-  accents:      string[];
-  paletteOpen:  boolean;
-  usedHexes:    string[];
-  onToggle:     () => void;
-  onPickSwatch: (hex: string, name: string) => void;
-  onPickAccent: (idx: number, hex: string, name: string) => void;
-  onRemoveAccent: (idx: number) => void;
+  hex:              string;
+  name:             string;
+  accents:          string[];
+  paletteOpen:      boolean;
+  usedCombinations: string[];
+  onToggle:         () => void;
+  onPickSwatch:     (hex: string, name: string) => void;
+  onPickAccent:     (idx: number, hex: string, name: string) => void;
+  onRemoveAccent:   (idx: number) => void;
 };
 
 export function ColorSwatchPicker({
-  hex, name, accents, paletteOpen, usedHexes,
+  hex, name, accents, paletteOpen, usedCombinations,
   onToggle, onPickSwatch, onPickAccent, onRemoveAccent,
 }: Props) {
   // "primary" = picking main color, "accent" = picking an accent slot
@@ -45,8 +45,12 @@ export function ColorSwatchPicker({
     setMode("accent");
   }
 
-  // Hexes blocked in each mode
-  const blockedForPrimary = new Set(usedHexes);
+  // A combination key is "hex.lower|accent1,accent2" — must be unique across tabs
+  const usedCombSet = new Set(usedCombinations);
+  const currentComboKey = (candidateHex: string) =>
+    `${candidateHex.toLowerCase()}|${accents.join(",")}`;
+
+  const blockedForPrimary = { has: (h: string) => usedCombSet.has(currentComboKey(h)) };
   const blockedForAccent  = new Set([hex, ...accents]);
 
   return (

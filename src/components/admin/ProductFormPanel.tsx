@@ -316,10 +316,11 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
       const imgs = c.images.map((u) => u.trim()).filter(Boolean);
       const accessoryInStock = c.sizes?.some((s) => s.inStock) ?? true;
       return {
-        name:   c.name,
-        hex:    c.hex,
-        images: imgs,
-        sizes:  isAccessory
+        name:    c.name,
+        hex:     c.hex,
+        accents: c.accents?.length ? c.accents : undefined,
+        images:  imgs,
+        sizes:   isAccessory
           ? ACCESSORY_SIZES.map((s) => ({ ...s, inStock: accessoryInStock }))
           : c.sizes,
       };
@@ -704,9 +705,9 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                       category={form.category ?? "t-shirts"}
                       isFirstColor={activeColor === 0}
                       paletteOpen={colorPaletteOpen === activeColor}
-                      usedHexes={form.colors
+                      usedCombinations={form.colors
                         .filter((_, idx) => idx !== activeColor)
-                        .map((c) => c.hex.toLowerCase())}
+                        .map((c) => `${c.hex.toLowerCase()}|${(c.accents ?? []).join(",")}`)}
                       dragging={draggingIdx === activeColor}
                       onPaletteToggle={() => setColorPaletteOpen(colorPaletteOpen === activeColor ? null : activeColor)}
                       onPickSwatch={(hex, name) => pickColorSwatch(activeColor, hex, name)}

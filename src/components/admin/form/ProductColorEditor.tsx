@@ -8,9 +8,9 @@ import { ColorSizePicker } from "@/components/admin/form/ColorSizePicker";
 type Props = {
   color:        ProductFormColor;
   category:     string;
-  isFirstColor: boolean;
-  paletteOpen:  boolean;
-  usedHexes:    string[];
+  isFirstColor:     boolean;
+  paletteOpen:      boolean;
+  usedCombinations: string[];
   dragging:     boolean;
   onPaletteToggle:      () => void;
   onPickSwatch:         (hex: string, name: string) => void;
@@ -30,7 +30,7 @@ type Props = {
 };
 
 export function ProductColorEditor({
-  color: c, category, isFirstColor, paletteOpen, usedHexes, dragging,
+  color: c, category, isFirstColor, paletteOpen, usedCombinations, dragging,
   onPaletteToggle, onPickSwatch, onPickAccent, onRemoveAccent, onDragOver, onDragLeave, onDrop,
   onFileChange, onImageUrlChange, onImageRemove, onImageReorder, onAddUrl,
   onToggleSize, onSetAccessoryStock, onApplyCategorySizes,
@@ -42,7 +42,7 @@ export function ProductColorEditor({
         name={c.name}
         accents={c.accents ?? []}
         paletteOpen={paletteOpen}
-        usedHexes={usedHexes}
+        usedCombinations={usedCombinations}
         onToggle={onPaletteToggle}
         onPickSwatch={onPickSwatch}
         onPickAccent={onPickAccent}
