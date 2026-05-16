@@ -6,11 +6,12 @@ type Props = {
   hex:          string;
   name:         string;
   paletteOpen:  boolean;
+  usedHexes:    string[];
   onToggle:     () => void;
   onPickSwatch: (hex: string, name: string) => void;
 };
 
-export function ColorSwatchPicker({ hex, name, paletteOpen, onToggle, onPickSwatch }: Props) {
+export function ColorSwatchPicker({ hex, name, paletteOpen, usedHexes, onToggle, onPickSwatch }: Props) {
   return (
     <div className="flex items-center gap-3">
       <div className="relative shrink-0">
@@ -35,20 +36,41 @@ export function ColorSwatchPicker({ hex, name, paletteOpen, onToggle, onPickSwat
                 Colour palette
               </p>
               <div className="grid grid-cols-4 gap-2">
-                {PALETTE.map((p) => (
-                  <button
-                    key={p.name}
-                    type="button"
-                    title={p.name}
-                    onClick={() => onPickSwatch(p.hex, p.name)}
-                    className={`h-7 w-7 rounded-full border transition-transform duration-100 hover:scale-110 ${
-                      hex === p.hex
-                        ? "border-foreground ring-2 ring-foreground ring-offset-1"
-                        : "border-black/10"
-                    }`}
-                    style={{ backgroundColor: p.hex }}
-                  />
-                ))}
+                {PALETTE.map((p) => {
+                  const isActive = hex === p.hex;
+                  const isUsed   = !isActive && usedHexes.includes(p.hex.toLowerCase());
+                  return (
+                    <div key={p.name} className="relative">
+                      <button
+                        type="button"
+                        title={isUsed ? `${p.name} (already added)` : p.name}
+                        onClick={() => !isUsed && onPickSwatch(p.hex, p.name)}
+                        disabled={isUsed}
+                        className={`relative h-7 w-7 rounded-full border transition-transform duration-100 ${
+                          isActive
+                            ? "border-foreground ring-2 ring-foreground ring-offset-1"
+                            : isUsed
+                            ? "cursor-not-allowed border-black/10 opacity-50"
+                            : "border-black/10 hover:scale-110"
+                        }`}
+                        style={{ backgroundColor: p.hex }}
+                      >
+                        {isUsed && (
+                          <span className="absolute inset-0 flex items-center justify-center rounded-full">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                              {/* white outline for visibility on dark swatches */}
+                              <line x1="2.5" y1="2.5" x2="9.5" y2="9.5" stroke="rgba(255,255,255,0.7)" strokeWidth="2.8" strokeLinecap="round"/>
+                              <line x1="9.5" y1="2.5" x2="2.5" y2="9.5" stroke="rgba(255,255,255,0.7)" strokeWidth="2.8" strokeLinecap="round"/>
+                              {/* dark X on top */}
+                              <line x1="2.5" y1="2.5" x2="9.5" y2="9.5" stroke="rgba(0,0,0,0.55)" strokeWidth="1.6" strokeLinecap="round"/>
+                              <line x1="9.5" y1="2.5" x2="2.5" y2="9.5" stroke="rgba(0,0,0,0.55)" strokeWidth="1.6" strokeLinecap="round"/>
+                            </svg>
+                          </span>
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </motion.div>
           )}

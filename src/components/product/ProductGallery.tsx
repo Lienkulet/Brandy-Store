@@ -27,8 +27,10 @@ export function ProductGallery({
   onOpenLightbox,
   onSelectImage,
 }: Props) {
-  const color  = product.colors[colorIdx];
-  const images = color.images;
+  const color      = product.colors[colorIdx];
+  const images     = color.images?.filter(Boolean) ?? [];
+  const hasImages  = images.length > 0;
+  const displaySrc = hasImages ? images[imageIdx] : product.image;
 
   return (
     <div className="lg:sticky lg:top-28 lg:self-start">
@@ -56,7 +58,7 @@ export function ProductGallery({
               transition={{ duration: 0.3, ease }}
             >
               <ProductImage
-                src={images[imageIdx]}
+                src={displaySrc}
                 alt={`${product.name} - ${color.name}`}
                 className="min-h-80 w-full rounded-2xl"
                 imageClassName="h-auto w-full object-contain"

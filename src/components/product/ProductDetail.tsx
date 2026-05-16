@@ -301,7 +301,7 @@ export function ProductDetail({ product }: { product: Product }) {
 
       <ProductLightbox
         open={lightbox}
-        src={product.colors[colorIdx].images[imageIdx]}
+        src={product.colors[colorIdx].images?.[imageIdx] ?? product.image}
         alt={`${product.name} — ${color.name}`}
         colorIdx={colorIdx}
         imageIdx={imageIdx}

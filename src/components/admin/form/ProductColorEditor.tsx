@@ -10,6 +10,7 @@ type Props = {
   category:     string;
   isFirstColor: boolean;
   paletteOpen:  boolean;
+  usedHexes:    string[];
   dragging:     boolean;
   onPaletteToggle:      () => void;
   onPickSwatch:         (hex: string, name: string) => void;
@@ -19,15 +20,17 @@ type Props = {
   onFileChange:         (files: FileList) => void;
   onImageUrlChange:     (imgIdx: number, value: string) => void;
   onImageRemove:        (imgIdx: number) => void;
+  onImageReorder:       (from: number, to: number) => void;
+  onAddUrl:             (url: string) => void;
   onToggleSize:         (label: string) => void;
   onSetAccessoryStock:  (inStock: boolean) => void;
   onApplyCategorySizes: () => void;
 };
 
 export function ProductColorEditor({
-  color: c, category, isFirstColor, paletteOpen, dragging,
+  color: c, category, isFirstColor, paletteOpen, usedHexes, dragging,
   onPaletteToggle, onPickSwatch, onDragOver, onDragLeave, onDrop,
-  onFileChange, onImageUrlChange, onImageRemove,
+  onFileChange, onImageUrlChange, onImageRemove, onImageReorder, onAddUrl,
   onToggleSize, onSetAccessoryStock, onApplyCategorySizes,
 }: Props) {
   return (
@@ -36,6 +39,7 @@ export function ProductColorEditor({
         hex={c.hex}
         name={c.name}
         paletteOpen={paletteOpen}
+        usedHexes={usedHexes}
         onToggle={onPaletteToggle}
         onPickSwatch={onPickSwatch}
       />
@@ -49,6 +53,8 @@ export function ProductColorEditor({
         onFileChange={onFileChange}
         onImageUrlChange={onImageUrlChange}
         onImageRemove={onImageRemove}
+        onImageReorder={onImageReorder}
+        onAddUrl={onAddUrl}
       />
       <ColorSizePicker
         color={c}

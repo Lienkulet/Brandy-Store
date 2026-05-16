@@ -15,6 +15,7 @@ import {
   toSlug,
   type ProductFormColor,
 } from "@/lib/product-form-model";
+import { PALETTE } from "@/data/colors";
 import { ease } from "@/lib/animations";
 import { FormSection, FormField, FormDivider } from "@/components/admin/form/FormPrimitives";
 import { ProductColorEditor } from "@/components/admin/form/ProductColorEditor";
@@ -183,10 +184,15 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
   }
 
   function addColor() {
-    setForm((f) => ({
-      ...f,
-      colors: [...f.colors, blankColor(f.category)],
-    }));
+    setForm((f) => {
+      const usedHexes = new Set(f.colors.map((c) => c.hex.toLowerCase()));
+      const next = PALETTE.find((p) => !usedHexes.has(p.hex.toLowerCase()));
+      const blank = blankColor(f.category);
+      const newColor: ProductFormColor = next
+        ? { ...blank, hex: next.hex, name: next.name }
+        : blank;
+      return { ...f, colors: [...f.colors, newColor] };
+    });
     setActiveColor((prev) => prev + 1);
   }
 
@@ -216,8 +222,18 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
     setColorImages(ci, [
       ...form.colors[ci].images.filter((u) => u.trim()),
       ...objectUrls,
-      "",
     ]);
+  }
+
+  function reorderImages(ci: number, from: number, to: number) {
+    const imgs = [...form.colors[ci].images.filter((u) => u.trim())];
+    const [item] = imgs.splice(from, 1);
+    imgs.splice(to, 0, item);
+    setColorImages(ci, imgs);
+  }
+
+  function addImageUrl(ci: number, url: string) {
+    setColorImages(ci, [...form.colors[ci].images.filter((u) => u.trim()), url]);
   }
 
   function handleDrop(ci: number, e: React.DragEvent) {
@@ -252,8 +268,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
     if (!form.colors?.length || !form.colors[0].name.trim())
       return setError("At least one colour is required.");
 
-    const firstColorImages = form.colors[0].images.map((u) => u.trim()).filter(Boolean);
-    const mainImage = firstColorImages[0] ?? "";
+    const mainImage = form.colors[0].images.map((u) => u.trim()).filter(Boolean)[0] ?? "";
     if (!mainImage) return setError("Add at least one image to the first colour.");
 
     const isAccessory = form.category === "accessories";
@@ -263,7 +278,7 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
       return {
         name:   c.name,
         hex:    c.hex,
-        images: imgs.length ? imgs : [mainImage],
+        images: imgs,
         sizes:  isAccessory
           ? ACCESSORY_SIZES.map((s) => ({ ...s, inStock: accessoryInStock }))
           : c.sizes,
@@ -622,15 +637,17 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                       </div>
                     ))}
 
-                    {/* Add colour button */}
-                    <button
-                      type="button"
-                      onClick={addColor}
-                      className="cursor-pointer flex h-8 w-8 items-center justify-center rounded-full border-2 border-dashed border-foreground/20 text-foreground/35 transition-colors hover:border-foreground/40 hover:text-foreground/60"
-                      title="Add colour"
-                    >
-                      <PlusIcon />
-                    </button>
+                    {/* Add colour button — hidden once all palette colours are taken */}
+                    {form.colors.length < PALETTE.length && (
+                      <button
+                        type="button"
+                        onClick={addColor}
+                        className="cursor-pointer flex h-8 w-8 items-center justify-center rounded-full border-2 border-dashed border-foreground/20 text-foreground/35 transition-colors hover:border-foreground/40 hover:text-foreground/60"
+                        title="Add colour"
+                      >
+                        <PlusIcon />
+                      </button>
+                    )}
                   </div>
 
                   {/* Active colour panel */}
@@ -640,6 +657,9 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                       category={form.category ?? "tops-shirts"}
                       isFirstColor={activeColor === 0}
                       paletteOpen={colorPaletteOpen === activeColor}
+                      usedHexes={form.colors
+                        .filter((_, idx) => idx !== activeColor)
+                        .map((c) => c.hex.toLowerCase())}
                       dragging={draggingIdx === activeColor}
                       onPaletteToggle={() => setColorPaletteOpen(colorPaletteOpen === activeColor ? null : activeColor)}
                       onPickSwatch={(hex, name) => pickColorSwatch(activeColor, hex, name)}
@@ -648,14 +668,18 @@ export function ProductFormPanel({ open, product, onClose, onSave }: Props) {
                       onDrop={(e) => handleDrop(activeColor, e)}
                       onFileChange={(files) => uploadFiles(activeColor, files)}
                       onImageUrlChange={(ii, value) => {
-                        const imgs = [...form.colors[activeColor].images];
+                        const imgs = [...form.colors[activeColor].images.filter((u) => u.trim())];
                         imgs[ii] = value;
                         setColorImages(activeColor, imgs);
                       }}
                       onImageRemove={(ii) => {
-                        const imgs = form.colors[activeColor].images.filter((_, idx) => idx !== ii);
-                        setColorImages(activeColor, imgs.length ? imgs : [""]);
+                        const imgs = form.colors[activeColor].images
+                          .filter((u) => u.trim())
+                          .filter((_, idx) => idx !== ii);
+                        setColorImages(activeColor, imgs);
                       }}
+                      onImageReorder={(from, to) => reorderImages(activeColor, from, to)}
+                      onAddUrl={(url) => addImageUrl(activeColor, url)}
                       onToggleSize={(label) => toggleColorSize(activeColor, label)}
                       onSetAccessoryStock={setAccessoryStock}
                       onApplyCategorySizes={applyCategorySizes}
