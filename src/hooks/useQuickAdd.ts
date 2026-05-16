@@ -7,6 +7,7 @@ export type QuickAddStep = "idle" | "sizes" | "added";
 
 type QuickAddData = {
   productId: string;
+  slug:      string;
   colorName: string;
   price:     string;
 };
@@ -45,6 +46,7 @@ export function useQuickAdd({
     addItem({
       id:        `${quickAdd.productId}-${quickAdd.colorName}-${sizeLabel}`,
       productId: quickAdd.productId,
+      slug:      quickAdd.slug,
       name,
       brand:     brand ?? "",
       size:      sizeLabel,

@@ -16,6 +16,7 @@ type ProductPrice = {
 
 type QuickAddData = {
   productId: string;
+  slug:      string;
   colorName: string;
   sizes:     { label: string; inStock: boolean }[];
   price:     string;
@@ -42,7 +43,7 @@ function ProductCard({ name, brand, image, price, href, isNew, quickAdd, sizeFre
     name,
     brand,
     image,
-    quickAdd: quickAdd ?? { productId: "", colorName: "", price: "" },
+    quickAdd: quickAdd ?? { productId: "", slug: "", colorName: "", price: "" },
     sizeFree,
     inStockSizes,
   });

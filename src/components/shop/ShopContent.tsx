@@ -307,6 +307,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
                       sizeFree={product.category === "accessories"}
                       quickAdd={{
                         productId: product.id,
+                        slug:      product.slug,
                         colorName: product.colors[0].name,
                         sizes:     getProductSizesForCard(product, filters.colors),
                         price:     product.price?.current ?? "Price on request",

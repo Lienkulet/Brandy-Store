@@ -2,13 +2,14 @@ export type OrderStatus = "pending" | "confirmed" | "shipped" | "delivered" | "c
 
 export type OrderItem = {
   productId?: string;
-  name:     string;
-  brand:    string;
-  size:     string;
-  color:    string;
-  price:    string;
-  quantity: number;
-  image:    string;
+  slug?:      string;
+  name:       string;
+  brand:      string;
+  size:       string;
+  color:      string;
+  price:      string;
+  quantity:   number;
+  image:      string;
 };
 
 export type Order = {

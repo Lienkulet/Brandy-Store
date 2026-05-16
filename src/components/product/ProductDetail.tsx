@@ -46,6 +46,7 @@ export function ProductDetail({ product }: { product: Product }) {
     addItem({
       id:        `${product.id}-${color.name}-${itemSize}`,
       productId: product.id,
+      slug:      product.slug,
       name:      product.name,
       brand:     product.brand,
       size:      itemSize,

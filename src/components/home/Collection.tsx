@@ -64,6 +64,7 @@ function Collection() {
               sizeFree={product.category === "accessories"}
               quickAdd={{
                 productId: product.id,
+                slug:      product.slug,
                 colorName: product.colors[0]?.name ?? "",
                 sizes: product.sizes,
                 price: product.price?.current ?? "Price on request",

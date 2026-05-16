@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { buildTelegramOrderMessage, sendTelegramMessage } from "@/lib/telegram";
-import type { OrderItem } from "@/lib/order-utils";
 
 export async function GET(req: NextRequest) {
   const cookie = req.cookies.get("brandy-session");
@@ -35,20 +34,12 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   try {
-    const productIds = Array.from(new Set((items as OrderItem[])
-      .map((item) => item.productId)
-      .filter(Boolean)));
-
-    const { data: products } = productIds.length
-      ? await supabaseAdmin.from("products").select("id, slug").in("id", productIds)
-      : { data: [] };
-
     const envBaseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL;
     const baseUrl = envBaseUrl
       ? (envBaseUrl.startsWith("http") ? envBaseUrl : `https://${envBaseUrl}`)
       : req.nextUrl.origin;
 
-    await sendTelegramMessage(buildTelegramOrderMessage(data, products ?? [], baseUrl));
+    await sendTelegramMessage(buildTelegramOrderMessage(data, baseUrl));
   } catch (notificationError) {
     console.error(notificationError);
   }

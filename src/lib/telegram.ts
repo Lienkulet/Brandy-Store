@@ -10,11 +10,6 @@ type TelegramOrder = {
   subtotal: string;
 };
 
-type ProductLink = {
-  id: string;
-  slug: string;
-};
-
 const DELIVERY_FALLBACK: Record<TelegramOrder["delivery"], string> = {
   pickup: "Pickup in store",
   courier: "Courier — Chișinău",
@@ -36,25 +31,15 @@ function formatProductName(item: OrderItem) {
   return `${brand} ${name}`;
 }
 
-function productUrl(item: OrderItem, products: ProductLink[], baseUrl: string) {
-  const product = products.find((p) => p.id === item.productId);
-  if (!product) return null;
-  return `${baseUrl}/product/${product.slug}`;
-}
-
-export function buildTelegramOrderMessage(
-  order: TelegramOrder,
-  products: ProductLink[],
-  baseUrl: string
-) {
+export function buildTelegramOrderMessage(order: TelegramOrder, baseUrl: string) {
   const separator = "─────────────────";
   const delivery = DELIVERY_FALLBACK[order.delivery];
   const address  = order.customer_address?.trim();
 
   const itemLines = order.items.map((item) => {
     const name = escapeHtml(formatProductName(item));
-    const url = productUrl(item, products, baseUrl);
-    const linkedName = url ? `<a href="${escapeHtml(url)}">${name}</a>` : name;
+    const url  = item.slug ? `${baseUrl}/product/${escapeHtml(item.slug)}` : null;
+    const linkedName = url ? `<a href="${url}">${name}</a>` : name;
     return `${linkedName} × ${item.quantity} — ${escapeHtml(item.size)} — ${escapeHtml(item.color)}`;
   });
 

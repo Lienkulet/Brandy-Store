@@ -9,6 +9,7 @@ const STORAGE_KEY = "brandy-cart";
 export type CartItem = {
   id:        string; // composite: productId-color-size
   productId: string;
+  slug:      string;
   name:      string;
   brand:     string;
   size:      string;
