@@ -11,6 +11,14 @@ import {
   DELIVERY_LABELS,
 } from "@/lib/order-utils";
 
+const STATUS_BORDER: Record<OrderStatus, string> = {
+  pending:   "border-l-amber-400",
+  confirmed: "border-l-blue-500",
+  shipped:   "border-l-violet-500",
+  delivered: "border-l-green-500",
+  cancelled: "border-l-red-400",
+};
+
 export function OrderRow({
   order, expanded, onToggle, onStatusChange,
 }: {
@@ -20,7 +28,7 @@ export function OrderRow({
   onStatusChange: (s: OrderStatus) => void;
 }) {
   return (
-    <div className="border-b border-foreground/6 last:border-0">
+    <div className={`border-b border-foreground/6 border-l-[3px] last:border-b-0 ${STATUS_BORDER[order.status]}`}>
       <OrderRowSummary order={order} onToggle={onToggle} />
 
       <AnimatePresence>
@@ -47,7 +55,10 @@ function OrderRowSummary({ order, onToggle }: { order: Order; onToggle: () => vo
       className="cursor-pointer grid w-full grid-cols-[1fr_auto] gap-4 px-5 py-4 text-left transition-colors duration-150 hover:bg-foreground/2 sm:grid-cols-[1fr_120px_100px_120px_80px]"
     >
       <div>
-        <p className="text-sm font-semibold text-foreground">{order.customer.name}</p>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-semibold text-foreground/35">#{order.orderNumber}</span>
+          <p className="text-sm font-semibold text-foreground">{order.customer.name}</p>
+        </div>
         <p className="text-[11px] text-muted">{order.customer.phone}</p>
       </div>
       <p className="hidden text-[11px] text-muted sm:block">
@@ -55,7 +66,9 @@ function OrderRowSummary({ order, onToggle }: { order: Order; onToggle: () => vo
       </p>
       <p className="hidden text-sm font-semibold text-foreground sm:block">{order.subtotal}</p>
       <p className="hidden text-[11px] text-muted sm:block">{DELIVERY_LABELS[order.delivery]}</p>
-      <StatusBadge status={order.status} />
+      <div className="flex items-center justify-end sm:justify-center">
+        <StatusBadge status={order.status} />
+      </div>
     </button>
   );
 }
@@ -145,7 +158,7 @@ function StatusChanger({ current, onChange }: { current: OrderStatus; onChange: 
 
 function StatusBadge({ status }: { status: OrderStatus }) {
   return (
-    <span className={`self-start rounded-full border px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] sm:self-center ${STATUS_STYLES[status]}`}>
+    <span className={`rounded-full border px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] ${STATUS_STYLES[status]}`}>
       {STATUS_LABELS[status]}
     </span>
   );

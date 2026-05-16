@@ -3,17 +3,34 @@
 import { useState, useEffect } from "react";
 import { type Order, type SupabaseOrder, type OrderStatus, toOrder } from "@/lib/order-utils";
 
-export function useOrders() {
+type Params = {
+  page:   number;
+  search: string;
+  status: string;
+};
+
+export function useOrders({ page, search, status }: Params) {
   const [orders, setOrders]   = useState<Order[]>([]);
+  const [total, setTotal]     = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/orders")
+    setLoading(true);
+    const params = new URLSearchParams({
+      page:   String(page),
+      search: search.trim().replace(/^#/, ""),
+      status,
+    });
+
+    fetch(`/api/orders?${params}`)
       .then((r) => r.json())
-      .then((data: SupabaseOrder[]) => setOrders(Array.isArray(data) ? data.map(toOrder) : []))
+      .then(({ data, total: t }: { data: SupabaseOrder[]; total: number }) => {
+        setOrders(Array.isArray(data) ? data.map(toOrder) : []);
+        setTotal(t);
+      })
       .catch(() => setOrders([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [page, search, status]);
 
   async function updateStatus(id: string, status: OrderStatus) {
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
@@ -24,5 +41,5 @@ export function useOrders() {
     });
   }
 
-  return { orders, loading, updateStatus };
+  return { orders, total, loading, updateStatus };
 }
