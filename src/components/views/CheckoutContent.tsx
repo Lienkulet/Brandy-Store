@@ -22,6 +22,48 @@ const DELIVERY_OPTIONS: { value: DeliveryMethod; label: string; sublabel: string
   { value: "nationwide", label: "Nationwide delivery",   sublabel: "2–4 business days"                 },
 ];
 
+type FieldKey = "name" | "phone" | "address";
+
+function sanitizeName(value: string) {
+  // Letters (including Romanian diacritics), spaces and hyphens only
+  return value.replace(/[^a-zA-ZÀ-ÿ\s-]/g, "");
+}
+
+function sanitizePhone(value: string) {
+  // Digits only, max 9 characters
+  return value.replace(/\D/g, "").slice(0, 9);
+}
+
+function validateFields(
+  name: string, phone: string, address: string, delivery: DeliveryMethod
+): Partial<Record<FieldKey, string>> {
+  const errs: Partial<Record<FieldKey, string>> = {};
+
+  if (!name.trim()) {
+    errs.name = "Full name is required.";
+  } else if (name.trim().length < 2) {
+    errs.name = "Please enter your full name.";
+  }
+
+  if (!phone) {
+    errs.phone = "Phone number is required.";
+  } else if (!phone.startsWith("0")) {
+    errs.phone = "Phone number must start with 0.";
+  } else if (phone.length < 9) {
+    errs.phone = "Phone number must be 9 digits.";
+  }
+
+  if (delivery !== "pickup") {
+    if (!address.trim()) {
+      errs.address = "Delivery address is required.";
+    } else if (address.trim().length < 5) {
+      errs.address = "Please enter a complete address.";
+    }
+  }
+
+  return errs;
+}
+
 export function CheckoutContent() {
   const { items, itemCount, isHydrated, clearCart } = useCart();
   const router = useRouter();
@@ -31,8 +73,11 @@ export function CheckoutContent() {
   const [address,  setAddress]  = useState("");
   const [delivery, setDelivery] = useState<DeliveryMethod>("pickup");
   const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState("");
+  const [serverError, setServerError] = useState("");
   const [success,  setSuccess]  = useState(false);
+
+  const [errors,  setErrors]  = useState<Partial<Record<FieldKey, string>>>({});
+  const [touched, setTouched] = useState<Partial<Record<FieldKey, boolean>>>({});
 
   // Redirect to shop if cart is empty (after hydration)
   useEffect(() => {
@@ -44,12 +89,33 @@ export function CheckoutContent() {
   const subtotal  = items.reduce((sum, i) => sum + parseMDL(i.price) * i.quantity, 0);
   const formatted = formatMDL(subtotal);
 
-  async function handlePlaceOrder() {
-    if (!name.trim()) { setError("Please enter your full name."); return; }
-    if (!phone.trim()) { setError("Please enter your phone number."); return; }
-    if (delivery !== "pickup" && !address.trim()) { setError("Please enter your delivery address."); return; }
+  function touchField(key: FieldKey) {
+    setTouched((prev) => ({ ...prev, [key]: true }));
+    const errs = validateFields(name, phone, address, delivery);
+    setErrors(errs);
+  }
 
-    setError("");
+  function handleChange(key: FieldKey, value: string) {
+    const sanitized = key === "name" ? sanitizeName(value) : key === "phone" ? sanitizePhone(value) : value;
+    if (key === "name")    setName(sanitized);
+    if (key === "phone")   setPhone(sanitized);
+    if (key === "address") setAddress(sanitized);
+    if (touched[key]) {
+      const updatedName    = key === "name"    ? sanitized : name;
+      const updatedPhone   = key === "phone"   ? sanitized : phone;
+      const updatedAddress = key === "address" ? sanitized : address;
+      setErrors(validateFields(updatedName, updatedPhone, updatedAddress, delivery));
+    }
+  }
+
+  async function handlePlaceOrder() {
+    const allTouched: Record<FieldKey, boolean> = { name: true, phone: true, address: true };
+    setTouched(allTouched);
+    const errs = validateFields(name, phone, address, delivery);
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    setServerError("");
     setLoading(true);
     try {
       const res = await fetch("/api/orders", {
@@ -74,7 +140,7 @@ export function CheckoutContent() {
       clearCart();
       setSuccess(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to place order.");
+      setServerError(e instanceof Error ? e.message : "Failed to place order.");
     } finally {
       setLoading(false);
     }
@@ -103,6 +169,10 @@ export function CheckoutContent() {
       </main>
     );
   }
+
+  const showErr = (key: FieldKey) => touched[key] ? errors[key] : undefined;
+  const inputCls = (key: FieldKey) =>
+    `input-field ${showErr(key) ? "border-red-400 focus:border-red-400 focus:ring-red-400/20" : ""}`;
 
   return (
     <main className="min-h-dvh bg-background pb-24 pt-28 text-foreground sm:pt-32">
@@ -139,22 +209,24 @@ export function CheckoutContent() {
             {/* Contact details */}
             <Section title="Contact details">
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Full name" required>
+                <Field label="Full name" required error={showErr("name")}>
                   <input
                     type="text"
                     placeholder="Ion Popescu"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="input-field"
+                    onChange={(e) => handleChange("name", e.target.value)}
+                    onBlur={() => touchField("name")}
+                    className={inputCls("name")}
                   />
                 </Field>
-                <Field label="Phone number" required>
+                <Field label="Phone number" required error={showErr("phone")}>
                   <input
                     type="tel"
-                    placeholder="+373 XXX XXX XX"
+                    placeholder="0XX XXX XXX"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="input-field"
+                    onChange={(e) => handleChange("phone", e.target.value)}
+                    onBlur={() => touchField("phone")}
+                    className={inputCls("phone")}
                   />
                 </Field>
               </div>
@@ -171,20 +243,17 @@ export function CheckoutContent() {
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => setDelivery(opt.value)}
+                      onClick={() => { setDelivery(opt.value); setErrors(validateFields(name, phone, address, opt.value)); }}
                       className={`cursor-pointer flex items-start gap-4 rounded-2xl border p-4 text-left transition-all duration-200 ${
                         active
                           ? "border-foreground bg-foreground/4"
                           : "border-foreground/12 hover:border-foreground/30"
                       }`}
                     >
-                      {/* Radio dot */}
                       <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-200 ${
                         active ? "border-foreground" : "border-foreground/25"
                       }`}>
-                        {active && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-foreground" />
-                        )}
+                        {active && <span className="h-1.5 w-1.5 rounded-full bg-foreground" />}
                       </span>
                       <div>
                         <p className="text-[12px] font-semibold text-foreground">{opt.label}</p>
@@ -206,13 +275,14 @@ export function CheckoutContent() {
               >
                 <Divider />
                 <Section title="Delivery address">
-                  <Field label="Address" required>
+                  <Field label="Address" required error={showErr("address")}>
                     <input
                       type="text"
                       placeholder="Str. Mihai Eminescu 47, ap. 12, Chișinău"
                       value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      className="input-field"
+                      onChange={(e) => handleChange("address", e.target.value)}
+                      onBlur={() => touchField("address")}
+                      className={inputCls("address")}
                     />
                   </Field>
                 </Section>
@@ -241,9 +311,7 @@ export function CheckoutContent() {
 
             {/* Subtotal */}
             <div className="mt-4 flex items-baseline justify-between rounded-2xl border border-foreground/8 bg-card px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/55">
-                Subtotal
-              </p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/55">Subtotal</p>
               <p className="font-serif text-xl font-semibold text-foreground">{formatted}</p>
             </div>
 
@@ -255,9 +323,9 @@ export function CheckoutContent() {
               </p>
             </div>
 
-            {/* Error */}
+            {/* Server error */}
             <AnimatePresence>
-              {error && (
+              {serverError && (
                 <motion.p
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -265,7 +333,7 @@ export function CheckoutContent() {
                   transition={{ duration: 0.25 }}
                   className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-[11px] text-red-600"
                 >
-                  {error}
+                  {serverError}
                 </motion.p>
               )}
             </AnimatePresence>
@@ -314,9 +382,7 @@ function OrderItem({ item }: { item: CartItem }) {
       </div>
       <div className="flex min-w-0 flex-1 flex-col justify-between">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/40">
-            {item.brand}
-          </p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/40">{item.brand}</p>
           <p className="truncate text-sm font-semibold text-foreground">{item.name}</p>
           <p className="text-[11px] text-muted">
             {item.size === "One Size" ? item.color : `${item.color} · ${item.size}`}
@@ -336,21 +402,36 @@ function OrderItem({ item }: { item: CartItem }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-6">
-      <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-foreground/55">
-        {title}
-      </p>
+      <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-foreground/55">{title}</p>
       {children}
     </div>
   );
 }
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({
+  label, required, error, children,
+}: {
+  label: string; required?: boolean; error?: string; children: React.ReactNode;
+}) {
   return (
     <div className="flex flex-col gap-1.5">
       <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/55">
         {label}{required && <span className="ml-0.5 text-foreground/40">*</span>}
       </label>
       {children}
+      <AnimatePresence>
+        {error && (
+          <motion.p
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.2 }}
+            className="text-[10px] font-medium text-red-500"
+          >
+            {error}
+          </motion.p>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

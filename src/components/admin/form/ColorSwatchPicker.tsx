@@ -30,20 +30,24 @@ export function ColorSwatchPicker({ hex, name, paletteOpen, usedHexes, onToggle,
               exit={{ opacity: 0, y: -6, scale: 0.97 }}
               transition={{ duration: 0.18, ease }}
               className="absolute left-0 top-full z-50 mt-2 rounded-2xl border border-foreground/8 bg-white p-3 shadow-[0_12px_40px_rgba(95,77,57,0.14)]"
-              style={{ minWidth: "11rem" }}
+              style={{ minWidth: "14rem" }}
             >
               <p className="mb-2.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-foreground/35">
                 Colour palette
               </p>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-5 gap-2">
                 {PALETTE.map((p) => {
                   const isActive = hex === p.hex;
                   const isUsed   = !isActive && usedHexes.includes(p.hex.toLowerCase());
                   return (
-                    <div key={p.name} className="relative">
+                    <div key={p.name} className="group relative">
+                      {/* Tooltip */}
+                      <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-foreground px-2 py-1 text-[9px] font-semibold text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                        {p.name}
+                        <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-foreground" />
+                      </div>
                       <button
                         type="button"
-                        title={isUsed ? `${p.name} (already added)` : p.name}
                         onClick={() => !isUsed && onPickSwatch(p.hex, p.name)}
                         disabled={isUsed}
                         className={`relative h-7 w-7 rounded-full border transition-transform duration-100 ${

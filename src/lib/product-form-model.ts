@@ -1,7 +1,7 @@
 import type { ColorVariant, Product, SizeOption } from "@/data/products";
 
 export const DEFAULT_SIZES: SizeOption[] = [
-  { label: "XS", inStock: true },
+  { label: "XS", inStock: false },
   { label: "S", inStock: true },
   { label: "M", inStock: true },
   { label: "L", inStock: true },

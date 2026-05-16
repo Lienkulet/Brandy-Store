@@ -34,7 +34,8 @@ export function ProductGallery({
 
   return (
     <div className="lg:sticky lg:top-28 lg:self-start">
-      <div className="flex items-start gap-3">
+      {/* Mobile: column (image → strip below). Desktop: row (image | strip on right) */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
 
         {/* Main image */}
         <button
@@ -67,11 +68,11 @@ export function ProductGallery({
           </AnimatePresence>
         </button>
 
-        {/* Thumbnail strip */}
+        {/* Thumbnail strip — horizontal scroll on mobile, vertical on desktop */}
         {sliderImages.length > 1 && (
           <div
             ref={stripRef}
-            className="flex max-h-[88vh] w-18 shrink-0 flex-col gap-2 overflow-y-auto px-1 py-1 scrollbar-none"
+            className="flex flex-row gap-2 overflow-x-auto px-1 py-1 scrollbar-none lg:max-h-[88vh] lg:w-18 lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto"
           >
             {sliderImages.map((item, fi) => {
               const isActive    = fi === activeFlatIdx;
@@ -91,7 +92,7 @@ export function ProductGallery({
                   <ProductImage
                     src={item.src}
                     alt=""
-                    className="h-20 w-16"
+                    className="h-16 w-12 lg:h-20 lg:w-16"
                     imageClassName="h-full w-full object-cover"
                   />
                   {!isSameColor && (

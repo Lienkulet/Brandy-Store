@@ -60,7 +60,7 @@ export function ProductDetail({ product }: { product: Product }) {
 
   return (
     <>
-      <main className="min-h-dvh bg-background pt-28 pb-24 text-foreground sm:pt-32">
+      <main className="min-h-dvh bg-background pt-24 pb-24 text-foreground sm:pt-32">
         <Container>
           <div className="grid gap-10 lg:grid-cols-[0.75fr_1fr] lg:gap-16 xl:grid-cols-[0.75fr_1fr]">
 

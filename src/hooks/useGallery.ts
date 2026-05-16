@@ -47,12 +47,17 @@ export function useGallery(product: Product) {
     return () => document.removeEventListener("keydown", onKey);
   }, [lightbox, activeFlatIdx]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Scroll active thumbnail into view
+  // Scroll active thumbnail into view within the strip (not the page)
   useEffect(() => {
     const strip = stripRef.current;
     if (!strip) return;
     const thumb = strip.children[activeFlatIdx] as HTMLElement | undefined;
-    thumb?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+    if (!thumb) return;
+    strip.scrollTo({
+      top:  thumb.offsetTop  - strip.clientHeight / 2 + thumb.offsetHeight / 2,
+      left: thumb.offsetLeft - strip.clientWidth  / 2 + thumb.offsetWidth  / 2,
+      behavior: "smooth",
+    });
   }, [activeFlatIdx]);
 
   return {
