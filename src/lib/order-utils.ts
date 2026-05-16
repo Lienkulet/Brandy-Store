@@ -13,17 +13,19 @@ export type OrderItem = {
 };
 
 export type Order = {
-  id:        string;
-  createdAt: string;
-  customer:  { name: string; phone: string; address?: string };
-  delivery:  "pickup" | "courier" | "nationwide";
-  items:     OrderItem[];
-  subtotal:  string;
-  status:    OrderStatus;
+  id:          string;
+  orderNumber: number;
+  createdAt:   string;
+  customer:    { name: string; phone: string; address?: string };
+  delivery:    "pickup" | "courier" | "nationwide";
+  items:       OrderItem[];
+  subtotal:    string;
+  status:      OrderStatus;
 };
 
 export type SupabaseOrder = {
   id:               string;
+  order_number:     number;
   created_at:       string;
   customer_name:    string;
   customer_phone:   string;
@@ -36,13 +38,14 @@ export type SupabaseOrder = {
 
 export function toOrder(o: SupabaseOrder): Order {
   return {
-    id:        o.id,
-    createdAt: o.created_at,
-    customer:  { name: o.customer_name, phone: o.customer_phone, address: o.customer_address },
-    delivery:  o.delivery,
-    items:     o.items,
-    subtotal:  o.subtotal,
-    status:    o.status,
+    id:          o.id,
+    orderNumber: o.order_number,
+    createdAt:   o.created_at,
+    customer:    { name: o.customer_name, phone: o.customer_phone, address: o.customer_address },
+    delivery:    o.delivery,
+    items:       o.items,
+    subtotal:    o.subtotal,
+    status:      o.status,
   };
 }
 

@@ -2,6 +2,7 @@ import type { OrderItem } from "@/lib/order-utils";
 
 type TelegramOrder = {
   id: string;
+  order_number: number;
   customer_name: string;
   customer_phone: string;
   customer_address?: string;
@@ -50,7 +51,7 @@ export function buildTelegramOrderMessage(order: TelegramOrder, baseUrl: string)
   ];
 
   return [
-    `<b>New Order — #${escapeHtml(order.id)}</b>`,
+    `<b>New Order — #${order.order_number}</b>`,
     "",
     ...customerLines,
     separator,
