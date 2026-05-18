@@ -4,10 +4,20 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ease } from "@/lib/animations";
 import { navigationItems, navSocialLinks } from "@/data/nav-links";
+import { useLang } from "@/context/LanguageContext";
+import { translations } from "@/data/translations";
+
+const NAV_KEY_MAP: Record<string, keyof typeof translations.en> = {
+  "New Arrivals": "nav.newArrivals",
+  "Shop":         "nav.shop",
+  "The Story":    "nav.theStory",
+  "Contact":      "nav.contact",
+};
 
 type Props = { onClose: () => void; pathname: string };
 
 export function MobileMenu({ onClose, pathname }: Props) {
+  const { t } = useLang();
   return (
     <motion.div
       className="fixed inset-0 z-40 flex flex-col bg-[#1e1a17] px-6 pb-10 pt-28"
@@ -41,11 +51,11 @@ export function MobileMenu({ onClose, pathname }: Props) {
                     isActive ? "text-white" : "text-white/60 group-hover:text-white"
                   }`}
                 >
-                  {item.label}
+                  {t(NAV_KEY_MAP[item.label])}
                 </span>
                 {isActive && (
                   <span className="ml-auto text-[10px] font-semibold uppercase tracking-[0.18em] text-white/30">
-                    Current
+                    {t("nav.mobile.current")}
                   </span>
                 )}
               </Link>
@@ -78,7 +88,7 @@ export function MobileMenu({ onClose, pathname }: Props) {
         </div>
 
         <p className="font-serif text-sm italic text-white/25">
-          Dressed for every room.
+          {t("footer.tagline")}
         </p>
       </motion.div>
     </motion.div>

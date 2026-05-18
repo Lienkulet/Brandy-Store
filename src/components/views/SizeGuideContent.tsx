@@ -4,26 +4,17 @@ import { motion } from "framer-motion";
 import Container from "@/components/layout/Container";
 import { SizeTabs } from "@/components/product/SizeTabs";
 import { ease } from "@/lib/animations";
-
-const measurements = [
-  {
-    label: "Chest",
-    instruction:
-      "Measure around the fullest part of your chest, keeping the tape horizontal and snug but not tight.",
-  },
-  {
-    label: "Waist",
-    instruction:
-      "Measure around your natural waistline, just above the hip bone. Keep one finger between the tape and your body.",
-  },
-  {
-    label: "Foot length",
-    instruction:
-      "Stand on a flat surface and measure from the heel to the tip of your longest toe. Use the longer foot if they differ.",
-  },
-];
+import { useLang } from "@/context/LanguageContext";
 
 export function SizeGuideContent() {
+  const { t } = useLang();
+
+  const measurements = [
+    { label: t("sizeGuide.chest.label"), instruction: t("sizeGuide.chest.instruction") },
+    { label: t("sizeGuide.waist.label"), instruction: t("sizeGuide.waist.instruction") },
+    { label: t("sizeGuide.foot.label"),  instruction: t("sizeGuide.foot.instruction")  },
+  ];
+
   return (
     <main className="bg-background pb-24 pt-36 text-foreground">
       <Container>
@@ -36,7 +27,7 @@ export function SizeGuideContent() {
           transition={{ duration: 0.8, ease }}
         >
           <p className="font-serif text-4xl font-semibold uppercase tracking-[0.06em] text-foreground sm:text-5xl">
-            Size Guide
+            {t("sizeGuide.heading")}
           </p>
           <motion.div
             className="mx-auto mt-5 h-px bg-foreground/20"
@@ -50,8 +41,7 @@ export function SizeGuideContent() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, ease, delay: 0.4 }}
           >
-            All measurements are in centimetres unless stated otherwise.
-            When between sizes, we recommend sizing up.
+            {t("sizeGuide.subtitle")}
           </motion.p>
         </motion.div>
 
@@ -64,7 +54,7 @@ export function SizeGuideContent() {
           transition={{ duration: 0.7, ease }}
         >
           <p className="mb-6 text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/50">
-            How to measure
+            {t("sizeGuide.howToMeasure")}
           </p>
           <div className="grid gap-4 sm:grid-cols-3">
             {measurements.map((m, i) => (
@@ -96,7 +86,7 @@ export function SizeGuideContent() {
           transition={{ duration: 0.7, ease }}
         >
           <p className="mb-6 text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/50">
-            Size charts
+            {t("sizeGuide.sizeCharts")}
           </p>
           <SizeTabs />
         </motion.div>
@@ -110,14 +100,10 @@ export function SizeGuideContent() {
           transition={{ duration: 0.6, ease }}
         >
           <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
-            Note on luxury brand sizing
+            {t("sizeGuide.luxuryNote.label")}
           </p>
           <p className="text-sm leading-relaxed text-muted">
-            Brands such as Zegna, Loro Piana, Brunello Cucinelli, and Emporio Armani use
-            Italian (IT) sizing for tailored pieces — typically jackets and trousers.
-            IT sizing runs approximately 10 sizes higher than standard EU sizing
-            (e.g. IT 50 = EU 40 = L). If you are unsure, contact us before ordering
-            and we will advise on the best fit.
+            {t("sizeGuide.luxuryNote.body")}
           </p>
         </motion.div>
 

@@ -8,7 +8,7 @@ import {
 } from "framer-motion";
 import GreyBtn from "@/components/ui/GreyBtn";
 import { ease } from "@/lib/animations";
-const WORDS = "FOR THE GENTLEMAN IN EVERY ROOM".split(" ");
+import { useLang } from "@/context/LanguageContext";
 
 const wordContainer = {
   hidden: {},
@@ -27,6 +27,9 @@ const wordReveal = {
 };
 
 function Hero() {
+  const { t } = useLang();
+  const WORDS = t("hero.headline").split(" ");
+  const BREAK_WORD = t("hero.breakWord");
   const { scrollY } = useScroll();
 
   // Text drifts up and fades as the user scrolls away from the hero
@@ -73,7 +76,7 @@ function Hero() {
               >
                 {word}
               </motion.span>
-              {word === "IN" && <div className="w-full" />}
+              {word === BREAK_WORD && <div className="w-full" />}
             </span>
           ))}
         </motion.div>
@@ -85,7 +88,7 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.85, ease, delay: 0.95 }}
         >
-          Timeless silhouettes and sweaters crafted for moments that matter.
+          {t("hero.subtitle")}
         </motion.p>
 
         {/* CTA */}
@@ -95,7 +98,7 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease, delay: 1.2 }}
         >
-          <GreyBtn name="Buy Now" href="/shop" />
+          <GreyBtn name={t("hero.cta")} href="/shop" />
         </motion.div>
       </motion.div>
 

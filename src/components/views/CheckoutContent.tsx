@@ -13,51 +13,46 @@ import { ease } from "@/lib/animations";
 import CheckIcon from "@/components/icons/CheckIcon";
 import InfoIcon from "@/components/icons/InfoIcon";
 import SpinnerIcon from "@/components/icons/SpinnerIcon";
+import { useLang } from "@/context/LanguageContext";
+import type { TranslationKey } from "@/data/translations";
 
 type DeliveryMethod = "pickup" | "courier" | "nationwide";
-
-const DELIVERY_OPTIONS: { value: DeliveryMethod; label: string; sublabel: string }[] = [
-  { value: "pickup",     label: "Pickup in store",       sublabel: "Str. Mihai Eminescu 47, Chișinău" },
-  { value: "courier",    label: "Courier — Chișinău",    sublabel: "Same-day or next-day delivery"     },
-  { value: "nationwide", label: "Nationwide delivery",   sublabel: "2–4 business days"                 },
-];
-
 type FieldKey = "name" | "phone" | "address";
 
 function sanitizeName(value: string) {
-  // Letters (including Romanian diacritics), spaces and hyphens only
   return value.replace(/[^a-zA-ZÀ-ÿ\s-]/g, "");
 }
 
 function sanitizePhone(value: string) {
-  // Digits only, max 9 characters
   return value.replace(/\D/g, "").slice(0, 9);
 }
 
+type TFn = (key: TranslationKey) => string;
+
 function validateFields(
-  name: string, phone: string, address: string, delivery: DeliveryMethod
+  name: string, phone: string, address: string, delivery: DeliveryMethod, t: TFn
 ): Partial<Record<FieldKey, string>> {
   const errs: Partial<Record<FieldKey, string>> = {};
 
   if (!name.trim()) {
-    errs.name = "Full name is required.";
+    errs.name = t("checkout.err.nameRequired");
   } else if (name.trim().length < 2) {
-    errs.name = "Please enter your full name.";
+    errs.name = t("checkout.err.nameTooShort");
   }
 
   if (!phone) {
-    errs.phone = "Phone number is required.";
+    errs.phone = t("checkout.err.phoneRequired");
   } else if (!phone.startsWith("0")) {
-    errs.phone = "Phone number must start with 0.";
+    errs.phone = t("checkout.err.phoneStart");
   } else if (phone.length < 9) {
-    errs.phone = "Phone number must be 9 digits.";
+    errs.phone = t("checkout.err.phoneLength");
   }
 
   if (delivery !== "pickup") {
     if (!address.trim()) {
-      errs.address = "Delivery address is required.";
+      errs.address = t("checkout.err.addressRequired");
     } else if (address.trim().length < 5) {
-      errs.address = "Please enter a complete address.";
+      errs.address = t("checkout.err.addressTooShort");
     }
   }
 
@@ -67,6 +62,13 @@ function validateFields(
 export function CheckoutContent() {
   const { items, itemCount, isHydrated, clearCart } = useCart();
   const router = useRouter();
+  const { t } = useLang();
+
+  const DELIVERY_OPTIONS: { value: DeliveryMethod; label: string; sublabel: string }[] = [
+    { value: "pickup",     label: t("checkout.delivery.pickup"),     sublabel: t("checkout.delivery.pickupSub")     },
+    { value: "courier",    label: t("checkout.delivery.courier"),    sublabel: t("checkout.delivery.courierSub")    },
+    { value: "nationwide", label: t("checkout.delivery.nationwide"), sublabel: t("checkout.delivery.nationwideSub") },
+  ];
 
   const [name,     setName]     = useState("");
   const [phone,    setPhone]    = useState("");
@@ -79,7 +81,6 @@ export function CheckoutContent() {
   const [errors,  setErrors]  = useState<Partial<Record<FieldKey, string>>>({});
   const [touched, setTouched] = useState<Partial<Record<FieldKey, boolean>>>({});
 
-  // Redirect to shop if cart is empty (after hydration)
   useEffect(() => {
     if (isHydrated && itemCount === 0 && !success) {
       router.replace("/shop");
@@ -91,7 +92,7 @@ export function CheckoutContent() {
 
   function touchField(key: FieldKey) {
     setTouched((prev) => ({ ...prev, [key]: true }));
-    const errs = validateFields(name, phone, address, delivery);
+    const errs = validateFields(name, phone, address, delivery, t);
     setErrors(errs);
   }
 
@@ -104,14 +105,14 @@ export function CheckoutContent() {
       const updatedName    = key === "name"    ? sanitized : name;
       const updatedPhone   = key === "phone"   ? sanitized : phone;
       const updatedAddress = key === "address" ? sanitized : address;
-      setErrors(validateFields(updatedName, updatedPhone, updatedAddress, delivery));
+      setErrors(validateFields(updatedName, updatedPhone, updatedAddress, delivery, t));
     }
   }
 
   async function handlePlaceOrder() {
     const allTouched: Record<FieldKey, boolean> = { name: true, phone: true, address: true };
     setTouched(allTouched);
-    const errs = validateFields(name, phone, address, delivery);
+    const errs = validateFields(name, phone, address, delivery, t);
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
@@ -135,12 +136,12 @@ export function CheckoutContent() {
       });
       if (!res.ok) {
         const body = await res.json();
-        throw new Error(body.error || "Something went wrong.");
+        throw new Error(body.error || t("checkout.err.generic"));
       }
       clearCart();
       setSuccess(true);
     } catch (e) {
-      setServerError(e instanceof Error ? e.message : "Failed to place order.");
+      setServerError(e instanceof Error ? e.message : t("checkout.err.failed"));
     } finally {
       setLoading(false);
     }
@@ -160,11 +161,11 @@ export function CheckoutContent() {
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-foreground/6">
             <CheckIcon size={28} />
           </div>
-          <h1 className="mb-3 font-serif text-3xl font-semibold">Order received</h1>
+          <h1 className="mb-3 font-serif text-3xl font-semibold">{t("checkout.success.title")}</h1>
           <p className="mb-8 text-sm leading-relaxed text-muted">
-            Thank you! Our team will call you shortly to confirm the details and arrange payment.
+            {t("checkout.success.body")}
           </p>
-          <BlackBtn href="/shop" name="Continue Shopping" />
+          <BlackBtn href="/shop" name={t("checkout.success.cta")} />
         </motion.div>
       </main>
     );
@@ -186,14 +187,14 @@ export function CheckoutContent() {
           transition={{ duration: 0.6, ease }}
         >
           <div className="mb-4 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/35">
-            <Link href="/shop" className="hover:text-foreground transition-colors duration-200">Shop</Link>
+            <Link href="/shop" className="hover:text-foreground transition-colors duration-200">{t("checkout.breadcrumb.shop")}</Link>
             <span>/</span>
-            <Link href="#" onClick={(e) => { e.preventDefault(); history.back(); }} className="hover:text-foreground transition-colors duration-200">Bag</Link>
+            <Link href="#" onClick={(e) => { e.preventDefault(); history.back(); }} className="hover:text-foreground transition-colors duration-200">{t("checkout.breadcrumb.bag")}</Link>
             <span>/</span>
-            <span className="text-foreground/60">Checkout</span>
+            <span className="text-foreground/60">{t("checkout.breadcrumb.checkout")}</span>
           </div>
           <h1 className="font-serif text-3xl font-semibold text-foreground sm:text-4xl">
-            Complete your order
+            {t("checkout.title")}
           </h1>
         </motion.div>
 
@@ -207,9 +208,9 @@ export function CheckoutContent() {
           >
 
             {/* Contact details */}
-            <Section title="Contact details">
+            <Section title={t("checkout.contactDetails")}>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Full name" required error={showErr("name")}>
+                <Field label={t("checkout.fullName")} required error={showErr("name")}>
                   <input
                     type="text"
                     placeholder="Ion Popescu"
@@ -219,7 +220,7 @@ export function CheckoutContent() {
                     className={inputCls("name")}
                   />
                 </Field>
-                <Field label="Phone number" required error={showErr("phone")}>
+                <Field label={t("checkout.phoneNumber")} required error={showErr("phone")}>
                   <input
                     type="tel"
                     placeholder="0XX XXX XXX"
@@ -235,7 +236,7 @@ export function CheckoutContent() {
             <Divider />
 
             {/* Delivery method */}
-            <Section title="Delivery method">
+            <Section title={t("checkout.deliveryMethod")}>
               <div className="flex flex-col gap-3">
                 {DELIVERY_OPTIONS.map((opt) => {
                   const active = delivery === opt.value;
@@ -243,7 +244,7 @@ export function CheckoutContent() {
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => { setDelivery(opt.value); setErrors(validateFields(name, phone, address, opt.value)); }}
+                      onClick={() => { setDelivery(opt.value); setErrors(validateFields(name, phone, address, opt.value, t)); }}
                       className={`cursor-pointer flex items-start gap-4 rounded-2xl border p-4 text-left transition-all duration-200 ${
                         active
                           ? "border-foreground bg-foreground/4"
@@ -274,8 +275,8 @@ export function CheckoutContent() {
                 transition={{ duration: 0.3, ease }}
               >
                 <Divider />
-                <Section title="Delivery address">
-                  <Field label="Address" required error={showErr("address")}>
+                <Section title={t("checkout.deliveryAddress")}>
+                  <Field label={t("checkout.address")} required error={showErr("address")}>
                     <input
                       type="text"
                       placeholder="Str. Mihai Eminescu 47, ap. 12, Chișinău"
@@ -299,19 +300,19 @@ export function CheckoutContent() {
             className="lg:sticky lg:top-32 lg:self-start"
           >
             <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-foreground/55">
-              Order summary
+              {t("checkout.orderSummary")}
             </p>
 
             {/* Items */}
             <ul className="divide-y divide-foreground/6 rounded-2xl border border-foreground/8 bg-card px-5">
               {items.map((item) => (
-                <OrderItem key={item.id} item={item} />
+                <OrderItem key={item.id} item={item} qty={t("checkout.qty")} />
               ))}
             </ul>
 
             {/* Subtotal */}
             <div className="mt-4 flex items-baseline justify-between rounded-2xl border border-foreground/8 bg-card px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/55">Subtotal</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/55">{t("checkout.subtotal")}</p>
               <p className="font-serif text-xl font-semibold text-foreground">{formatted}</p>
             </div>
 
@@ -319,7 +320,7 @@ export function CheckoutContent() {
             <div className="mt-4 flex gap-3 rounded-2xl bg-foreground/4 px-5 py-4">
               <span className="mt-0.5 shrink-0 text-foreground/40"><InfoIcon /></span>
               <p className="text-[11px] leading-relaxed text-foreground/55">
-                After placing your order, one of our team members will call you to confirm the details and arrange payment.
+                {t("checkout.operatorNote")}
               </p>
             </div>
 
@@ -348,14 +349,14 @@ export function CheckoutContent() {
               <span aria-hidden="true" className="absolute inset-0 origin-left scale-x-0 rounded-full bg-white/15 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-100" />
               <span className="relative z-10 flex items-center gap-2.5 text-white">
                 {loading && <SpinnerIcon size={14} />}
-                {loading ? "Placing order…" : "Place Order"}
+                {loading ? t("checkout.placingOrder") : t("checkout.placeOrder")}
               </span>
             </button>
 
             <p className="mt-4 text-center text-[10px] text-muted">
-              Questions?{" "}
+              {t("checkout.questions")}{" "}
               <Link href="/contact" className="underline underline-offset-2 hover:text-foreground transition-colors duration-200">
-                Contact us
+                {t("checkout.contactUs")}
               </Link>
             </p>
           </motion.div>
@@ -368,7 +369,7 @@ export function CheckoutContent() {
 
 /* ─── Order item row ────────────────────────────────────────────────── */
 
-function OrderItem({ item }: { item: CartItem }) {
+function OrderItem({ item, qty }: { item: CartItem; qty: string }) {
   return (
     <li className="flex gap-4 py-4">
       <div className="h-16 w-12 shrink-0 overflow-hidden rounded-xl bg-[#f7f4f0]">
@@ -389,7 +390,7 @@ function OrderItem({ item }: { item: CartItem }) {
           </p>
         </div>
         <div className="flex items-end justify-between">
-          <p className="text-[11px] text-muted">Qty {item.quantity}</p>
+          <p className="text-[11px] text-muted">{qty} {item.quantity}</p>
           <p className="text-sm font-semibold text-foreground">{item.price}</p>
         </div>
       </div>

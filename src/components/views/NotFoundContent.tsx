@@ -5,10 +5,13 @@ import { motion } from "framer-motion";
 import Container from "@/components/layout/Container";
 import BlackBtn from "@/components/ui/BlackBtn";
 import { ease } from "@/lib/animations";
+import { useLang } from "@/context/LanguageContext";
 
 const digits = ["4", "0", "4"];
 
 export function NotFoundContent() {
+  const { t } = useLang();
+
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-background text-foreground">
       <Container>
@@ -30,7 +33,6 @@ export function NotFoundContent() {
             ))}
           </div>
 
-          {/* Divider */}
           <motion.div
             className="h-px bg-foreground/20"
             initial={{ width: 0 }}
@@ -38,48 +40,43 @@ export function NotFoundContent() {
             transition={{ duration: 0.6, ease, delay: 0.45 }}
           />
 
-          {/* Heading */}
           <motion.p
             className="mt-6 font-serif text-2xl font-semibold sm:text-3xl"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease, delay: 0.5 }}
           >
-            This page doesn&apos;t exist.
+            {t("notFound.heading")}
           </motion.p>
 
-          {/* Body */}
           <motion.p
             className="mx-auto mt-4 max-w-sm text-sm leading-relaxed text-muted"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, ease, delay: 0.65 }}
           >
-            The piece you&apos;re looking for may have sold out or moved to a
-            new address. Head back and keep browsing.
+            {t("notFound.body")}
           </motion.p>
 
-          {/* Actions */}
           <motion.div
             className="mt-10 flex flex-wrap justify-center gap-4"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease, delay: 0.75 }}
           >
-            <BlackBtn name="Back to Homepage" href="/" />
-            <BlackBtn name="Shop Now" href="/shop" />
+            <BlackBtn name={t("notFound.home")} href="/" />
+            <BlackBtn name={t("notFound.shop")} href="/shop" />
           </motion.div>
 
-          {/* Subtle help line */}
           <motion.p
             className="mt-8 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/30"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, ease, delay: 0.9 }}
           >
-            Need help?{" "}
+            {t("notFound.needHelp")}{" "}
             <Link href="/contact" className="underline underline-offset-2 hover:text-foreground/60 transition-colors duration-200">
-              Contact us
+              {t("notFound.contactUs")}
             </Link>
           </motion.p>
 

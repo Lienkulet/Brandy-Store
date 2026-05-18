@@ -13,9 +13,20 @@ import { AccountIcon } from "@/components/icons/Account";
 import { CartIcon } from "@/components/icons/CartIcon";
 import { CartDrawer } from "@/components/layout/CartDrawer";
 import { useCart } from "@/context/CartContext";
+import { useLang } from "@/context/LanguageContext";
 import { ease } from "@/lib/animations";
 import { navigationItems } from "@/data/nav-links";
 import { MobileMenu } from "@/components/layout/nav/MobileMenu";
+import RomanianIcon from "../icons/RomanianIcon";
+import EnglishIcon from "../icons/EnglishIcon";
+import { translations } from "@/data/translations";
+
+const NAV_KEY_MAP: Record<string, keyof typeof translations.en> = {
+  "New Arrivals": "nav.newArrivals",
+  "Shop":         "nav.shop",
+  "The Story":    "nav.theStory",
+  "Contact":      "nav.contact",
+};
 
 const actionItems = [
   // { label: "Search",  icon: SearchIcon  },
@@ -47,6 +58,7 @@ export function Navbar() {
   const [authed, setAuthed]         = useState(false);
   const [cartPulse, setCartPulse]   = useState(false);
   const { itemCount, isHydrated }   = useCart();
+  const { lang, setLang, t }        = useLang();
   const previousItemCount = useRef(itemCount);
   const hasHydratedCart = useRef(false);
 
@@ -151,7 +163,7 @@ export function Navbar() {
               {navigationItems.map((item) => (
                 <motion.li key={item.label} variants={fadeDown} whileHover="hover">
                   <Link href={item.href} className="relative block py-1 opacity-80 hover:opacity-100 transition-opacity duration-200">
-                    {item.label}
+                    {t(NAV_KEY_MAP[item.label])}
                     <motion.span
                       className="absolute bottom-0 left-0 h-px w-full bg-current"
                       variants={underline}
@@ -171,6 +183,24 @@ export function Navbar() {
             initial="hidden"
             animate="visible"
           >
+            {/* Language toggle */}
+            <motion.div variants={fadeDown} className="block">
+              <button
+                aria-label={lang === "ro" ? "Switch to English" : "Schimbă în Română"}
+                onClick={() => setLang(lang === "ro" ? "en" : "ro")}
+                className="cursor-pointer flex items-center justify-center"
+              >
+                <motion.div
+                  whileHover={{ y: -2, scale: 1.1 }}
+                  whileTap={{ scale: 0.92 }}
+                  transition={{ duration: 0.22, ease }}
+                  className="overflow-hidden rounded-sm"
+                >
+                  {lang === "ro" ? <RomanianIcon size={22} /> : <EnglishIcon size={22} />}
+                </motion.div>
+              </button>
+            </motion.div>
+
             {/* Action icons */}
             {actionItems.map(({ label, icon: Icon }) => (
               <motion.div key={label} variants={fadeDown} className="block">

@@ -4,8 +4,10 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import BlackBtn from "@/components/ui/BlackBtn";
 import { ease } from "@/lib/animations";
+import { useLang } from "@/context/LanguageContext";
 
 function Season() {
+  const { t } = useLang();
   return (
     <motion.section
         className="mt-16 soft-card overflow-hidden rounded-4xl"
@@ -42,7 +44,7 @@ function Season() {
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.25, ease }}
           >
-            The New Season Edit
+            {t("season.heading")}
           </motion.h2>
 
           <motion.p
@@ -52,8 +54,7 @@ function Season() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.4, ease }}
           >
-            Fresh knits and quarter zips, tailored comfort for every room you
-            walk into.
+            {t("season.body")}
           </motion.p>
 
           <motion.div
@@ -62,7 +63,7 @@ function Season() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.55, ease }}
           >
-            <BlackBtn href="/new-arrivals" name="Shop New Arrivals" className="mt-6" />
+            <BlackBtn href="/new-arrivals" name={t("season.cta")} className="mt-6" />
           </motion.div>
         </div>
       </motion.section>

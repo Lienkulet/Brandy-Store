@@ -6,14 +6,8 @@ import type { SortKey, ProductFilters } from "@/lib/shop-utils";
 import ChevronIcon from "@/components/icons/ChevronIcon";
 import CheckIcon from "@/components/icons/CheckIcon";
 import CloseIcon from "@/components/icons/CloseIcon";
+import { useLang } from "@/context/LanguageContext";
 export type { SortKey, ProductFilters } from "@/lib/shop-utils";
-
-const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: "new-in", label: "New In" },
-  { key: "oldest", label: "Oldest First" },
-  { key: "price-asc", label: "Price: Low to High" },
-  { key: "price-desc", label: "Price: High to Low" },
-];
 
 type Option = { value: string; label: string };
 type ColorOption = { name: string; hex: string };
@@ -89,6 +83,7 @@ export function ColorFilterDropdown({
   open: boolean;
   onOpen: () => void;
 }) {
+  const { t } = useLang();
   const count = selected.length;
 
   return (
@@ -101,7 +96,7 @@ export function ColorFilterDropdown({
             : "text-foreground/50 hover:text-foreground/75"
         }`}
       >
-        Colour{count > 0 && ` (${count})`}
+        {t("shop.filter.colour")}{count > 0 && ` (${count})`}
         <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2, ease }} className="flex shrink-0"><ChevronIcon size={10} /></motion.span>
       </button>
 
@@ -141,11 +136,6 @@ export function ColorFilterDropdown({
   );
 }
 
-const AVAILABILITY_OPTIONS = [
-  { value: "in-stock",     label: "In Stock" },
-  { value: "out-of-stock", label: "Out of Stock" },
-] as const;
-
 export function AvailabilityDropdown({
   value, onChange, open, onOpen,
 }: {
@@ -154,8 +144,13 @@ export function AvailabilityDropdown({
   open: boolean;
   onOpen: () => void;
 }) {
+  const { t } = useLang();
+  const AVAILABILITY_OPTIONS = [
+    { value: "in-stock"     as const, label: t("shop.filter.inStock")    },
+    { value: "out-of-stock" as const, label: t("shop.filter.outOfStock") },
+  ];
   const active = value !== "";
-  const label  = AVAILABILITY_OPTIONS.find((o) => o.value === value)?.label ?? "Availability";
+  const label  = AVAILABILITY_OPTIONS.find((o) => o.value === value)?.label ?? t("shop.filter.availability");
 
   return (
     <div className="relative z-20">
@@ -207,7 +202,14 @@ export function SortDropdown({
   open: boolean;
   onOpen: () => void;
 }) {
-  const label = SORT_OPTIONS.find((option) => option.key === value)?.label ?? "Sort";
+  const { t } = useLang();
+  const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+    { key: "new-in",     label: t("shop.sort.newIn")    },
+    { key: "oldest",     label: t("shop.sort.oldest")   },
+    { key: "price-asc",  label: t("shop.sort.priceAsc") },
+    { key: "price-desc", label: t("shop.sort.priceDesc") },
+  ];
+  const label = SORT_OPTIONS.find((option) => option.key === value)?.label ?? t("shop.sort.label");
 
   return (
     <div className="relative z-20">
@@ -266,6 +268,13 @@ export function MobileFilterPanel({
   onClear: () => void;
   onClose: () => void;
 }) {
+  const { t } = useLang();
+  const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+    { key: "new-in",     label: t("shop.sort.newIn")    },
+    { key: "oldest",     label: t("shop.sort.oldest")   },
+    { key: "price-asc",  label: t("shop.sort.priceAsc") },
+    { key: "price-desc", label: t("shop.sort.priceDesc") },
+  ];
   const activeFilterCount = filters.brands.length + filters.sizes.length + filters.colors.length + (filters.onSale ? 1 : 0) + (filters.availability ? 1 : 0);
 
   return (
@@ -278,7 +287,7 @@ export function MobileFilterPanel({
     >
       <div className="flex items-center justify-between border-b border-foreground/8 px-5 py-4">
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-foreground/60">
-          Filter & Sort
+          {t("shop.filter.filterSort")}
         </p>
         <div className="flex items-center gap-4">
           {activeFilterCount > 0 && (
@@ -286,7 +295,7 @@ export function MobileFilterPanel({
               onClick={onClear}
               className="cursor-pointer text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/40 underline underline-offset-2"
             >
-              Clear all
+              {t("shop.filter.clearAll")}
             </button>
           )}
           <button onClick={onClose} className="cursor-pointer text-foreground/50 hover:text-foreground transition-colors" aria-label="Close filters">
@@ -296,7 +305,7 @@ export function MobileFilterPanel({
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-6 space-y-8">
-        <MobileSection title="Sort">
+        <MobileSection title={t("shop.sort.label")}>
           <div className="flex flex-wrap gap-2">
             {SORT_OPTIONS.map((option) => (
               <button
@@ -316,7 +325,7 @@ export function MobileFilterPanel({
 
         {availableBrands.length > 0 && (
           <MobilePillSection
-            title="Brand"
+            title={t("shop.filter.brand")}
             values={availableBrands}
             selected={filters.brands}
             onToggle={(value) => onToggle("brands", value)}
@@ -324,7 +333,7 @@ export function MobileFilterPanel({
         )}
 
         {availableSizes.length > 0 && (
-          <MobileSection title="Size">
+          <MobileSection title={t("shop.filter.size")}>
             <div className="flex flex-wrap gap-2">
               {availableSizes.map((size) => {
                 const checked = filters.sizes.includes(size);
@@ -347,7 +356,7 @@ export function MobileFilterPanel({
         )}
 
         {availableColors.length > 0 && (
-          <MobileSection title="Colour">
+          <MobileSection title={t("shop.filter.colour")}>
             <div className="flex flex-wrap gap-3">
               {availableColors.map(({ name, hex }) => {
                 const checked = filters.colors.includes(name);
@@ -371,7 +380,7 @@ export function MobileFilterPanel({
           </MobileSection>
         )}
 
-        <MobileSection title="Availability">
+        <MobileSection title={t("shop.filter.availability")}>
           <div className="flex flex-wrap gap-2">
             {(["in-stock", "out-of-stock"] as const).map((v) => (
               <button
@@ -383,13 +392,13 @@ export function MobileFilterPanel({
                     : "border border-foreground/15 text-muted hover:border-foreground/30 hover:text-foreground"
                 }`}
               >
-                {v === "in-stock" ? "In Stock" : "Out of Stock"}
+                {v === "in-stock" ? t("shop.filter.inStock") : t("shop.filter.outOfStock")}
               </button>
             ))}
           </div>
         </MobileSection>
 
-        <MobileSection title="Offers">
+        <MobileSection title={t("shop.filter.onSale")}>
           <button
             onClick={onToggleSale}
             className={`cursor-pointer h-9 rounded-full px-4 text-[11px] font-semibold uppercase tracking-[0.14em] transition-colors duration-200 ${
@@ -398,7 +407,7 @@ export function MobileFilterPanel({
                 : "border border-foreground/15 text-muted hover:border-foreground/30 hover:text-foreground"
             }`}
           >
-            On Sale
+            {t("shop.filter.onSale")}
           </button>
         </MobileSection>
       </div>
@@ -408,7 +417,7 @@ export function MobileFilterPanel({
           onClick={onClose}
           className="cursor-pointer w-full rounded-full bg-foreground py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition-colors duration-200 hover:bg-foreground/90"
         >
-          Show {resultCount} {resultCount === 1 ? "piece" : "pieces"}
+          {t("shop.show")} {resultCount} {resultCount === 1 ? t("shop.piece") : t("shop.pieces")}
         </button>
       </div>
     </motion.div>

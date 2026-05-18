@@ -2,10 +2,12 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ease } from "@/lib/animations";
 import BagIcon from "@/components/icons/BagIcon";
+import { useLang } from "@/context/LanguageContext";
 
 type Props = { onClose: () => void };
 
 export function EmptyCart({ onClose }: Props) {
+  const { t } = useLang();
   return (
     <motion.div
       className="flex h-full flex-col items-center justify-center px-8 py-24 text-center"
@@ -17,9 +19,9 @@ export function EmptyCart({ onClose }: Props) {
         <span className="text-foreground/35"><BagIcon size={32} /></span>
       </div>
 
-      <p className="font-serif text-2xl font-semibold text-foreground">Your bag is empty</p>
+      <p className="font-serif text-2xl font-semibold text-foreground">{t("cart.empty.title")}</p>
       <p className="mt-3 max-w-56 text-sm leading-relaxed text-muted">
-        Add pieces you love and they will appear here.
+        {t("cart.empty.body")}
       </p>
 
       <Link
@@ -27,7 +29,7 @@ export function EmptyCart({ onClose }: Props) {
         onClick={onClose}
         className="mt-10 inline-block rounded-full border border-foreground px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground transition-colors duration-300 hover:bg-foreground hover:text-white"
       >
-        Explore the Shop
+        {t("cart.empty.cta")}
       </Link>
     </motion.div>
   );

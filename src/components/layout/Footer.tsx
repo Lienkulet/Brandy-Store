@@ -5,12 +5,49 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import Container from "@/components/layout/Container";
 import { ease } from "@/lib/animations";
-import { infoLinks, legalLinks, footerSocialLinks, footerColumns } from "@/data/footer-links";
+import { footerSocialLinks } from "@/data/footer-links";
+import { useLang } from "@/context/LanguageContext";
+
+const productLinks = [
+  { labelKey: "footer.link.newArrivals" as const, href: "/new-arrivals" },
+  { labelKey: "footer.link.tshirtsPolo" as const, href: "/shop/t-shirts" },
+  { labelKey: "footer.link.shirts"      as const, href: "/shop/shirts"   },
+  { labelKey: "footer.link.knitwear"    as const, href: "/shop/knitwear-layering" },
+  { labelKey: "footer.link.jackets"     as const, href: "/shop/jackets-outerwear" },
+  { labelKey: "footer.link.pants"       as const, href: "/shop/pants-jeans"       },
+];
+
+const categoryLinks = [
+  { labelKey: "footer.link.tshirtsPolo" as const, href: "/shop/t-shirts"              },
+  { labelKey: "footer.link.shirts"      as const, href: "/shop/shirts"                },
+  { labelKey: "footer.link.knitwear"    as const, href: "/shop/knitwear-layering"      },
+  { labelKey: "footer.link.jackets"     as const, href: "/shop/jackets-outerwear"      },
+  { labelKey: "footer.link.pants"       as const, href: "/shop/pants-jeans"            },
+  { labelKey: "footer.link.underwear"   as const, href: "/shop/underwear-essentials"   },
+  { labelKey: "footer.link.sportswear"  as const, href: "/shop/sportswear-shoes"       },
+];
+
+const infoLinkKeys = [
+  { labelKey: "footer.link.sizeGuide" as const, href: "/size-guide" },
+  { labelKey: "footer.link.contact"   as const, href: "/contact"    },
+];
+
+const legalLinkKeys = [
+  { labelKey: "footer.link.terms"   as const, href: "/legal/terms"   },
+  { labelKey: "footer.link.privacy" as const, href: "/legal/privacy" },
+  { labelKey: "footer.link.cookies" as const, href: "/legal/cookies" },
+];
 
 function Footer() {
+  const { t } = useLang();
+
+  const footerColumns = [
+    { titleKey: "footer.col.product"    as const, items: productLinks  },
+    { titleKey: "footer.col.categories" as const, items: categoryLinks },
+  ];
+
   return (
     <footer className="mt-24">
-      {/* Top separator */}
       <div className="border-t border-foreground/8" />
 
       <Container>
@@ -35,22 +72,21 @@ function Footer() {
             </Link>
 
             <p className="mt-4 font-serif text-sm italic leading-relaxed text-muted">
-              Dressed for every room.
+              {t("footer.tagline")}
             </p>
 
             <p className="mt-3 text-sm leading-6 text-muted/80">
-              Get newsletter updates for upcoming products and the best discounts.
+              {t("footer.newsletter.intro")}
             </p>
 
-            {/* Bottom-border newsletter input */}
             <form className="mt-7">
               <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
-                Newsletter
+                {t("footer.newsletter.label")}
               </p>
               <div className="group/form relative flex items-center border-b border-foreground/20 pb-2.5 transition-colors duration-300 focus-within:border-foreground/60">
                 <input
                   type="email"
-                  placeholder="Your email address"
+                  placeholder={t("footer.newsletter.placeholder")}
                   className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted/50"
                 />
                 <button
@@ -64,16 +100,31 @@ function Footer() {
             </form>
           </motion.div>
 
-          {/* Link footerColumns */}
+          {/* Link columns */}
           {footerColumns.map((col, i) => (
             <motion.div
-              key={col.title}
+              key={col.titleKey}
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.7, ease, delay: 0.1 + i * 0.1 }}
             >
-              <FooterColumn title={col.title} items={col.items} />
+              <h3 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/60">
+                {t(col.titleKey)}
+              </h3>
+              <ul className="mt-5 space-y-3">
+                {col.items.map(({ labelKey, href }) => (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className="group/link relative inline-block text-sm text-muted transition-colors duration-200 hover:text-foreground"
+                    >
+                      {t(labelKey)}
+                      <span className="absolute bottom-0 left-0 h-px w-full origin-left scale-x-0 bg-foreground/30 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/link:scale-x-100" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </motion.div>
           ))}
 
@@ -85,16 +136,16 @@ function Footer() {
             transition={{ duration: 0.7, ease, delay: 0.3 }}
           >
             <h3 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/60">
-              Info
+              {t("footer.info")}
             </h3>
             <ul className="mt-5 space-y-3">
-              {infoLinks.map(({ label, href }) => (
-                <li key={label}>
+              {infoLinkKeys.map(({ labelKey, href }) => (
+                <li key={href}>
                   <Link
                     href={href}
                     className="group/link relative inline-block text-sm text-muted transition-colors duration-200 hover:text-foreground"
                   >
-                    {label}
+                    {t(labelKey)}
                     <span className="absolute bottom-0 left-0 h-px w-full origin-left scale-x-0 bg-foreground/30 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/link:scale-x-100" />
                   </Link>
                 </li>
@@ -110,7 +161,7 @@ function Footer() {
             transition={{ duration: 0.7, ease, delay: 0.4 }}
           >
             <h3 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/60">
-              Follow Us
+              {t("footer.followUs")}
             </h3>
             <ul className="mt-5 space-y-3">
               {footerSocialLinks.map(({ label, href, icon: Icon }) => (
@@ -138,49 +189,19 @@ function Footer() {
         <Container className="flex flex-col gap-4 py-6 text-[11px] font-medium uppercase tracking-[0.14em] text-white/50 sm:flex-row sm:items-center sm:justify-between">
           <p>&copy; 2026 BrandyStore</p>
           <div className="flex flex-wrap gap-x-7 gap-y-2">
-            {legalLinks.map(({ label, href }) => (
+            {legalLinkKeys.map(({ labelKey, href }) => (
               <Link
-                key={label}
+                key={href}
                 href={href}
                 className="transition-colors duration-200 hover:text-white/90"
               >
-                {label}
+                {t(labelKey)}
               </Link>
             ))}
           </div>
         </Container>
       </div>
     </footer>
-  );
-}
-
-type FooterItem = { label: string; href: string };
-
-type FooterColumnProps = {
-  title: string;
-  items: FooterItem[];
-};
-
-function FooterColumn({ title, items }: FooterColumnProps) {
-  return (
-    <div>
-      <h3 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/60">
-        {title}
-      </h3>
-      <ul className="mt-5 space-y-3">
-        {items.map(({ label, href }) => (
-          <li key={label}>
-            <Link
-              href={href}
-              className="group/link relative inline-block text-sm text-muted transition-colors duration-200 hover:text-foreground"
-            >
-              {label}
-              <span className="absolute bottom-0 left-0 h-px w-full origin-left scale-x-0 bg-foreground/30 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/link:scale-x-100" />
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
 

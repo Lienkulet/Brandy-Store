@@ -19,9 +19,26 @@ import {
 import FilterIcon from "@/components/icons/FilterIcon";
 import SpinnerIcon from "@/components/icons/SpinnerIcon";
 import { ease } from "@/lib/animations";
+import { useLang } from "@/context/LanguageContext";
+import type { TranslationKey } from "@/data/translations";
+
+const CAT_KEY_MAP: Record<string, TranslationKey> = {
+  "All":                    "cat.all",
+  "T-Shirts & Polo":        "cat.tshirtsPolo",
+  "Shirts":                 "cat.shirts",
+  "Knitwear & Layering":    "cat.knitwear",
+  "Jackets & Outerwear":    "cat.jackets",
+  "Pants & Jeans":          "cat.pants",
+  "Shorts":                 "cat.shorts",
+  "Sets":                   "cat.sets",
+  "Underwear & Essentials": "cat.underwear",
+  "Shoes":                  "cat.shoes",
+  "Accessories":            "cat.accessories",
+};
 
 
 export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: string; onlyNew?: boolean }) {
+  const { t } = useLang();
   const [category, setCategory]         = useState<string | null>(initialCategory ?? null);
   const [filters, setFilters]           = useState<ProductFilters>({ brands: [], sizes: [], colors: [], onSale: false, availability: "" });
   const [sort, setSort]                 = useState<SortKey>("new-in");
@@ -66,7 +83,8 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
   const availableColors = PALETTE;
 
   const activeFilterCount = filters.brands.length + filters.sizes.length + filters.colors.length + (filters.onSale ? 1 : 0) + (filters.availability ? 1 : 0);
-  const categoryLabel     = categories.find((c) => c.slug === category)?.label ?? "All";
+  const rawCategoryLabel  = categories.find((c) => c.slug === category)?.label ?? "All";
+  const categoryLabel     = CAT_KEY_MAP[rawCategoryLabel] ? t(CAT_KEY_MAP[rawCategoryLabel]) : rawCategoryLabel;
 
   type ArrayFilterKey = "brands" | "sizes" | "colors";
 
@@ -104,7 +122,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
           transition={{ duration: 0.8, ease }}
         >
           <p className="font-serif text-4xl font-semibold uppercase tracking-[0.06em] sm:text-5xl">
-            {onlyNew ? "New Arrivals" : "Shop"}
+            {onlyNew ? t("shop.newArrivals") : t("shop.heading")}
           </p>
           <motion.div
             className="mx-auto mt-5 h-px bg-foreground/20"
@@ -118,9 +136,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, ease, delay: 0.4 }}
           >
-            {onlyNew
-              ? "The latest additions to our collection."
-              : "Carefully selected menswear from the world's finest houses."}
+            {onlyNew ? t("shop.newArrivalsSub") : t("shop.sub")}
           </motion.p>
         </motion.div>
 
@@ -149,7 +165,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
                         : "text-foreground/35 hover:text-foreground/65"
                     }`}
                   >
-                    {cat.label}
+                    {CAT_KEY_MAP[cat.label] ? t(CAT_KEY_MAP[cat.label]) : cat.label}
                     {isActive ? (
                       <motion.span
                         layoutId="category-underline"
@@ -174,7 +190,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
             <div className="mb-4 hidden items-center justify-between md:flex">
               <div className="flex items-center gap-6">
                 <FilterDropdown
-                  label="Brand"
+                  label={t("shop.filter.brand")}
                   options={availableBrands.map((b) => ({ value: b, label: b }))}
                   selected={filters.brands}
                   onToggle={(v) => toggleFilter("brands", v)}
@@ -183,7 +199,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
                 />
                 {availableSizes.length > 0 && (
                   <FilterDropdown
-                    label="Size"
+                    label={t("shop.filter.size")}
                     options={availableSizes.map((s) => ({ value: s, label: s }))}
                     selected={filters.sizes}
                     onToggle={(v) => toggleFilter("sizes", v)}
@@ -210,7 +226,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
                     filters.onSale ? "text-foreground" : "text-foreground/50 hover:text-foreground/75"
                   }`}
                 >
-                  On Sale
+                  {t("shop.filter.onSale")}
                   {filters.onSale ? (
                     <motion.span
                       layoutId="sale-underline"
@@ -237,14 +253,14 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/40">
                 {categoryLabel}
                 {activeFilterCount > 0 && (
-                  <span className="ml-2 text-foreground/60">· {activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""}</span>
+                  <span className="ml-2 text-foreground/60">· {activeFilterCount} {activeFilterCount > 1 ? t("shop.filter.plural") : t("shop.filter.single")}</span>
                 )}
               </p>
 
               <div className="flex items-center gap-3">
                 {!loading && (
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/40">
-                    {total} {total === 1 ? "piece" : "pieces"}
+                    {total} {total === 1 ? t("shop.piece") : t("shop.pieces")}
                   </p>
                 )}
                 {/* Mobile filter button */}
@@ -253,7 +269,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
                   className="cursor-pointer flex items-center gap-1.5 md:hidden rounded-full border border-foreground/20 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/60 hover:border-foreground/40 hover:text-foreground transition-colors duration-200"
                 >
                   <FilterIcon />
-                  Filter{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+                  {t("shop.filter.label")}{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
                 </button>
               </div>
             </div>
@@ -328,7 +344,7 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
                           Loading…
                         </>
                       ) : (
-                        `Load more`
+                        t("shop.loadMore")
                       )}
                     </button>
                   </div>
@@ -336,13 +352,13 @@ export function ShopContent({ initialCategory, onlyNew }: { initialCategory?: st
               </>
             ) : (
               <div className="flex flex-col items-center py-24 text-center">
-                <p className="font-serif text-2xl font-semibold text-foreground">No products found</p>
-                <p className="mt-3 text-sm text-muted">Try adjusting your filters or explore other categories.</p>
+                <p className="font-serif text-2xl font-semibold text-foreground">{t("shop.noResults.title")}</p>
+                <p className="mt-3 text-sm text-muted">{t("shop.noResults.body")}</p>
                 <button
                   onClick={clearFilters}
                   className="cursor-pointer mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground underline underline-offset-4 hover:text-muted transition-colors duration-200"
                 >
-                  Clear all filters
+                  {t("shop.noResults.clear")}
                 </button>
               </div>
             )}

@@ -6,8 +6,10 @@ import ProductCard from "@/components/cards/ProductCard";
 import type { Product } from "@/data/products";
 import { useProducts } from "@/hooks/useProducts";
 import { ease } from "@/lib/animations";
+import { useLang } from "@/context/LanguageContext";
 
 function Collection() {
+  const { t } = useLang();
   const filterNewProducts = useCallback((product: Product) => Boolean(product.isNew), []);
   const { products } = useProducts(filterNewProducts);
   const items = products.slice(0, 3);
@@ -26,7 +28,7 @@ function Collection() {
         transition={{ duration: 0.8, ease }}
       >
         <p className="font-serif text-2xl font-semibold uppercase tracking-[0.24em] text-foreground sm:text-3xl">
-          New Collection
+          {t("collection.heading")}
         </p>
 
         <motion.div
@@ -38,8 +40,7 @@ function Collection() {
         />
 
         <p className="mx-auto mt-4 max-w-170 text-sm text-muted sm:text-base">
-          Our latest collection, where classic and contemporary styles converge
-          in perfect harmony.
+          {t("collection.sub")}
         </p>
       </motion.div>
 

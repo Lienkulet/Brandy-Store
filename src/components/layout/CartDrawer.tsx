@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect } from "react";
 import { useCart } from "@/context/CartContext";
+import { useLang } from "@/context/LanguageContext";
 import { ease } from "@/lib/animations";
 import CloseIcon from "@/components/icons/CloseIcon";
 import { EmptyCart } from "@/components/layout/cart/EmptyCart";
@@ -16,6 +17,7 @@ type CartDrawerProps = {
 
 export function CartDrawer({ open, onClose }: CartDrawerProps) {
   const { items, isHydrated } = useCart();
+  const { t } = useLang();
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -49,11 +51,11 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
             <div className="flex items-center justify-between border-b border-foreground/8 px-6 py-5">
               <div className="flex items-baseline gap-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-foreground">
-                  Your Bag
+                  {t("cart.title")}
                 </p>
                 {isHydrated && items.length > 0 && (
                   <span className="text-[10px] font-semibold text-foreground/40">
-                    {items.length} {items.length === 1 ? "item" : "items"}
+                    {items.length} {items.length === 1 ? t("cart.item") : t("cart.items")}
                   </span>
                 )}
               </div>

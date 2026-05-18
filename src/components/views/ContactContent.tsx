@@ -7,8 +7,19 @@ import { ArrowRightIcon } from "@/components/icons/ArrowRightIcon";
 import LocationIcon from "@/components/icons/LocationIcon";
 import { ease } from "@/lib/animations";
 import { contactChannels } from "@/data/contact-channels";
+import { useLang } from "@/context/LanguageContext";
+import type { TranslationKey } from "@/data/translations";
+
+const CHANNEL_DESC_KEY: Record<string, TranslationKey> = {
+  "Call or WhatsApp us directly": "contact.channel.phone",
+  "DM us on Instagram":           "contact.channel.instagram",
+  "Message us on Telegram":       "contact.channel.telegram",
+  "Follow us on TikTok":          "contact.channel.tiktok",
+};
 
 export function ContactContent() {
+  const { t } = useLang();
+
   return (
     <main className="bg-background pb-24 pt-36 text-foreground">
       <Container>
@@ -21,7 +32,7 @@ export function ContactContent() {
           transition={{ duration: 0.8, ease }}
         >
           <p className="font-serif text-4xl font-semibold uppercase tracking-[0.06em] text-foreground sm:text-5xl">
-            Contact
+            {t("contact.heading")}
           </p>
           <motion.div
             className="mx-auto mt-5 h-px bg-foreground/20"
@@ -35,14 +46,13 @@ export function ContactContent() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, ease, delay: 0.4 }}
           >
-            We typically respond within a few hours. Reach us on any platform below
-            or send a message directly.
+            {t("contact.subtitle")}
           </motion.p>
         </motion.div>
 
         <div className="grid gap-12 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
 
-          {/* Left — contact contactChannels */}
+          {/* Left — contact channels */}
           <div className="space-y-4">
             <motion.p
               className="mb-6 text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/50"
@@ -51,7 +61,7 @@ export function ContactContent() {
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.5, ease }}
             >
-              Reach us on
+              {t("contact.reachUs")}
             </motion.p>
             <ul className="space-y-4">
             {contactChannels.map((ch, i) => (
@@ -76,7 +86,9 @@ export function ContactContent() {
                   <p className="mt-0.5 truncate text-sm font-medium text-foreground">
                     {ch.handle}
                   </p>
-                  <p className="mt-0.5 text-xs text-muted">{ch.description}</p>
+                  <p className="mt-0.5 text-xs text-muted">
+                    {CHANNEL_DESC_KEY[ch.description] ? t(CHANNEL_DESC_KEY[ch.description]) : ch.description}
+                  </p>
                 </div>
                 <span className="-translate-x-1 text-foreground/25 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
                   <ArrowRightIcon size={16} />
@@ -95,7 +107,7 @@ export function ContactContent() {
             transition={{ duration: 0.7, ease, delay: 0.1 }}
           >
             <p className="mb-6 text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/50">
-              Send a message
+              {t("contact.sendMessage")}
             </p>
             <ContactForm />
           </motion.div>
@@ -111,15 +123,13 @@ export function ContactContent() {
           transition={{ duration: 0.7, ease }}
         >
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/50">
-            In-store pickup
+            {t("contact.inStorePickup")}
           </p>
           <p className="mb-6 text-sm text-muted">
-            Prefer to pick up in person? Visit us at our location in Chișinău.
-            Contact us first to confirm availability.
+            {t("contact.pickupBody")}
           </p>
 
           <div className="overflow-hidden rounded-2xl border border-foreground/8 shadow-[0_8px_32px_rgba(95,77,57,0.07)]">
-            {/* Map label bar */}
             <div className="flex items-center justify-between border-b border-foreground/8 bg-foreground/2 px-5 py-3.5">
               <div className="flex items-center gap-2.5">
                 <span className="text-foreground/50"><LocationIcon size={16} /></span>
@@ -133,11 +143,10 @@ export function ContactContent() {
                 rel="noopener noreferrer"
                 className="text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/40 transition-colors hover:text-foreground"
               >
-                Open in Maps →
+                {t("contact.openInMaps")}
               </a>
             </div>
 
-            {/* Map iframe */}
             <div className="relative h-80 sm:h-96 lg:h-110">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d43504.21309474083!2d28.77044060165749!3d47.03996946352848!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40c97d948db3e011%3A0x572262bdb19c809a!2sFourchette!5e0!3m2!1sen!2s!4v1776157794039!5m2!1sen!2s"
