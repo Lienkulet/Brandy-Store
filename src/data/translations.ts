@@ -226,12 +226,12 @@ const ro: Record<TranslationKey, string> = {
   // Hero
   "hero.headline": "PENTRU GENTLEMANUL DIN ORICE CAMERĂ",
   "hero.breakWord": "DIN",
-  "hero.subtitle": "Siluete clasice și pulovere create pentru momentele care contează.",
+  "hero.subtitle": "Siluete elegante și pulovere create pentru momentele care contează.",
   "hero.cta": "Cumpără Acum",
 
   // Collection
   "collection.heading": "Colecție Nouă",
-  "collection.sub": "Cea mai recentă colecție, unde stilurile clasice și contemporane se întâlnesc în perfectă armonie.",
+  "collection.sub": "Cea mai recentă colecție, unde stilurile elegante și contemporane se întâlnesc în perfectă armonie.",
 
   // Season
   "season.heading": "Editia Noului Sezon",
