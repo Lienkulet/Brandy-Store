@@ -70,13 +70,13 @@ function Hero() {
         >
           {WORDS.map((word, i) => (
             <span key={i} className="contents">
+              {word === BREAK_WORD && <div className="w-full" />}
               <motion.span
                 variants={wordReveal}
                 className="inline-block font-serif text-[2rem] font-bold leading-[1.03] -tracking-[1px] text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.35)] sm:text-[3.25rem] lg:text-[4rem]"
               >
                 {word}
               </motion.span>
-              {word === BREAK_WORD && <div className="w-full" />}
             </span>
           ))}
         </motion.div>
